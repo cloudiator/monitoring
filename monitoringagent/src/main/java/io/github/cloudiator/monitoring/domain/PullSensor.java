@@ -15,7 +15,7 @@ public class PullSensor extends Sensor {
   private String className = null;
 
   @JsonProperty("configuration")
-  private SensorConfiguration configuration = null;
+  private java.util.Map configuration = null;
 
   @JsonProperty("interval")
   private Interval interval = null;
@@ -40,7 +40,7 @@ public class PullSensor extends Sensor {
     this.className = className;
   }
 
-  public PullSensor configuration(SensorConfiguration configuration) {
+  public PullSensor configuration(java.util.Map configuration) {
     this.configuration = configuration;
     return this;
   }
@@ -52,11 +52,11 @@ public class PullSensor extends Sensor {
    **/
 
 
-  public SensorConfiguration getConfiguration() {
+  public java.util.Map getConfiguration() {
     return configuration;
   }
 
-  public void setConfiguration(SensorConfiguration configuration) {
+  public void setConfiguration(java.util.Map configuration) {
     this.configuration = configuration;
   }
 

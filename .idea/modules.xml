@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/monitoring.iml" filepath="$PROJECT_DIR$/.idea/monitoring.iml" />
-      <module fileurl="file://$PROJECT_DIR$/monitoringagent/monitoringagent.iml" filepath="$PROJECT_DIR$/monitoringagent/monitoringagent.iml" />
+      <module fileurl="file://$PROJECT_DIR$/monitoringagent/monitoring.iml" filepath="$PROJECT_DIR$/monitoringagent/monitoring.iml" />
+      <module fileurl="file://$PROJECT_DIR$/project.iml" filepath="$PROJECT_DIR$/project.iml" />
     </modules>
   </component>
 </project>

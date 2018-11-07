@@ -3,9 +3,11 @@ package io.github.cloudiator.persistance;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 
+import java.util.Map;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -21,8 +23,8 @@ public class PullSensorModel extends SensorModel {
   @Lob
   private String className;
 
-  @OneToOne
-  private SensorConfigurationModel sensorConfiguration;
+  @ElementCollection
+  private Map<String, String> configuration;
 
   @ManyToOne(targetEntity = IntervalModel.class)
   private IntervalModel interval;
@@ -30,15 +32,13 @@ public class PullSensorModel extends SensorModel {
   protected PullSensorModel() {
   }
 
-  public PullSensorModel(String className, SensorConfigurationModel sensorConfiguration,
-      IntervalModel interval) {
+  public PullSensorModel(String className, java.util.Map configuration, IntervalModel interval) {
     checkNotNull(className);
-    checkNotNull(sensorConfiguration);
+    checkNotNull(configuration);
     checkNotNull(interval);
     this.className = className;
-    this.sensorConfiguration = sensorConfiguration;
     this.interval = interval;
-
+    this.configuration.putAll(configuration);
   }
 
 
@@ -50,13 +50,12 @@ public class PullSensorModel extends SensorModel {
     this.className = className;
   }
 
-  public SensorConfigurationModel getSensorConfiguration() {
-    return sensorConfiguration;
+  public java.util.Map getConfiguration() {
+    return configuration;
   }
 
-  public void setSensorConfiguration(
-      SensorConfigurationModel sensorConfiguration) {
-    this.sensorConfiguration = sensorConfiguration;
+  public void setConfiguration(java.util.Map configuration) {
+    this.configuration = configuration;
   }
 
   public IntervalModel getInterval() {

@@ -7,6 +7,7 @@ import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import javax.persistence.CascadeType;
@@ -94,9 +95,9 @@ public class MonitorModel extends Model {
   }
 
   public void addDataSink(DataSinkType dataSinkType,
-      Set<DataSinkConfigurationModel> dataSinkConfigurationModels) {
+      Map configuration) {
     DataSinkModel dataSinkModel = new DataSinkModel(this, dataSinkType,
-        dataSinkConfigurationModels);
+        configuration);
     addDataSink(dataSinkModel);
   }
 

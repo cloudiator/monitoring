@@ -7,15 +7,12 @@
     <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
 
 
-    <class>io.github.cloudiator.persistance.DataSinkConfigurationModel</class>
     <class>io.github.cloudiator.persistance.DataSinkModel</class>
     <class>io.github.cloudiator.persistance.IntervalModel</class>
     <class>io.github.cloudiator.persistance.MonitoringTagModel</class>
     <class>io.github.cloudiator.persistance.MonitorModel</class>
-    <class>io.github.cloudiator.persistance.PropertyModel</class>
     <class>io.github.cloudiator.persistance.PullSensorModel</class>
     <class>io.github.cloudiator.persistance.PushSensorModel</class>
-    <class>io.github.cloudiator.persistance.SensorConfigurationModel</class>
     <class>io.github.cloudiator.persistance.SensorModel</class>
     <class>io.github.cloudiator.persistance.TargetModel</class>
 

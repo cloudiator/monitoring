@@ -6,7 +6,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.inject.Inject;
 import io.github.cloudiator.monitoring.domain.DataSink;
-import io.github.cloudiator.monitoring.domain.DataSinkConfiguration;
 import io.github.cloudiator.monitoring.domain.Monitor;
 import io.github.cloudiator.monitoring.domain.MonitoringTag;
 import io.github.cloudiator.monitoring.domain.MonitoringTarget;
@@ -15,12 +14,9 @@ import io.github.cloudiator.monitoring.domain.PullSensor;
 import io.github.cloudiator.monitoring.domain.PushSensor;
 import io.github.cloudiator.monitoring.domain.Sensor;
 import io.github.cloudiator.persistance.TargetModel.TargetEnum;
-import io.github.cloudiator.persistance.DataSinkModel;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import javax.persistence.EnumType;
 
 public class MonitorDomainRepository {
 
@@ -104,12 +100,8 @@ public class MonitorDomainRepository {
       intervalModel.setPeriod(((PullSensor) sensor).getInterval().getPeriod());
       intervalModel.setUnit(Unit.valueOf(((PullSensor) sensor).getInterval().getUnit().name()));
       pullSensorModel.setInterval(intervalModel);
+      pullSensorModel.setConfiguration(((PullSensor) sensor).getConfiguration());
 
-      SensorConfigurationModel sensorConfigurationModel = new SensorConfigurationModel();
-      for (Property property : ((PullSensor) sensor).getConfiguration().getProperties()) {
-        sensorConfigurationModel.addProperty(property.getKey(), property.getValue());
-      }
-      pullSensorModel.setSensorConfiguration(sensorConfigurationModel);
       pullSensorModel.setMonitor(monitorModel);
 
       sensorDomainRepository.saveSensor(pullSensorModel);
@@ -126,10 +118,7 @@ public class MonitorDomainRepository {
     for (DataSink dataSink : monitor.getSinks()) {
       DataSinkModel dataSinkModel = new DataSinkModel(monitorModel,
           DataSinkType.valueOf(dataSink.getType().name()),
-          new HashSet<DataSinkConfigurationModel>());
-      for (DataSinkConfiguration dataSinkConfig : dataSink.getConfiguration()) {
-        dataSinkModel.addConfiguration(dataSinkConfig.getKey(), dataSinkConfig.getValue());
-      }
+          dataSink.getConfiguration());
       monitorModel.addDataSink(dataSinkModel);
       dataSinkModelRepository.save(dataSinkModel);
     }
@@ -150,7 +139,7 @@ public class MonitorDomainRepository {
   public void updateMonitor(Monitor monitor) {
     MonitorModel dbMonitor = monitorModelRepository.findMonitorByMetric(monitor.getMetric())
         .orElse(null);
-    if (dbMonitor == null){
+    if (dbMonitor == null) {
       throw new IllegalStateException("Monitor does not exist.");
     }
     // NOT Implemented

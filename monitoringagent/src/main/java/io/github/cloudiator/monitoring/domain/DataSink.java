@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 
 /**
@@ -48,8 +47,9 @@ public class DataSink {
 
   private TypeEnum type = null;
 
+  private java.util.Map configuration = null;
 
-  private Set<DataSinkConfiguration> _configuration = null;
+
 
   public DataSink type(TypeEnum type) {
     this.type = type;
@@ -71,16 +71,8 @@ public class DataSink {
     this.type = type;
   }
 
-  public DataSink _configuration(Set<DataSinkConfiguration> _configuration) {
-    this._configuration = _configuration;
-    return this;
-  }
-
-  public DataSink addConfigurationItem(DataSinkConfiguration _configurationItem) {
-    if (this._configuration == null) {
-      this._configuration = new HashSet<DataSinkConfiguration>();
-    }
-    this._configuration.add(_configurationItem);
+  public DataSink configuration(java.util.Map configuration) {
+    this.configuration = configuration;
     return this;
   }
 
@@ -92,12 +84,12 @@ public class DataSink {
    **/
 
 
-  public Set<DataSinkConfiguration> getConfiguration() {
-    return _configuration;
+  public java.util.Map getConfiguration() {
+    return configuration;
   }
 
-  public void setConfiguration(Set<DataSinkConfiguration> _configuration) {
-    this._configuration = _configuration;
+  public void setConfiguration(java.util.Map configuration) {
+    this.configuration = configuration;
   }
 
 
@@ -111,12 +103,12 @@ public class DataSink {
     }
     DataSink dataSink = (DataSink) o;
     return Objects.equals(this.type, dataSink.type) &&
-        Objects.equals(this._configuration, dataSink._configuration);
+        Objects.equals(this.configuration, dataSink.configuration);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(type, _configuration);
+    return Objects.hash(type, configuration);
   }
 
   @Override
@@ -125,7 +117,7 @@ public class DataSink {
     sb.append("class DataSink {\n");
 
     sb.append("    type: ").append(toIndentedString(type)).append("\n");
-    sb.append("    _configuration: ").append(toIndentedString(_configuration)).append("\n");
+    sb.append("    configuration: ").append(toIndentedString(configuration)).append("\n");
     sb.append("}");
     return sb.toString();
   }

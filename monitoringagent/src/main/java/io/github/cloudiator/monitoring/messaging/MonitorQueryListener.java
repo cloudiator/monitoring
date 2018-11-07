@@ -40,7 +40,8 @@ public class MonitorQueryListener implements Runnable {
           @Override
           public void accept(String id, MonitorQueryRequest content) {
             try {
-              System.out.println("Got message: " + content);
+              System.out.println("Got message: ");
+
               MonitorQueryResponse.Builder responseBuilder = MonitorQueryResponse.newBuilder();
               for (Monitor monitor : getAllMonitors()) {
                 responseBuilder.addMonitor(monitorConverter.apply(monitor));

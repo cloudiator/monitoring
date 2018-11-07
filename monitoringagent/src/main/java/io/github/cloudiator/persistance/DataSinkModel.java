@@ -5,9 +5,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -26,30 +28,31 @@ public class DataSinkModel extends Model {
   @ManyToOne
   private MonitorModel monitor;
 
-  @OneToMany(cascade = CascadeType.ALL, mappedBy = "dataSink")
-  private Set<DataSinkConfigurationModel> dataSinkConfiguration;
-
+  @ElementCollection
+  private Map<String, String> configuration;
 
   protected DataSinkModel() {
   }
 
-  public DataSinkModel(MonitorModel monitor, DataSinkType type,
-      Set<DataSinkConfigurationModel> dataSinkConfigurationModels) {
+  public DataSinkModel(MonitorModel monitor, DataSinkType type, Map configuration) {
     checkNotNull(monitor, "MonitorModel is null");
     checkNotNull(type, "DataSinkType is null");
-    checkNotNull(dataSinkConfigurationModels, "DataSinkConfigurationModels is null");
+    checkNotNull(configuration, "DataSinkConfiguration is null");
     this.type = type;
-    this.dataSinkConfiguration = dataSinkConfigurationModels;
+    this.configuration = configuration;
     this.monitor = monitor;
   }
-
 
   public DataSinkType getType() {
     return type;
   }
 
-  public Set<DataSinkConfigurationModel> getDataSinkConfiguration() {
-    return dataSinkConfiguration;
+  public Map<String, String> getConfiguration() {
+    return configuration;
+  }
+
+  public void setConfiguration(Map<String, String> configuration) {
+    this.configuration = configuration;
   }
 
   public MonitorModel getMonitor() {
@@ -61,17 +64,4 @@ public class DataSinkModel extends Model {
   }
 
 
-  public void addConfiguration(DataSinkConfigurationModel dataSinkConfigurationModel) {
-    checkNotNull(dataSinkConfigurationModel, "DataSinkConfigurationModel is null");
-    if (dataSinkConfiguration == null) {
-      dataSinkConfiguration = new HashSet<>();
-    }
-    dataSinkConfiguration.add(dataSinkConfigurationModel);
-  }
-
-  public void addConfiguration(String key, String value) {
-    DataSinkConfigurationModel configurationModel = new DataSinkConfigurationModel(this, key,
-        value);
-    addConfiguration(configurationModel);
-  }
 }
