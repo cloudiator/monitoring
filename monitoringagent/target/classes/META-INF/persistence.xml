@@ -9,7 +9,7 @@
 
     <class>io.github.cloudiator.persistance.DataSinkModel</class>
     <class>io.github.cloudiator.persistance.IntervalModel</class>
-    <class>io.github.cloudiator.persistance.MonitoringTagModel</class>
+    <class>io.github.cloudiator.persistance.MTagModel</class>
     <class>io.github.cloudiator.persistance.MonitorModel</class>
     <class>io.github.cloudiator.persistance.PullSensorModel</class>
     <class>io.github.cloudiator.persistance.PushSensorModel</class>

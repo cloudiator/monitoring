@@ -5,42 +5,45 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.inject.Inject;
-import io.github.cloudiator.monitoring.domain.DataSink;
-import io.github.cloudiator.monitoring.domain.Monitor;
-import io.github.cloudiator.monitoring.domain.MonitoringTag;
-import io.github.cloudiator.monitoring.domain.MonitoringTarget;
-import io.github.cloudiator.monitoring.domain.Property;
-import io.github.cloudiator.monitoring.domain.PullSensor;
-import io.github.cloudiator.monitoring.domain.PushSensor;
-import io.github.cloudiator.monitoring.domain.Sensor;
-import io.github.cloudiator.persistance.TargetModel.TargetEnum;
+import io.github.cloudiator.rest.model.DataSink;
+import io.github.cloudiator.rest.model.Monitor;
+import io.github.cloudiator.rest.model.MonitoringTag;
+import io.github.cloudiator.rest.model.MonitoringTarget;
+import io.github.cloudiator.rest.model.PullSensor;
+import io.github.cloudiator.rest.model.PushSensor;
+import io.github.cloudiator.rest.model.Sensor;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class MonitorDomainRepository {
 
   final static MonitorModelConverter MONITOR_MODEL_CONVERTER = new MonitorModelConverter();
 
-  private final TargetDomainRepository targetDomainRepository;
-  private final SensorDomainRepository sensorDomainRepository;
 
-  private final MonitoringTagModelRepository monitoringTagModelRepository;
+  private final SensorDomainRepository sensorDomainRepository;
+  private final TargetDomainRepository targetDomainRepository;
+
+  private final MTagModelRepository MTagModelRepository;
   private final DataSinkModelRepository dataSinkModelRepository;
   private final MonitorModelRepository monitorModelRepository;
+  private final IntervalModelRepository intervalModelRepository;
 
 
   @Inject
   public MonitorDomainRepository(DataSinkModelRepository dataSinkModelRepository,
-      MonitoringTagModelRepository monitoringTagModelRepository,
+      MTagModelRepository MTagModelRepository,
       MonitorModelRepository monitorModelRepository,
       TargetDomainRepository targetDomainRepository,
-      SensorDomainRepository sensorDomainRepository) {
+      SensorDomainRepository sensorDomainRepository,
+      IntervalModelRepository intervalModelRepository) {
     this.dataSinkModelRepository = dataSinkModelRepository;
-    this.monitoringTagModelRepository = monitoringTagModelRepository;
+    this.MTagModelRepository = MTagModelRepository;
     this.monitorModelRepository = monitorModelRepository;
     this.targetDomainRepository = targetDomainRepository;
     this.sensorDomainRepository = sensorDomainRepository;
+    this.intervalModelRepository = intervalModelRepository;
   }
 
   public Monitor findMonitorByMetric(String metric) {
@@ -60,11 +63,11 @@ public class MonitorDomainRepository {
   }
 
   public List<Monitor> getAllMonitors() {
-    List<Monitor> allMonitors = new ArrayList<>();
-    for (MonitorModel monitormodel : monitorModelRepository.findAll()) {
-      allMonitors.add(MONITOR_MODEL_CONVERTER.apply(monitormodel));
+    List<Monitor> result = new ArrayList<>();
+    for (MonitorModel monitorModel : monitorModelRepository.findAll()) {
+      result.add(MONITOR_MODEL_CONVERTER.apply(monitorModel));
     }
-    return allMonitors;
+    return result;
   }
 
   public Monitor addMonitor(Monitor monitor) {
@@ -75,64 +78,65 @@ public class MonitorDomainRepository {
     checkNotNull(monitor.getSinks(), "Datasinks is null.");
     checkNotNull(monitor.getTags(), "Tags is null.");
 
-    MonitorModel monitorModel = new MonitorModel();
-    //Target
+    /**
+     * Create new Models
+     */
+
+    MonitorModel monitorModel = new MonitorModel().metric(monitor.getMetric());
+    //include Targets
     for (MonitoringTarget monitoringTarget : monitor.getTargets()) {
-      TargetModel targetModel = targetDomainRepository
-          .getByIdentifierAndType(monitoringTarget.getIdentifier(),
-              TargetEnum.valueOf(monitoringTarget.getType().name()));
-      if (targetModel == null) {
-        targetModel = new TargetModel(
-            TargetEnum.valueOf(monitoringTarget.getType().name()), monitoringTarget.getIdentifier(),
-            new HashSet<MonitorModel>());
-      }
-      targetModel.addMonitor(monitorModel);
-      targetDomainRepository.saveTarget(targetModel);
+      TargetModel targetModel = new TargetModel()
+          .identifier(monitoringTarget.getIdentifier())
+          .targetType(TargetType.valueOf(monitoringTarget.getType().name()));
       monitorModel.addTarget(targetModel);
     }
-    //Sensor
+
+    //include Sensor
     Sensor sensor = monitor.getSensor();
-    if (sensor instanceof PullSensor) {
-      PullSensorModel pullSensorModel = new PullSensorModel();
-      pullSensorModel.setClassName(((PullSensor) sensor).getClassName());
+    switch (sensor.getType()) {
+      case "PullSensor":
+        IntervalModel intervalModel = new IntervalModel();
+        intervalModel.setPeriod(((PullSensor) sensor).getInterval().getPeriod());
+        intervalModel.setUnit(Unit.valueOf(((PullSensor) sensor).getInterval().getUnit().name()));
 
-      IntervalModel intervalModel = new IntervalModel();
-      intervalModel.setPeriod(((PullSensor) sensor).getInterval().getPeriod());
-      intervalModel.setUnit(Unit.valueOf(((PullSensor) sensor).getInterval().getUnit().name()));
-      pullSensorModel.setInterval(intervalModel);
-      pullSensorModel.setConfiguration(((PullSensor) sensor).getConfiguration());
-
-      pullSensorModel.setMonitor(monitorModel);
-
-      sensorDomainRepository.saveSensor(pullSensorModel);
-      monitorModel.setSensor(pullSensorModel);
-    } else if (sensor instanceof PushSensor) {
-      PushSensorModel pushSensorModel = new PushSensorModel();
-      pushSensorModel.setPort(((PushSensor) sensor).getPort());
-      pushSensorModel.setMonitor(monitorModel);
-
-      sensorDomainRepository.saveSensor(pushSensorModel);
-      monitorModel.setSensor(pushSensorModel);
+        PullSensorModel pullSensorModel = new PullSensorModel()
+            .className(((PullSensor) sensor).getClassName())
+            .interval(intervalModel).configuration(((PullSensor) sensor).getConfiguration());
+        monitorModel.setSensor(pullSensorModel);
+        break;
+      case "PushSensor":
+        PushSensorModel pushSensorModel = new PushSensorModel();
+        pushSensorModel.setPort(((PushSensor) sensor).getPort());
+        monitorModel.setSensor(pushSensorModel);
+        break;
+      default:
+        throw new IllegalArgumentException(
+            "MonitorceationError: No valid Sensor: " + sensor.getType());
     }
     //Sinks
     for (DataSink dataSink : monitor.getSinks()) {
-      DataSinkModel dataSinkModel = new DataSinkModel(monitorModel,
-          DataSinkType.valueOf(dataSink.getType().name()),
-          dataSink.getConfiguration());
-      monitorModel.addDataSink(dataSinkModel);
-      dataSinkModelRepository.save(dataSinkModel);
+      DataSinkModel createdsink = new DataSinkModel()
+          .sinkType(dataSink.getType().name())
+          .configuration(dataSink.getConfiguration());
+
+
+      monitorModel.addDataSink(createdsink);
     }
     //Tags
     for (MonitoringTag monitoringTag : monitor.getTags()) {
-      MonitoringTagModel tagModel = monitoringTagModelRepository
-          .findByKeyValuePair(monitoringTag.getKey(), monitoringTag.getValue()).orElse(null);
-      if (tagModel == null) {
-        tagModel = new MonitoringTagModel(monitoringTag.getKey(), monitoringTag.getValue(),
-            new HashSet<MonitorModel>());
-      }
-      tagModel.addMonitor(monitorModel);
+      MTagModel tagModel = new MTagModel(monitoringTag.getKey(),
+          monitoringTag.getValue());
+
+      monitorModel.addMonitoringTag(tagModel);
     }
+
+    /**
+     *Save all Models
+     * Monitor has CasdaceType.All by all references
+     */
+
     monitorModelRepository.save(monitorModel);
+
     return MONITOR_MODEL_CONVERTER.apply(monitorModel);
   }
 
@@ -144,5 +148,26 @@ public class MonitorDomainRepository {
     }
     // NOT Implemented
   }
+
+  public void deleteMonitor(Monitor monitor) {
+    Optional<MonitorModel> dbMonitor = monitorModelRepository
+        .findMonitorByMetric(monitor.getMetric());
+    if (!dbMonitor.isPresent()) {
+      throw new IllegalStateException("Monitor does not exist.");
+    } else {
+      monitorModelRepository.delete(dbMonitor.get());
+    }
+
+  }
+
+  public void deleteMonitor(String metric) {
+    Optional<MonitorModel> dbMonitor = monitorModelRepository.findMonitorByMetric(metric);
+    if (!dbMonitor.isPresent()) {
+      throw new IllegalStateException("Monitor does not exist.");
+    } else {
+      monitorModelRepository.delete(dbMonitor.get());
+    }
+  }
+
 }
 

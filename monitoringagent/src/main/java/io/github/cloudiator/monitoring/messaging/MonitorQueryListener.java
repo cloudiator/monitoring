@@ -1,10 +1,11 @@
 package io.github.cloudiator.monitoring.messaging;
 
 import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
-import io.github.cloudiator.monitoring.converter.MonitorConverter;
-import io.github.cloudiator.monitoring.domain.Monitor;
-import io.github.cloudiator.monitoring.domain.MonitorOrchestrationService;
+import io.github.cloudiator.rest.converter.MonitorConverter;
+import io.github.cloudiator.monitoring.domain.MonitorManagementService;
+import io.github.cloudiator.rest.model.Monitor;
+import java.util.Collection;
+import java.util.List;
 import org.cloudiator.messages.Monitor.MonitorQueryRequest;
 import org.cloudiator.messages.Monitor.MonitorQueryResponse;
 import org.cloudiator.messaging.MessageCallback;
@@ -17,21 +18,15 @@ public class MonitorQueryListener implements Runnable {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(MonitorQueryListener.class);
   private final MessageInterface messageInterface;
-  private final MonitorOrchestrationService monitorOrchestrationService;
-  private final MonitorConverter monitorConverter = MonitorConverter.MONITOR_CONVERTER;
+  private final MonitorManagementService monitorManagementService;
+  private final MonitorConverter monitorConverter = new MonitorConverter();
 
   @Inject
   public MonitorQueryListener(MessageInterface messageInterface,
-      MonitorOrchestrationService monitorOrchestrationService) {
+      MonitorManagementService monitorManagementService) {
     this.messageInterface = messageInterface;
-    this.monitorOrchestrationService = monitorOrchestrationService;
+    this.monitorManagementService = monitorManagementService;
   }
-
-  @Transactional
-  private Iterable<Monitor> getAllMonitors() {
-    return monitorOrchestrationService.getAllMonitors();
-  }
-
 
   @Override
   public void run() {
@@ -42,11 +37,16 @@ public class MonitorQueryListener implements Runnable {
             try {
               System.out.println("Got message: ");
 
+              List<Monitor> dbmonitors = monitorManagementService.getAllMonitors();
+
               MonitorQueryResponse.Builder responseBuilder = MonitorQueryResponse.newBuilder();
-              for (Monitor monitor : getAllMonitors()) {
+              for (Monitor monitor : dbmonitors) {
                 responseBuilder.addMonitor(monitorConverter.apply(monitor));
               }
-              messageInterface.reply(id, responseBuilder.build());
+
+              MonitorQueryResponse result = responseBuilder.build();
+              System.out.println("Sending result: " + result);
+              messageInterface.reply(id, result);
             } catch (Exception e) {
               LOGGER.error("Error while searching for Monitors. ", e);
               messageInterface.reply(MonitorQueryResponse.class, id, Error.newBuilder().setCode(500)
@@ -55,6 +55,5 @@ public class MonitorQueryListener implements Runnable {
 
           }
         });
-
   }
 }

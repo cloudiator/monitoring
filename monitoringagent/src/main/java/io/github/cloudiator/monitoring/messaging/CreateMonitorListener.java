@@ -2,11 +2,10 @@ package io.github.cloudiator.monitoring.messaging;
 
 
 import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
 import io.github.cloudiator.monitoring.converter.MonitorConverter;
-import io.github.cloudiator.monitoring.domain.Monitor;
+import io.github.cloudiator.monitoring.domain.MonitorManagementService;
+import io.github.cloudiator.rest.model.Monitor;
 import io.github.cloudiator.monitoring.domain.MonitorOrchestrationService;
-import java.util.Optional;
 import org.cloudiator.messages.General.Error;
 import org.cloudiator.messages.Monitor.CreateMonitorRequest;
 import org.cloudiator.messages.Monitor.CreateMonitorResponse;
@@ -19,26 +18,14 @@ public class CreateMonitorListener implements Runnable {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CreateMonitorListener.class);
   private final MessageInterface messageInterface;
-  private final MonitorOrchestrationService monitorOrchestrationService;
+  private final MonitorManagementService monitorManagementService;
   private final MonitorConverter monitorConverter = MonitorConverter.MONITOR_CONVERTER;
 
   @Inject
   public CreateMonitorListener(MessageInterface messageInterface,
-      MonitorOrchestrationService monitorOrchestrationService) {
+      MonitorManagementService monitorManagementService) {
     this.messageInterface = messageInterface;
-    this.monitorOrchestrationService = monitorOrchestrationService;
-  }
-
-  @Transactional
-  private Optional<Monitor> checkAndCreate(Monitor monitor) {
-    Optional<Monitor> dbMonitor = monitorOrchestrationService
-        .getMonitor(monitor.getMetric());
-    if (dbMonitor.isPresent()) {
-      return Optional.empty();
-    } else {
-      dbMonitor = Optional.of(monitorOrchestrationService.createMonitor(monitor));
-      return dbMonitor;
-    }
+    this.monitorManagementService = monitorManagementService;
   }
 
 
@@ -49,18 +36,25 @@ public class CreateMonitorListener implements Runnable {
           @Override
           public void accept(String id, CreateMonitorRequest content) {
             try {
-              Monitor newMonitor = monitorConverter.applyBack(content.getNewmonitor());
-              Optional<Monitor> requestedMonitor = checkAndCreate(newMonitor);
-              if (!requestedMonitor.isPresent()) {
-                messageInterface.reply(CreateMonitorResponse.class, id,
-                    Error.newBuilder().setCode(400)
-                        .setMessage("Monitor or Monitormetric already exist.").build());
-                return;
-              } else {
-                CreateMonitorResponse monitorResponse = CreateMonitorResponse.newBuilder()
-                    .setMonitor(monitorConverter.apply(requestedMonitor.get())).build();
-                messageInterface.reply(id, monitorResponse);
-              }
+
+              Monitor contentMonitor = monitorConverter.applyBack(content.getNewmonitor());
+
+              System.out.println("\n Got this Monitor: " + contentMonitor);
+
+              Monitor createdMonitor = monitorManagementService
+                  .handleNewMonitor(content.getUserId(), contentMonitor);
+
+              CreateMonitorResponse monitorResponse = CreateMonitorResponse.newBuilder()
+                  .setMonitor(monitorConverter.apply(createdMonitor)).build();
+              System.out.println("This is my Response: " + monitorResponse);
+              messageInterface.reply(id, monitorResponse);
+
+            } catch (IllegalArgumentException ie) {
+              LOGGER.error("IllegalState while creating Monitor. ", ie);
+              messageInterface.reply(CreateMonitorResponse.class, id,
+                  Error.newBuilder().setCode(403)
+                      .setMessage("Illegal Argument by creating Monitor: " + ie.getMessage())
+                      .build());
             } catch (Exception e) {
               LOGGER.error("Error while creating Monitor. ", e);
               messageInterface.reply(CreateMonitorResponse.class, id,

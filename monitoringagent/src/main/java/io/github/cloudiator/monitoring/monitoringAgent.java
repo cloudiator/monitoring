@@ -14,12 +14,14 @@ import io.github.cloudiator.monitoring.messaging.UpdateMonitorListener;
 import io.github.cloudiator.util.JpaContext;
 import org.cloudiator.messaging.kafka.KafkaContext;
 import org.cloudiator.messaging.kafka.KafkaMessagingModule;
+import org.cloudiator.messaging.services.MessageServiceModule;
 
 public class monitoringAgent {
 
   private final static Injector injector = Guice
       .createInjector(new MonitorConfigModule(new MonitorContext(Configuration.conf())),
           new KafkaMessagingModule(new KafkaContext(Configuration.conf())),
+          new MessageServiceModule(),
           new JpaModule("defaultPersistenceUnit", new JpaContext(Configuration.conf())));
 
   public static void main(String[] args) {

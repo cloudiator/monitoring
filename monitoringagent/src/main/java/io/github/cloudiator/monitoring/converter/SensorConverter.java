@@ -1,9 +1,9 @@
 package io.github.cloudiator.monitoring.converter;
 
 import de.uniulm.omi.cloudiator.util.TwoWayConverter;
-import io.github.cloudiator.monitoring.domain.PullSensor;
-import io.github.cloudiator.monitoring.domain.PushSensor;
-import io.github.cloudiator.monitoring.domain.Sensor;
+import io.github.cloudiator.rest.model.PullSensor;
+import io.github.cloudiator.rest.model.PushSensor;
+import io.github.cloudiator.rest.model.Sensor;
 import org.cloudiator.messages.entities.MonitorEntities;
 
 public class SensorConverter implements TwoWayConverter<Sensor, MonitorEntities.Sensor> {

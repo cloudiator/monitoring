@@ -1,25 +1,28 @@
 package io.github.cloudiator.persistance;
 
-import java.util.Set;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.persistence.OneToMany;
 
 @Entity
 public class IntervalModel extends Model {
 
-  @Column
+  @Column(nullable = false)
   private Long period;
 
   @Enumerated(EnumType.STRING)
-  @Column
+  @Column(nullable = false)
   private Unit unit;
 
-  @OneToMany(cascade = CascadeType.ALL, mappedBy = "interval")
-  private Set<PullSensorModel> sensorModelSet;
+  protected IntervalModel() {
+
+  }
+
+  public IntervalModel(Unit unit, Long period) {
+    this.unit = unit;
+    this.period = period;
+  }
 
   public Long getPeriod() {
     return period;
@@ -36,8 +39,5 @@ public class IntervalModel extends Model {
   public void setUnit(Unit unit) {
     this.unit = unit;
   }
-
-
-
 
 }

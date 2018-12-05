@@ -9,23 +9,23 @@ import java.util.Optional;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
-public class MonitoringTagModelRepositoryJpa extends
-    BaseModelRepositoryJpa<MonitoringTagModel> implements MonitoringTagModelRepository {
+public class MTagModelRepositoryJpa extends
+    BaseModelRepositoryJpa<MTagModel> implements MTagModelRepository {
 
   @Inject
-  protected MonitoringTagModelRepositoryJpa(
+  protected MTagModelRepositoryJpa(
       Provider<EntityManager> entityManager,
-      TypeLiteral<MonitoringTagModel> type) {
+      TypeLiteral<MTagModel> type) {
     super(entityManager, type);
   }
 
   @Override
-  public Optional<MonitoringTagModel> findByKeyValuePair(String tagKey, String value) {
+  public Optional<MTagModel> findByKeyValuePair(String tagKey, String value) {
     checkNotNull(tagKey, "TagKey is null.");
     String queryString = String
         .format("from %s where tagKey=:tagKey and value=:value", type.getName());
     Query query = em().createQuery(queryString).setParameter("tagKey", tagKey)
         .setParameter("value", value);
-    return Optional.of((MonitoringTagModel) query.getSingleResult());
+    return Optional.of((MTagModel) query.getSingleResult());
   }
 }

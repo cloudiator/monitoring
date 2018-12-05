@@ -1,7 +1,7 @@
 package io.github.cloudiator.persistance;
 
 import de.uniulm.omi.cloudiator.util.OneWayConverter;
-import io.github.cloudiator.monitoring.domain.PushSensor;
+import io.github.cloudiator.rest.model.PushSensor;
 import javax.annotation.Nullable;
 
 public class PushSensorModelConverter implements OneWayConverter<PushSensorModel, PushSensor> {

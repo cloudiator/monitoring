@@ -2,13 +2,14 @@ package io.github.cloudiator.persistance;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+
 import com.google.inject.Inject;
-import io.github.cloudiator.monitoring.domain.MonitoringTarget;
-import io.github.cloudiator.persistance.TargetModel.TargetEnum;
+import io.github.cloudiator.rest.model.MonitoringTarget;
+import io.github.cloudiator.rest.model.MonitoringTarget.TypeEnum;
+import java.util.Optional;
 
 public class TargetDomainRepository {
 
-  final static MonitorModelConverter MONITOR_MODEL_CONVERTER = new MonitorModelConverter();
   final static TargetModelConverter TARGET_MODEL_CONVERTER = new TargetModelConverter();
 
   private final TargetModelRepository targetModelRepository;
@@ -28,15 +29,15 @@ public class TargetDomainRepository {
   public boolean exists(MonitoringTarget monitoringTarget) {
     checkNotNull(monitoringTarget, "monitoringTarget is null.");
     return targetModelRepository.getByIdentifierAndType(monitoringTarget.getIdentifier(),
-        TargetEnum.valueOf(monitoringTarget.getType().name())).isPresent();
+        TargetType.valueOf(monitoringTarget.getType().name())).isPresent();
   }
 
-  public TargetModel getByIdentifierAndType(String identifier, TargetEnum targetEnum) {
+  public Optional<TargetModel> getByIdentifierAndType(String identifier, TargetType targetType) {
     checkNotNull(identifier, "identifier is null.");
-    TargetModel targetModel = targetModelRepository.getByIdentifierAndType(identifier, targetEnum)
-        .orElse(null);
+    Optional<TargetModel> targetModel = targetModelRepository
+        .getByIdentifierAndType(identifier, targetType);
     if (targetModel == null) {
-      return null;
+      return Optional.empty();
     }
     return targetModel;
   }
@@ -44,6 +45,5 @@ public class TargetDomainRepository {
   public void saveTarget(TargetModel targetModel) {
     targetModelRepository.save(targetModel);
   }
-
 
 }

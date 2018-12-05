@@ -1,24 +1,17 @@
 package io.github.cloudiator.persistance;
 
-import static com.google.common.base.Preconditions.checkArgument;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.AbstractSet;
-import java.util.Collection;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.JoinTable;
-import javax.persistence.Lob;
-import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
-import org.hibernate.collection.internal.PersistentSet;
+
 
 @Entity
 public class MonitorModel extends Model {
@@ -26,26 +19,24 @@ public class MonitorModel extends Model {
   @Column(nullable = false, unique = true, updatable = false)
   private String metric;
 
-  @ManyToMany
-  @JoinTable(name = "monitor_has_targets")
-  private Set<TargetModel> targets;
+  @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<TargetModel> targets;
 
-  @OneToOne(orphanRemoval = true)
+  @OneToOne(optional = false, orphanRemoval = true, cascade = CascadeType.ALL)
   private SensorModel sensor;
 
-  @OneToMany(cascade = CascadeType.ALL, mappedBy = "monitor")
-  private Set<DataSinkModel> datasinks;
+  @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<DataSinkModel> datasinks;
 
-  @ManyToMany
-  @JoinTable(name = "monitor_has_tags")
-  private Set<MonitoringTagModel> monitortags;
+  @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<MTagModel> monitortags;
 
 
   protected MonitorModel() {
   }
 
-  public MonitorModel(String metric, Set<TargetModel> targets, SensorModel sensor,
-      Set<DataSinkModel> datasinks, Set<MonitoringTagModel> monitortags) {
+  public MonitorModel(String metric, List<TargetModel> targets, SensorModel sensor,
+      List<DataSinkModel> datasinks, List<MTagModel> monitortags) {
     checkNotNull(metric);
     checkNotNull(sensor);
     this.metric = metric;
@@ -55,62 +46,27 @@ public class MonitorModel extends Model {
     this.monitortags = monitortags;
   }
 
+  public MonitorModel metric(String metric) {
+    this.metric = metric;
+    return this;
+  }
+
 
   public String getMetric() {
     return metric;
   }
 
-  public Set<TargetModel> getTargets() {
+  public List<TargetModel> getTargets() {
     return targets;
   }
 
-  public Set<DataSinkModel> getDatasinks() {
+  public List<DataSinkModel> getDatasinks() {
     return datasinks;
   }
 
-  public Set<MonitoringTagModel> getMonitortags() {
+  public List<MTagModel> getMonitortags() {
     return monitortags;
   }
-
-
-  public void addTarget(TargetModel targetModel) {
-    checkNotNull(targetModel, "TargetModel is null");
-    if (targets == null) {
-      targets = new HashSet<TargetModel>();
-    }
-    if (!targets.contains(targetModel)) {
-      targets.add(targetModel);
-    }
-  }
-
-
-  public void addDataSink(DataSinkModel dataSinkModel) {
-    checkNotNull(dataSinkModel, "DataSinkModel is null");
-    if (datasinks == null) {
-      datasinks = new HashSet<DataSinkModel>();
-    }
-    if (!datasinks.contains(dataSinkModel)) {
-      datasinks.add(dataSinkModel);
-    }
-  }
-
-  public void addDataSink(DataSinkType dataSinkType,
-      Map configuration) {
-    DataSinkModel dataSinkModel = new DataSinkModel(this, dataSinkType,
-        configuration);
-    addDataSink(dataSinkModel);
-  }
-
-  public void addMonitoringTag(MonitoringTagModel tagModel) {
-    checkNotNull(tagModel, "MonitoringTagModel is null");
-    if (monitortags == null) {
-      monitortags = new HashSet<MonitoringTagModel>();
-    }
-    if (!monitortags.contains(tagModel)) {
-      monitortags.add(tagModel);
-    }
-  }
-
 
   public SensorModel getSensor() {
     return sensor;
@@ -119,6 +75,37 @@ public class MonitorModel extends Model {
   public void setSensor(SensorModel sensor) {
     this.sensor = sensor;
   }
+
+
+  public void addTarget(TargetModel targetModel) {
+    if (targets == null) {
+      targets = new ArrayList<TargetModel>();
+    }
+    if (!targets.contains(targetModel)) {
+      targets.add(targetModel);
+    }
+  }
+
+
+  public void addDataSink(DataSinkModel dataSinkModel) {
+    if (datasinks == null) {
+      datasinks = new ArrayList<DataSinkModel>();
+    }
+    if (!datasinks.contains(dataSinkModel)) {
+      datasinks.add(dataSinkModel);
+    }
+  }
+
+
+  public void addMonitoringTag(MTagModel tagModel) {
+    if (monitortags == null) {
+      monitortags = new ArrayList<MTagModel>();
+    }
+    if (!monitortags.contains(tagModel)) {
+      monitortags.add(tagModel);
+    }
+  }
+
 
   @Override
   public boolean equals(Object o) {
@@ -132,7 +119,8 @@ public class MonitorModel extends Model {
     return Objects.equals(this.metric, monitorModel.metric) &&
         Objects.equals(this.sensor, monitorModel.sensor) &&
         Objects.equals(this.targets, monitorModel.targets) &&
-        Objects.equals(this.datasinks, monitorModel.datasinks);
+        Objects.equals(this.datasinks, monitorModel.datasinks) &&
+        Objects.equals(this.monitortags, monitorModel.monitortags);
   }
 
 }

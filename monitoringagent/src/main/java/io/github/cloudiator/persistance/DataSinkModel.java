@@ -1,32 +1,24 @@
 package io.github.cloudiator.persistance;
 
 
-import static com.google.common.base.Preconditions.checkNotNull;
 
-
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
+
+
 
 @Entity
 public class DataSinkModel extends Model {
 
-
   @Enumerated(EnumType.STRING)
   @Column
-  private DataSinkType type;
+  private DataSinkType sinkType;
 
-  @ManyToOne
-  private MonitorModel monitor;
 
   @ElementCollection
   private Map<String, String> configuration;
@@ -34,34 +26,36 @@ public class DataSinkModel extends Model {
   protected DataSinkModel() {
   }
 
-  public DataSinkModel(MonitorModel monitor, DataSinkType type, Map configuration) {
-    checkNotNull(monitor, "MonitorModel is null");
-    checkNotNull(type, "DataSinkType is null");
-    checkNotNull(configuration, "DataSinkConfiguration is null");
-    this.type = type;
-    this.configuration = configuration;
-    this.monitor = monitor;
+  public DataSinkModel sinkType(String sinktype) {
+    this.sinkType = DataSinkType.valueOf(sinktype);
+    return this;
   }
 
-  public DataSinkType getType() {
-    return type;
+  public DataSinkModel configuration(Map configuration) {
+    Map config = new HashMap();
+    config.putAll(configuration);
+    this.configuration = config;
+    return this;
+  }
+
+
+  public DataSinkType getSinkType() {
+    return sinkType;
   }
 
   public Map<String, String> getConfiguration() {
     return configuration;
   }
 
-  public void setConfiguration(Map<String, String> configuration) {
-    this.configuration = configuration;
+  public void setConfiguration(Map configuration) {
+    if (this.configuration == null) {
+      this.configuration = new HashMap();
+    }
+    this.configuration.putAll(configuration);
   }
 
-  public MonitorModel getMonitor() {
-    return monitor;
+  public void setSinkType(DataSinkType sinktype) {
+    this.sinkType = sinktype;
   }
-
-  public void setType(DataSinkType type) {
-    this.type = type;
-  }
-
 
 }

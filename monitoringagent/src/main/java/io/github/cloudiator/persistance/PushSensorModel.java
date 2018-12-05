@@ -5,8 +5,8 @@ import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.Lob;
 
-@Entity(name = "PushSensorModel")
-public class PushSensorModel extends SensorModel {
+@Entity
+class PushSensorModel extends SensorModel {
 
   @Column(nullable = false)
   @Lob

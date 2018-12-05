@@ -7,6 +7,9 @@ public enum Unit {
   SECONDS,
   MILLISECONDS,
   MICROSECONDS,
-  NANOSECONDS
+  NANOSECONDS;
+
+  private Unit() {
+  }
 
 }

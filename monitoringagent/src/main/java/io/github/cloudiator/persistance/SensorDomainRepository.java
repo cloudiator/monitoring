@@ -1,7 +1,8 @@
 package io.github.cloudiator.persistance;
 
 import com.google.inject.Inject;
-import io.github.cloudiator.monitoring.domain.Sensor;
+import com.google.inject.persist.Transactional;
+import io.github.cloudiator.rest.model.Sensor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -18,6 +19,7 @@ public class SensorDomainRepository {
       PushSensorModelRepository pushSensorModelRepository) {
     this.pullSensorModelRepository = pullSensorModelRepository;
     this.pushSensorModelRepository = pushSensorModelRepository;
+
   }
 
 
@@ -31,6 +33,7 @@ public class SensorDomainRepository {
     }
     return allSensors;
   }
+
 
   public void saveSensor(SensorModel sensorModel) {
     if (sensorModel instanceof PullSensorModel) {

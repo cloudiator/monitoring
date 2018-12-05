@@ -1,10 +1,10 @@
 package io.github.cloudiator.monitoring.converter;
 
 import de.uniulm.omi.cloudiator.util.TwoWayConverter;
-import io.github.cloudiator.monitoring.domain.DataSink;
-import io.github.cloudiator.monitoring.domain.Monitor;
-import io.github.cloudiator.monitoring.domain.MonitoringTag;
-import io.github.cloudiator.monitoring.domain.MonitoringTarget;
+import io.github.cloudiator.rest.model.DataSink;
+import io.github.cloudiator.rest.model.Monitor;
+import io.github.cloudiator.rest.model.MonitoringTag;
+import io.github.cloudiator.rest.model.MonitoringTarget;
 import org.cloudiator.messages.entities.MonitorEntities;
 
 public class MonitorConverter implements TwoWayConverter<Monitor, MonitorEntities.Monitor> {
@@ -21,10 +21,12 @@ public class MonitorConverter implements TwoWayConverter<Monitor, MonitorEntitie
 
   @Override
   public Monitor applyBack(MonitorEntities.Monitor kafkaMonitor) {
-    Monitor result = new Monitor(kafkaMonitor.getMetric());
+    Monitor result = new Monitor().metric(kafkaMonitor.getMetric());
     //Targets
     for (MonitorEntities.MonitoringTarget kafkaTarget : kafkaMonitor.getTargetList()) {
+
       result.addTargetsItem(monitoringTargetConverter.applyBack(kafkaTarget));
+
     }
     //Sensor
     result.setSensor(sensorConverter.applyBack(kafkaMonitor.getSensor()));
@@ -44,8 +46,12 @@ public class MonitorConverter implements TwoWayConverter<Monitor, MonitorEntitie
     MonitorEntities.Monitor.Builder MonitorBuilder = MonitorEntities.Monitor.newBuilder()
         .setMetric(domainMonitor.getMetric());
     //Targets
-    for (MonitoringTarget domainTarget : domainMonitor.getTargets()) {
-      MonitorBuilder.addTarget(monitoringTargetConverter.apply(domainTarget));
+    if (domainMonitor.getTargets() != null) {
+      for (MonitoringTarget domainTarget : domainMonitor.getTargets()) {
+        MonitorBuilder.addTarget(monitoringTargetConverter.apply(domainTarget));
+      }
+    } else {
+      MonitorBuilder.clearTarget();
     }
     //Sensor
     MonitorBuilder.setSensor(sensorConverter.apply(domainMonitor.getSensor()));

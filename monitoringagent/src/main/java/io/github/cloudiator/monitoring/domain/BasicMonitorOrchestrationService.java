@@ -3,14 +3,10 @@ package io.github.cloudiator.monitoring.domain;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.inject.Inject;
-import com.mchange.util.AssertException;
+import io.github.cloudiator.rest.model.Monitor;
 import io.github.cloudiator.persistance.MonitorDomainRepository;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
-import org.cloudiator.messages.Installation.InstallationRequest;
-import org.cloudiator.messages.Installation.InstallationResponse;
-import org.cloudiator.messaging.SettableFutureResponseCallback;
-import org.cloudiator.messaging.services.InstallationRequestService;
 
 public class BasicMonitorOrchestrationService implements MonitorOrchestrationService {
 
@@ -25,36 +21,11 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
 
   @Override
   public Monitor createMonitor(Monitor newMonitor) {
-
-    for (MonitoringTarget target : newMonitor.getTargets()) {
-      switch (target.getType()) {
-        case CLOUD:
-          break;
-        case NODE:
-          /*
-          SettableFutureResponseCallback<InstallationResponse, InstallationResponse> installationFuture = SettableFutureResponseCallback
-              .create();
-          installationRequestService.createInstallationRequestAsync(null, installationFuture);
-          installationFuture.get();
-          */
-          break;
-        case JOB:
-          break;
-        case TASK:
-          break;
-        case PROCESS:
-          break;
-        default:
-          throw new AssertionError("MonitorTargetTypeError " + target.getType());
-      }
-    }
-
     return monitorDomainRepository.addMonitor(newMonitor);
-
   }
 
   @Override
-  public Iterable<Monitor> getAllMonitors() {
+  public List<Monitor> getAllMonitors() {
     return monitorDomainRepository.getAllMonitors();
   }
 
@@ -66,7 +37,12 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
 
   @Override
   public void deleteMonitor(Monitor monitor) {
+    monitorDomainRepository.deleteMonitor(monitor);
+  }
 
+  @Override
+  public void deleteMonitor(String metric) {
+    monitorDomainRepository.deleteMonitor(metric);
   }
 
   @Override

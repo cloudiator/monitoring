@@ -1,7 +1,7 @@
 package io.github.cloudiator.monitoring.converter;
 
 import de.uniulm.omi.cloudiator.util.TwoWayConverter;
-import io.github.cloudiator.monitoring.domain.MonitoringTag;
+import io.github.cloudiator.rest.model.MonitoringTag;
 import org.cloudiator.messages.entities.MonitorEntities;
 
 public class MonitoringTagConverter implements

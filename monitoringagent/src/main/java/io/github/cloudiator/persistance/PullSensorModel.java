@@ -2,22 +2,22 @@ package io.github.cloudiator.persistance;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
-import javax.persistence.DiscriminatorValue;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.Lob;
-import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import org.hibernate.annotations.Cascade;
 
-@Entity(name = "PullSensorModel")
-public class PullSensorModel extends SensorModel {
+@Entity
+class PullSensorModel extends SensorModel {
 
   @Column
   @Lob
@@ -26,7 +26,7 @@ public class PullSensorModel extends SensorModel {
   @ElementCollection
   private Map<String, String> configuration;
 
-  @ManyToOne(targetEntity = IntervalModel.class)
+  @OneToOne(optional = false, cascade = CascadeType.ALL, orphanRemoval = true)
   private IntervalModel interval;
 
   protected PullSensorModel() {
@@ -39,6 +39,23 @@ public class PullSensorModel extends SensorModel {
     this.className = className;
     this.interval = interval;
     this.configuration.putAll(configuration);
+  }
+
+  public PullSensorModel className(String className) {
+    this.className = className;
+    return this;
+  }
+
+  public PullSensorModel interval(IntervalModel interval) {
+    this.interval = interval;
+    return this;
+  }
+
+  public PullSensorModel configuration(Map configuration) {
+    Map config = new HashMap<>();
+    config.putAll(configuration);
+    this.configuration = config;
+    return this;
   }
 
 
@@ -55,7 +72,10 @@ public class PullSensorModel extends SensorModel {
   }
 
   public void setConfiguration(java.util.Map configuration) {
-    this.configuration = configuration;
+    if (this.configuration == null) {
+      this.configuration = new HashMap();
+    }
+    this.configuration.putAll(configuration);
   }
 
   public IntervalModel getInterval() {

@@ -4,10 +4,12 @@ import com.google.inject.AbstractModule;
 import com.google.inject.persist.jpa.JpaPersistModule;
 import io.github.cloudiator.persistance.DataSinkModelRepository;
 import io.github.cloudiator.persistance.DataSinkModelRepositoryJpa;
+import io.github.cloudiator.persistance.IntervalModelRepository;
+import io.github.cloudiator.persistance.IntervalModelRepositoryJpa;
 import io.github.cloudiator.persistance.MonitorModelRepository;
 import io.github.cloudiator.persistance.MonitorModelRepositoryJpa;
-import io.github.cloudiator.persistance.MonitoringTagModelRepository;
-import io.github.cloudiator.persistance.MonitoringTagModelRepositoryJpa;
+import io.github.cloudiator.persistance.MTagModelRepository;
+import io.github.cloudiator.persistance.MTagModelRepositoryJpa;
 import io.github.cloudiator.persistance.PullSensorModelRepository;
 import io.github.cloudiator.persistance.PullSensorModelRepositoryJpa;
 import io.github.cloudiator.persistance.PushSensorModelRepository;
@@ -37,12 +39,12 @@ public class JpaModule extends AbstractModule {
     install(buildPersistModule());
 
     bind(DataSinkModelRepository.class).to(DataSinkModelRepositoryJpa.class);
-    bind(MonitoringTagModelRepository.class).to(MonitoringTagModelRepositoryJpa.class);
+    bind(MTagModelRepository.class).to(MTagModelRepositoryJpa.class);
     bind(MonitorModelRepository.class).to(MonitorModelRepositoryJpa.class);
     bind(PullSensorModelRepository.class).to(PullSensorModelRepositoryJpa.class);
     bind(PushSensorModelRepository.class).to(PushSensorModelRepositoryJpa.class);
     bind(TargetModelRepository.class).to(TargetModelRepositoryJpa.class);
-
+    bind(IntervalModelRepository.class).to(IntervalModelRepositoryJpa.class);
 
   }
 

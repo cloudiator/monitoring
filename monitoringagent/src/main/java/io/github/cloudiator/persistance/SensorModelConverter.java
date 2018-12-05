@@ -1,7 +1,7 @@
 package io.github.cloudiator.persistance;
 
 import de.uniulm.omi.cloudiator.util.OneWayConverter;
-import io.github.cloudiator.monitoring.domain.Sensor;
+import io.github.cloudiator.rest.model.Sensor;
 
 
 public class SensorModelConverter implements OneWayConverter<SensorModel, Sensor> {

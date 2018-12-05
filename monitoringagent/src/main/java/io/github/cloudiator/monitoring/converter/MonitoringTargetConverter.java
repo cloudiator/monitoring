@@ -1,8 +1,8 @@
 package io.github.cloudiator.monitoring.converter;
 
 import de.uniulm.omi.cloudiator.util.TwoWayConverter;
-import io.github.cloudiator.monitoring.domain.MonitoringTarget;
-import io.github.cloudiator.monitoring.domain.MonitoringTarget.TypeEnum;
+import io.github.cloudiator.rest.model.MonitoringTarget;
+import io.github.cloudiator.rest.model.MonitoringTarget.TypeEnum;
 import org.cloudiator.messages.entities.MonitorEntities;
 import org.cloudiator.messages.entities.MonitorEntities.TargetType;
 
@@ -11,8 +11,8 @@ public class MonitoringTargetConverter implements
 
   @Override
   public MonitoringTarget applyBack(MonitorEntities.MonitoringTarget kafkaMonitoringTarget) {
-    MonitoringTarget result = new MonitoringTarget();
-    result.setType(TypeEnum.fromValue(kafkaMonitoringTarget.getType().name()));
+    MonitoringTarget result = new MonitoringTarget()
+        .type(TypeEnum.fromValue(kafkaMonitoringTarget.getType().name()));
     result.setIdentifier(kafkaMonitoringTarget.getIdentifier());
     return result;
   }

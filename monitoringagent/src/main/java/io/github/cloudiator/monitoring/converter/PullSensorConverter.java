@@ -1,9 +1,9 @@
 package io.github.cloudiator.monitoring.converter;
 
 import de.uniulm.omi.cloudiator.util.TwoWayConverter;
-import io.github.cloudiator.monitoring.domain.Interval;
-import io.github.cloudiator.monitoring.domain.Interval.UnitEnum;
-import io.github.cloudiator.monitoring.domain.PullSensor;
+import io.github.cloudiator.rest.model.Interval;
+import io.github.cloudiator.rest.model.Interval.UnitEnum;
+import io.github.cloudiator.rest.model.PullSensor;
 import org.cloudiator.messages.entities.MonitorEntities;
 import org.cloudiator.messages.entities.MonitorEntities.Unit;
 
@@ -14,9 +14,10 @@ public class PullSensorConverter implements
   public PullSensor applyBack(MonitorEntities.PullSensor kafkaPullSensor) {
     PullSensor result = new PullSensor()
         .className(kafkaPullSensor.getClassName())
-        .interval(new Interval(UnitEnum.fromValue(kafkaPullSensor.getInterval().getUnit().name()),
-            kafkaPullSensor.getInterval().getPeriod()))
-        .configuration(kafkaPullSensor.getConfigurationMap());
+        .interval(
+            new Interval().unit(UnitEnum.valueOf(kafkaPullSensor.getInterval().getUnit().name()))
+                .period(kafkaPullSensor.getInterval().getPeriod()))
+        ._configuration(kafkaPullSensor.getConfigurationMap());
     result.setType(result.getClass().getSimpleName());
     return result;
   }
@@ -27,8 +28,12 @@ public class PullSensorConverter implements
         .setClassName(domainPullSensor.getClassName())
         .setInterval(MonitorEntities.Interval.newBuilder()
             .setUnit(Unit.valueOf(domainPullSensor.getInterval().getUnit().name()))
-            .setPeriod(domainPullSensor.getInterval().getPeriod()).build())
-        .putAllConfiguration(domainPullSensor.getConfiguration());
+            .setPeriod(domainPullSensor.getInterval().getPeriod()).build());
+    if (!domainPullSensor.getConfiguration().isEmpty()) {
+      result.putAllConfiguration(domainPullSensor.getConfiguration());
+    } else {
+      result.clearConfiguration();
+    }
     return result.build();
   }
 }
