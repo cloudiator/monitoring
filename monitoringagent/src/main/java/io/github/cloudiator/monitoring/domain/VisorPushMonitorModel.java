@@ -4,7 +4,7 @@ import io.github.cloudiator.rest.model.DataSink;
 import java.util.List;
 import java.util.Map;
 
-public class VisorPushMonitorModel {
+public class VisorPushMonitorModel extends VisorMonitorModel {
 
   private String type;
   private String metricName;

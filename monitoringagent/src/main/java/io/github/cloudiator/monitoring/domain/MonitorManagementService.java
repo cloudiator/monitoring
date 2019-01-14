@@ -113,7 +113,7 @@ public class MonitorManagementService {
     Node targetNode;
     targetNode = monitorHandler.installVisor(userId, target.getIdentifier());
 
-    monitorHandler.configureVisor(userId, targetNode ,monitor);
+    monitorHandler.configureVisor(userId, target, targetNode ,monitor);
 
   }
 

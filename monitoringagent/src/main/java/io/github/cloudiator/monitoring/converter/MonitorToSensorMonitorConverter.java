@@ -7,7 +7,7 @@ import io.github.cloudiator.rest.model.PullSensor;
 import io.github.cloudiator.rest.model.PushSensor;
 import io.github.cloudiator.rest.model.Sensor;
 
-public class MonitorToSensorMonitorConverter implements OneWayConverter<Monitor, VisorSensorMonitorModel> {
+public class MonitorToSensorMonitorConverter extends MonitorToVisorMonitorConverter implements OneWayConverter<Monitor, VisorSensorMonitorModel> {
 
   @Override
   public VisorSensorMonitorModel apply(Monitor monitor) {

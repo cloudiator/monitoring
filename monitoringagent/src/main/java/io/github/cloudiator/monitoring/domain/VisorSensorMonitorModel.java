@@ -5,7 +5,7 @@ import io.github.cloudiator.rest.model.Interval;
 import java.util.List;
 import java.util.Map;
 
-public class VisorSensorMonitorModel {
+public class VisorSensorMonitorModel extends VisorMonitorModel {
 
   String type;
   String metricName;

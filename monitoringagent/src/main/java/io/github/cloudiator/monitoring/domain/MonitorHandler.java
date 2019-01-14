@@ -4,14 +4,23 @@ import static org.reflections.util.ConfigurationBuilder.build;
 
 import com.google.inject.Inject;
 import com.google.gson.Gson;
+import io.github.cloudiator.monitoring.converter.MonitorToPushMonitorConverter;
+import io.github.cloudiator.monitoring.converter.MonitorToSensorMonitorConverter;
 import io.github.cloudiator.rest.converter.IpAddressConverter;
 import io.github.cloudiator.rest.converter.NodeConverter;
 import io.github.cloudiator.rest.model.Monitor;
+import io.github.cloudiator.rest.model.MonitoringTarget;
+import io.github.cloudiator.rest.model.MonitoringTarget.TypeEnum;
 import io.github.cloudiator.rest.model.Node;
+import io.github.cloudiator.rest.model.PullSensor;
+import io.github.cloudiator.rest.model.PushSensor;
 import io.github.cloudiator.util.Base64IdEncoder;
 import io.github.cloudiator.util.IdEncoder;
+import java.io.UnsupportedEncodingException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
@@ -34,11 +43,17 @@ import org.apache.http.impl.client.CloseableHttpClient;
 
 public class MonitorHandler {
 
+
   private final InstallationRequestService installationRequestService;
   private final NodeService nodeService;
   private final IpAddressConverter ipConverter;
   private final NodeConverter nodeConverter;
   private final IdEncoder idEncoder = Base64IdEncoder.create();
+  private final MonitorToPushMonitorConverter pushMonitorConverter = new MonitorToPushMonitorConverter();
+  private final MonitorToSensorMonitorConverter sensorMonitorConverter = new MonitorToSensorMonitorConverter();
+
+  private final String VisorPort = "31415";
+  private static final Logger LOGGER = LoggerFactory.getLogger(MonitorHandler.class);
 
   @Inject
   public MonitorHandler(InstallationRequestService installationRequestService,
@@ -48,8 +63,6 @@ public class MonitorHandler {
     this.ipConverter = new IpAddressConverter();
     this.nodeConverter = new NodeConverter();
   }
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(MonitorHandler.class);
 
 
   public Node installVisor(String userId, String nodeId) {
@@ -86,12 +99,37 @@ public class MonitorHandler {
     return result;
   }
 
-  public int configureVisor(String userId, Node targetNode, Monitor monitor) {
+  public int configureVisor(String userId, MonitoringTarget target, Node targetNode,
+      Monitor monitor) {
     LOGGER.debug("Starting VisorConfigurationProcess on: " + targetNode.getNodeId());
 
     ResponseHandler<String> handler = new BasicResponseHandler();
     CloseableHttpClient client = HttpClients.createDefault();
+    VisorMonitorModel visorMonitor = null;
+
     Gson gson = new Gson();
+    HttpPost httpPost = new HttpPost(
+        "http://" + targetNode.getIpAddresses().get(0) + ":" + VisorPort + "/monitors");
+
+    // handle MonitorType convertation to Post-Payload
+    if (monitor.getSensor() instanceof PullSensor) {
+      visorMonitor = sensorMonitorConverter.apply(monitor);
+    } else if (monitor.getSensor() instanceof PushSensor) {
+      visorMonitor = pushMonitorConverter.apply(monitor);
+    } else {
+      throw new AssertionError("SensorType is invalid: " + monitor.getSensor().getType());
+    }
+    String payload = gson.toJson(visorMonitor);
+    StringEntity entity = null;
+
+    try {
+      entity = new StringEntity(payload);
+      
+
+    } catch (UnsupportedEncodingException e) {
+      LOGGER.error("Error while creating HTTP Post payload for Visorcall!", e);
+      throw new IllegalStateException("Error while submitting MonitorConfig to Visor!");
+    }
 
     return 1;
   }
