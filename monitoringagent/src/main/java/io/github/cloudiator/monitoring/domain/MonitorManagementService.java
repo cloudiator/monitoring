@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import io.github.cloudiator.rest.model.Monitor;
 import io.github.cloudiator.rest.model.MonitoringTarget;
+import io.github.cloudiator.rest.model.Node;
 import java.util.List;
 import java.util.Optional;
 import org.cloudiator.messaging.ResponseException;
@@ -73,7 +74,7 @@ public class MonitorManagementService {
   public Monitor handleNewMonitor(String userId, Monitor newMonitor) {
     //Target
     for (MonitoringTarget mTarget : newMonitor.getTargets()) {
-      if (!handleMonitorTarget(userId, mTarget)) {
+      if (!handleMonitorTarget(userId, mTarget, newMonitor)) {
         throw new AssertionError("Error by handling Target: " + mTarget);
       }
     }
@@ -84,20 +85,52 @@ public class MonitorManagementService {
     return requestedMonitor;
   }
 
-  private boolean handleMonitorTarget(String userId, MonitoringTarget target) {
+  private boolean handleMonitorTarget(String userId, MonitoringTarget target, Monitor monitor) {
     switch (target.getType()) {
       case PROCESS:
+        handleProcess(userId, target, monitor);
         break;
       case TASK:
+        handleTask(userId, target, monitor);
         break;
       case JOB:
+        handleJob(userId, target, monitor);
         break;
       case NODE:
-        return true; //monitorHandler.installVisor(userId, target.getIdentifier());
+        System.out.println("Handle NODE: " + target);
+        handleNode(userId, target, monitor);
+        return true;
       case CLOUD:
+        handleCloud(userId, target, monitor);
         break;
+      default:
+        throw new IllegalArgumentException("unkown MonitorTargetType: " + target.getType());
     }
     return false;
+  }
+
+  private void handleNode(String userId, MonitoringTarget target, Monitor monitor) {
+    Node targetNode;
+    targetNode = monitorHandler.installVisor(userId, target.getIdentifier());
+
+    monitorHandler.configureVisor(userId, targetNode ,monitor);
+
+  }
+
+  private void handleProcess(String userId, MonitoringTarget target, Monitor monitor) {
+    // haben ID: Process - Groups?
+  }
+
+  private void handleTask(String userId, MonitoringTarget target, Monitor monitor) {
+  }
+
+  private void handleJob(String userId, MonitoringTarget target, Monitor monitor) {
+    //
+  }
+
+  private void handleCloud(String userId, MonitoringTarget target, Monitor monitor) {
+    // NodeGroups:
+
   }
 
 

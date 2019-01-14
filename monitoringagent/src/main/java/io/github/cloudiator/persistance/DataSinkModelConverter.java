@@ -4,7 +4,6 @@ import de.uniulm.omi.cloudiator.util.OneWayConverter;
 import io.github.cloudiator.rest.model.DataSink;
 import io.github.cloudiator.rest.model.DataSink.TypeEnum;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 

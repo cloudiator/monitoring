@@ -3,14 +3,19 @@ package io.github.cloudiator.monitoring.domain;
 import static org.reflections.util.ConfigurationBuilder.build;
 
 import com.google.inject.Inject;
+import com.google.gson.Gson;
 import io.github.cloudiator.rest.converter.IpAddressConverter;
 import io.github.cloudiator.rest.converter.NodeConverter;
+import io.github.cloudiator.rest.model.Monitor;
 import io.github.cloudiator.rest.model.Node;
 import io.github.cloudiator.util.Base64IdEncoder;
 import io.github.cloudiator.util.IdEncoder;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.impl.client.BasicResponseHandler;
+import org.apache.http.impl.client.HttpClients;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.concurrent.ExecutionException;
 import org.cloudiator.messages.InstallationEntities;
 import org.cloudiator.messages.InstallationEntities.Installation;
@@ -24,6 +29,7 @@ import org.cloudiator.messaging.SettableFutureResponseCallback;
 import org.cloudiator.messaging.services.InstallationRequestService;
 import org.cloudiator.messaging.services.NodeService;
 import io.github.cloudiator.rest.model.IpAddress;
+import org.apache.http.impl.client.CloseableHttpClient;
 
 
 public class MonitorHandler {
@@ -43,28 +49,32 @@ public class MonitorHandler {
     this.nodeConverter = new NodeConverter();
   }
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(MonitorHandler.class);
 
-  public boolean installVisor(String userId, String nodeId) {
 
-    NodeEntities.Node target = getNodeById(nodeId, userId);
-    if (target == null) {
-      return false;
-    }
-
-    final Builder installationBuilder = Installation.newBuilder().setNode(target).addTool(
-        InstallationEntities.Tool.VISOR);
-
-    final InstallationRequest installationRequest = InstallationRequest.newBuilder()
-        .setInstallation(installationBuilder.build())
-        .setUserId(userId).build();
-
-    final SettableFutureResponseCallback<InstallationResponse, InstallationResponse> futureResponseCallback = SettableFutureResponseCallback
-        .create();
-
-    installationRequestService
-        .createInstallationRequestAsync(installationRequest, futureResponseCallback);
-
+  public Node installVisor(String userId, String nodeId) {
+    Node result;
+    LOGGER.debug(" Starting VisorInstallationProcess on: " + nodeId);
     try {
+      NodeEntities.Node target = getNodeById(nodeId, userId);
+      if (target == null) {
+        //? throw new ResponseException(500, "Node not found");
+      }
+      result = nodeConverter.applyBack(target);
+
+      final Builder installationBuilder = Installation.newBuilder().setNode(target).addTool(
+          InstallationEntities.Tool.VISOR);
+
+      final InstallationRequest installationRequest = InstallationRequest.newBuilder()
+          .setInstallation(installationBuilder.build())
+          .setUserId(userId).build();
+
+      final SettableFutureResponseCallback<InstallationResponse, InstallationResponse> futureResponseCallback = SettableFutureResponseCallback
+          .create();
+
+      installationRequestService
+          .createInstallationRequestAsync(installationRequest, futureResponseCallback);
+
       futureResponseCallback.get();
     } catch (InterruptedException e) {
       throw new IllegalStateException(
@@ -72,8 +82,18 @@ public class MonitorHandler {
     } catch (ExecutionException e) {
       throw new IllegalStateException("Error during VisorInstallation", e.getCause());
     }
+    LOGGER.debug("finished VisorInstallationProcess on: " + nodeId);
+    return result;
+  }
 
-    return true;
+  public int configureVisor(String userId, Node targetNode, Monitor monitor) {
+    LOGGER.debug("Starting VisorConfigurationProcess on: " + targetNode.getNodeId());
+
+    ResponseHandler<String> handler = new BasicResponseHandler();
+    CloseableHttpClient client = HttpClients.createDefault();
+    Gson gson = new Gson();
+
+    return 1;
   }
 
   public IpAddress getIpAddressFromNodeId(String nodeId) {
@@ -102,9 +122,9 @@ public class MonitorHandler {
       NodeQueryResponse response = nodeService.queryNodes(request);
 
       if (response.getNodesCount() > 1) {
-        throw new AssertionError("More than one Node back ");
+        throw new IllegalStateException("More than one Node back ");
       } else if (response.getNodesCount() == 0) {
-        return null;
+        throw new IllegalStateException("Node not found");
       }
 
       System.out.println("NodeId:" + nodeId);

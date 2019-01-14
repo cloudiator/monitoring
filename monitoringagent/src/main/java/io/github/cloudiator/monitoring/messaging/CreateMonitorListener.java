@@ -52,7 +52,7 @@ public class CreateMonitorListener implements Runnable {
             } catch (IllegalArgumentException ie) {
               LOGGER.error("IllegalState while creating Monitor. ", ie);
               messageInterface.reply(CreateMonitorResponse.class, id,
-                  Error.newBuilder().setCode(403)
+                  Error.newBuilder().setCode(400)
                       .setMessage("Illegal Argument by creating Monitor: " + ie.getMessage())
                       .build());
             } catch (Exception e) {
