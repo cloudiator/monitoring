@@ -118,7 +118,8 @@ public class MonitorManagementService {
   }
 
   private void handleProcess(String userId, MonitoringTarget target, Monitor monitor) {
-    // haben ID: Process - Groups?
+    // only SingleProcess - ClusterProcess not supported
+
   }
 
   private void handleTask(String userId, MonitoringTarget target, Monitor monitor) {

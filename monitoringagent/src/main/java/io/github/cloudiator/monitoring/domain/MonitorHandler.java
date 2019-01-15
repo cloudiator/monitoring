@@ -3,26 +3,17 @@ package io.github.cloudiator.monitoring.domain;
 import static org.reflections.util.ConfigurationBuilder.build;
 
 import com.google.inject.Inject;
-import com.google.gson.Gson;
-import io.github.cloudiator.monitoring.converter.MonitorToPushMonitorConverter;
-import io.github.cloudiator.monitoring.converter.MonitorToSensorMonitorConverter;
+import io.github.cloudiator.monitoring.converter.MonitorToVisorMonitorConverter;
 import io.github.cloudiator.rest.converter.IpAddressConverter;
 import io.github.cloudiator.rest.converter.NodeConverter;
 import io.github.cloudiator.rest.model.Monitor;
 import io.github.cloudiator.rest.model.MonitoringTarget;
-import io.github.cloudiator.rest.model.MonitoringTarget.TypeEnum;
 import io.github.cloudiator.rest.model.Node;
-import io.github.cloudiator.rest.model.PullSensor;
-import io.github.cloudiator.rest.model.PushSensor;
 import io.github.cloudiator.util.Base64IdEncoder;
 import io.github.cloudiator.util.IdEncoder;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.ResponseHandler;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.BasicResponseHandler;
-import org.apache.http.impl.client.HttpClients;
+import java.math.BigDecimal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.concurrent.ExecutionException;
@@ -38,7 +29,11 @@ import org.cloudiator.messaging.SettableFutureResponseCallback;
 import org.cloudiator.messaging.services.InstallationRequestService;
 import org.cloudiator.messaging.services.NodeService;
 import io.github.cloudiator.rest.model.IpAddress;
-import org.apache.http.impl.client.CloseableHttpClient;
+
+import io.github.cloudiator.visor.rest.*;
+import io.github.cloudiator.visor.rest.auth.*;
+import io.github.cloudiator.visor.rest.model.*;
+import io.github.cloudiator.visor.rest.api.DefaultApi;
 
 
 public class MonitorHandler {
@@ -49,8 +44,7 @@ public class MonitorHandler {
   private final IpAddressConverter ipConverter;
   private final NodeConverter nodeConverter;
   private final IdEncoder idEncoder = Base64IdEncoder.create();
-  private final MonitorToPushMonitorConverter pushMonitorConverter = new MonitorToPushMonitorConverter();
-  private final MonitorToSensorMonitorConverter sensorMonitorConverter = new MonitorToSensorMonitorConverter();
+  private final MonitorToVisorMonitorConverter visorMonitorConverter = new MonitorToVisorMonitorConverter();
 
   private final String VisorPort = "31415";
   private static final Logger LOGGER = LoggerFactory.getLogger(MonitorHandler.class);
@@ -103,13 +97,27 @@ public class MonitorHandler {
       Monitor monitor) {
     LOGGER.debug("Starting VisorConfigurationProcess on: " + targetNode.getNodeId());
 
+    DefaultApi apiInstance = new DefaultApi();
+    //io.github.cloudiator.visor.rest.model.Monitor visorMonitor = new io.github.cloudiator.visor.rest.model.Monitor(); // Monitor |
+    io.github.cloudiator.visor.rest.model.Monitor visorMonitor = visorMonitorConverter
+        .apply(monitor);
+    try {
+      io.github.cloudiator.visor.rest.model.Monitor visorResponse = apiInstance
+          .postMonitors(visorMonitor);
+      System.out.println(visorResponse);
+    } catch (ApiException e) {
+      System.err.println("Exception when calling DefaultApi#postMonitors");
+      e.printStackTrace();
+    }
+
+    /*
     ResponseHandler<String> handler = new BasicResponseHandler();
     CloseableHttpClient client = HttpClients.createDefault();
-    VisorMonitorModel visorMonitor = null;
+    //VisorMonitorModel visorMonitor = null;
 
     Gson gson = new Gson();
     HttpPost httpPost = new HttpPost(
-        "http://" + targetNode.getIpAddresses().get(0) + ":" + VisorPort + "/monitors");
+        "http://" + targetNode.getIpAddresses().get(0).getValue() + ":" + VisorPort + "/monitors");
 
     // handle MonitorType convertation to Post-Payload
     if (monitor.getSensor() instanceof PullSensor) {
@@ -124,13 +132,33 @@ public class MonitorHandler {
 
     try {
       entity = new StringEntity(payload);
-      
+      httpPost.setEntity(entity);
+      httpPost.setHeader("Content-type", "application/json");
+
+      LOGGER.debug("HttpPost: " + httpPost.toString());
+      LOGGER.debug("Submit Visor Monitor payload: " + payload);
+
+      CloseableHttpResponse response = client.execute(httpPost);
+
+      int httpcode = response.getStatusLine().getStatusCode();
+
+      //httpcode check
+      LOGGER.debug("Submit VisorConfig. ResponseCode: " + httpcode);
+      System.out.println("-------- \n Submitted VisorConfig \n " + httpPost + "\n -----------");
+
+      String body = handler.handleResponse(response);
+      client.close();
+
+      LOGGER.debug("Successfully submitted VisorConfig !");
 
     } catch (UnsupportedEncodingException e) {
       LOGGER.error("Error while creating HTTP Post payload for Visorcall!", e);
       throw new IllegalStateException("Error while submitting MonitorConfig to Visor!");
+    } catch (IOException e) {
+      LOGGER.error("Error while creating HTTP Post payload for Visorcall!", e);
+      throw new IllegalStateException("Error while submitting MonitorConfig to Visor!");
     }
-
+    */
     return 1;
   }
 
