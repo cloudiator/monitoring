@@ -59,15 +59,10 @@ public class MonitorHandler {
   }
 
 
-  public Node installVisor(String userId, String nodeId) {
-    Node result;
-    LOGGER.debug(" Starting VisorInstallationProcess on: " + nodeId);
+  public boolean installVisor(String userId, Node node) {
+    LOGGER.debug(" Starting VisorInstallationProcess on: " + node.getNodeId());
     try {
-      NodeEntities.Node target = getNodeById(nodeId, userId);
-      if (target == null) {
-        //? throw new ResponseException(500, "Node not found");
-      }
-      result = nodeConverter.applyBack(target);
+      NodeEntities.Node target = nodeConverter.apply(node);
 
       final Builder installationBuilder = Installation.newBuilder().setNode(target).addTool(
           InstallationEntities.Tool.VISOR);
@@ -89,11 +84,11 @@ public class MonitorHandler {
     } catch (ExecutionException e) {
       throw new IllegalStateException("Error during VisorInstallation", e.getCause());
     }
-    LOGGER.debug("finished VisorInstallationProcess on: " + nodeId);
-    return result;
+    LOGGER.debug("finished VisorInstallationProcess on: " + node.getNodeId());
+    return true;
   }
 
-  public int configureVisor(String userId, MonitoringTarget target, Node targetNode,
+  public boolean configureVisor(String userId, MonitoringTarget target, Node targetNode,
       Monitor monitor) {
     LOGGER.debug("Starting VisorConfigurationProcess on: " + targetNode.getNodeId());
 
@@ -110,56 +105,7 @@ public class MonitorHandler {
       e.printStackTrace();
     }
 
-    /*
-    ResponseHandler<String> handler = new BasicResponseHandler();
-    CloseableHttpClient client = HttpClients.createDefault();
-    //VisorMonitorModel visorMonitor = null;
-
-    Gson gson = new Gson();
-    HttpPost httpPost = new HttpPost(
-        "http://" + targetNode.getIpAddresses().get(0).getValue() + ":" + VisorPort + "/monitors");
-
-    // handle MonitorType convertation to Post-Payload
-    if (monitor.getSensor() instanceof PullSensor) {
-      visorMonitor = sensorMonitorConverter.apply(monitor);
-    } else if (monitor.getSensor() instanceof PushSensor) {
-      visorMonitor = pushMonitorConverter.apply(monitor);
-    } else {
-      throw new AssertionError("SensorType is invalid: " + monitor.getSensor().getType());
-    }
-    String payload = gson.toJson(visorMonitor);
-    StringEntity entity = null;
-
-    try {
-      entity = new StringEntity(payload);
-      httpPost.setEntity(entity);
-      httpPost.setHeader("Content-type", "application/json");
-
-      LOGGER.debug("HttpPost: " + httpPost.toString());
-      LOGGER.debug("Submit Visor Monitor payload: " + payload);
-
-      CloseableHttpResponse response = client.execute(httpPost);
-
-      int httpcode = response.getStatusLine().getStatusCode();
-
-      //httpcode check
-      LOGGER.debug("Submit VisorConfig. ResponseCode: " + httpcode);
-      System.out.println("-------- \n Submitted VisorConfig \n " + httpPost + "\n -----------");
-
-      String body = handler.handleResponse(response);
-      client.close();
-
-      LOGGER.debug("Successfully submitted VisorConfig !");
-
-    } catch (UnsupportedEncodingException e) {
-      LOGGER.error("Error while creating HTTP Post payload for Visorcall!", e);
-      throw new IllegalStateException("Error while submitting MonitorConfig to Visor!");
-    } catch (IOException e) {
-      LOGGER.error("Error while creating HTTP Post payload for Visorcall!", e);
-      throw new IllegalStateException("Error while submitting MonitorConfig to Visor!");
-    }
-    */
-    return 1;
+    return true;
   }
 
   public IpAddress getIpAddressFromNodeId(String nodeId) {
@@ -172,14 +118,12 @@ public class MonitorHandler {
       return ipAddress;
     } catch (Exception e) {
       throw new AssertionError("Problem with NodeIP");
-
     }
   }
 
-  public NodeEntities.Node getNodeById(String nodeId, String userId) {
-
+  public Node getNodeById(String nodeId, String userId) {
+    LOGGER.debug(" Starting getNodeById ");
     final String decodedId = idEncoder.decode(nodeId);
-
     try {
 
       NodeQueryMessage request = NodeQueryMessage.newBuilder().setNodeId(decodedId)
@@ -193,12 +137,10 @@ public class MonitorHandler {
         throw new IllegalStateException("Node not found");
       }
 
-      System.out.println("NodeId:" + nodeId);
-      System.out.println("Nodelist-size: " + response.getNodesList().size());
-      System.out.println("Nodes: " + response.getNodesList().toString());
       NodeEntities.Node nodeEntity = response.getNodesList().get(0);
+      LOGGER.debug("found NodeEntity: " + nodeEntity.getId());
 
-      return nodeEntity;
+      return nodeConverter.applyBack(nodeEntity);
 
     } catch (Exception e) {
       throw new AssertionError("Problem by getting Node:" + e.getMessage());
