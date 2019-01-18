@@ -2,13 +2,14 @@ package io.github.cloudiator.monitoring.domain;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
+import io.github.cloudiator.messaging.NodeToNodeMessageConverter;
 import io.github.cloudiator.rest.converter.ProcessConverter;
 import io.github.cloudiator.rest.model.CloudiatorProcess;
 import io.github.cloudiator.rest.model.ClusterProcess;
 import io.github.cloudiator.rest.model.Monitor;
 import io.github.cloudiator.rest.model.MonitoringTarget;
-import io.github.cloudiator.rest.model.Node;
 import io.github.cloudiator.rest.model.SingleProcess;
+import io.github.cloudiator.domain.Node;
 import java.util.List;
 import java.util.Optional;
 import org.cloudiator.messages.Process.ProcessQueryRequest;
@@ -26,6 +27,7 @@ public class MonitorManagementService {
   private final MonitorHandler monitorHandler;
   private final MonitorOrchestrationService monitorOrchestrationService;
   private final ProcessService processService;
+  private final NodeToNodeMessageConverter nodeMessageConverter = NodeToNodeMessageConverter.INSTANCE;
 
   @Inject
   public MonitorManagementService(MonitorHandler monitorHandler,
@@ -169,12 +171,12 @@ public class MonitorManagementService {
       Node processNode = monitorHandler.getNodeById(((SingleProcess) process).getNode(), userId);
 
       if (!monitorHandler.installVisor(userId, processNode)) {
-        LOGGER.error("Error by installing Visor on Node: " + processNode.getNodeId());
+        LOGGER.error("Error by installing Visor on Node: " + processNode.name());
         throw new IllegalStateException("Error by installing Visor on Node: " + processNode);
       }
 
       if (!monitorHandler.configureVisor(userId, target, processNode, monitor)) {
-        LOGGER.error("Error by configuring Visor on Node: " + processNode.getNodeId());
+        LOGGER.error("Error by configuring Visor on Node: " + processNode.name());
         throw new IllegalStateException("Error by configuring Visor on Node: " + processNode);
       }
       LOGGER.debug("Finished handling SingleProcess");

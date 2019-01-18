@@ -3,12 +3,13 @@ package io.github.cloudiator.monitoring.domain;
 import static org.reflections.util.ConfigurationBuilder.build;
 
 import com.google.inject.Inject;
+import io.github.cloudiator.domain.Node;
+import io.github.cloudiator.messaging.NodeToNodeMessageConverter;
 import io.github.cloudiator.monitoring.converter.MonitorToVisorMonitorConverter;
 import io.github.cloudiator.rest.converter.IpAddressConverter;
 import io.github.cloudiator.rest.converter.NodeConverter;
 import io.github.cloudiator.rest.model.Monitor;
 import io.github.cloudiator.rest.model.MonitoringTarget;
-import io.github.cloudiator.rest.model.Node;
 import io.github.cloudiator.util.Base64IdEncoder;
 import io.github.cloudiator.util.IdEncoder;
 import java.io.IOException;
@@ -42,9 +43,9 @@ public class MonitorHandler {
   private final InstallationRequestService installationRequestService;
   private final NodeService nodeService;
   private final IpAddressConverter ipConverter;
-  private final NodeConverter nodeConverter;
   private final IdEncoder idEncoder = Base64IdEncoder.create();
   private final MonitorToVisorMonitorConverter visorMonitorConverter = new MonitorToVisorMonitorConverter();
+  private final NodeToNodeMessageConverter nodeMessageConverter = NodeToNodeMessageConverter.INSTANCE;
 
   private final String VisorPort = "31415";
   private static final Logger LOGGER = LoggerFactory.getLogger(MonitorHandler.class);
@@ -55,14 +56,13 @@ public class MonitorHandler {
     this.installationRequestService = installationRequestService;
     this.nodeService = nodeService;
     this.ipConverter = new IpAddressConverter();
-    this.nodeConverter = new NodeConverter();
   }
 
 
   public boolean installVisor(String userId, Node node) {
-    LOGGER.debug(" Starting VisorInstallationProcess on: " + node.getNodeId());
+    LOGGER.debug(" Starting VisorInstallationProcess on: " + node.name());
     try {
-      NodeEntities.Node target = nodeConverter.apply(node);
+      NodeEntities.Node target = nodeMessageConverter.apply(node);
 
       final Builder installationBuilder = Installation.newBuilder().setNode(target).addTool(
           InstallationEntities.Tool.VISOR);
@@ -84,19 +84,25 @@ public class MonitorHandler {
     } catch (ExecutionException e) {
       throw new IllegalStateException("Error during VisorInstallation", e.getCause());
     }
-    LOGGER.debug("finished VisorInstallationProcess on: " + node.getNodeId());
+    LOGGER.debug("finished VisorInstallationProcess on: " + node.name());
     return true;
   }
 
   public boolean configureVisor(String userId, MonitoringTarget target, Node targetNode,
       Monitor monitor) {
-    LOGGER.debug("Starting VisorConfigurationProcess on: " + targetNode.getNodeId());
+    LOGGER.debug("Starting VisorConfigurationProcess on: " + targetNode.name());
 
     DefaultApi apiInstance = new DefaultApi();
-    //io.github.cloudiator.visor.rest.model.Monitor visorMonitor = new io.github.cloudiator.visor.rest.model.Monitor(); // Monitor |
+    ApiClient apiClient = new ApiClient();
+    apiClient.setBasePath(targetNode.connectTo().ip());
+    apiInstance.setApiClient(apiClient);
+    LOGGER.debug("apiClient: " + apiClient);
+
     io.github.cloudiator.visor.rest.model.Monitor visorMonitor = visorMonitorConverter
         .apply(monitor);
+    LOGGER.debug("used Monitor: " + visorMonitor);
     try {
+      LOGGER.debug("using DefaultApi and visorMonitor: ", visorMonitor);
       io.github.cloudiator.visor.rest.model.Monitor visorResponse = apiInstance
           .postMonitors(visorMonitor);
       System.out.println(visorResponse);
@@ -108,18 +114,6 @@ public class MonitorHandler {
     return true;
   }
 
-  public IpAddress getIpAddressFromNodeId(String nodeId) {
-    try {
-
-      NodeQueryMessage request = NodeQueryMessage.newBuilder().setNodeId(nodeId).build();
-      NodeQueryResponse response = nodeService.queryNodes(request);
-      IpAddress ipAddress = ipConverter.applyBack(response.getNodesOrBuilder(0).getIpAddresses(0));
-
-      return ipAddress;
-    } catch (Exception e) {
-      throw new AssertionError("Problem with NodeIP");
-    }
-  }
 
   public Node getNodeById(String nodeId, String userId) {
     LOGGER.debug(" Starting getNodeById ");
@@ -138,9 +132,9 @@ public class MonitorHandler {
       }
 
       NodeEntities.Node nodeEntity = response.getNodesList().get(0);
-      LOGGER.debug("found NodeEntity: " + nodeEntity.getId());
+      LOGGER.debug("found NodeEntity: " + nodeEntity);
 
-      return nodeConverter.applyBack(nodeEntity);
+      return nodeMessageConverter.applyBack(nodeEntity);
 
     } catch (Exception e) {
       throw new AssertionError("Problem by getting Node:" + e.getMessage());

@@ -30,7 +30,8 @@ public class MonitorToVisorMonitorConverter implements
           .port(new BigDecimal(((PushSensor) monitor.getSensor()).getPort()))
           .metricName(monitor.getMetric())
           .dataSinks(dataSinkConverter.apply(monitor.getSinks()))
-          .type(io.github.cloudiator.visor.rest.model.Monitor.TypeEnum.PUSHMONITOR);
+          .type(io.github.cloudiator.visor.rest.model.Monitor.TypeEnum.PUSHMONITOR)
+          .componentId("1");
       //missing ComponentId, MonitorContext
     } else if (monitor.getSensor() instanceof PullSensor) {
       result = new SensorMonitor()
@@ -39,7 +40,8 @@ public class MonitorToVisorMonitorConverter implements
           .sensorConfiguration(((PullSensor) monitor.getSensor()).getConfiguration())
           .metricName(monitor.getMetric())
           .dataSinks(dataSinkConverter.apply(monitor.getSinks()))
-          .type(io.github.cloudiator.visor.rest.model.Monitor.TypeEnum.SENSORMONITOR);
+          .type(io.github.cloudiator.visor.rest.model.Monitor.TypeEnum.SENSORMONITOR)
+          .componentId("1");
       //missing ComponentId, MonitorContext
     } else {
       throw new IllegalStateException("Unkown Sensortype: " + monitor.getSensor().getType());
