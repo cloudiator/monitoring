@@ -15,6 +15,8 @@ import io.github.cloudiator.util.IdEncoder;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import org.apache.http.HttpStatus;
+import org.cloudiator.messaging.ResponseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.concurrent.ExecutionException;
@@ -95,7 +97,6 @@ public class MonitorHandler {
     DefaultApi apiInstance = new DefaultApi();
     ApiClient apiClient = new ApiClient();
     apiClient.setBasePath("http://" + targetNode.connectTo().ip() + ":" + VisorPort);
-    LOGGER.debug("BasePath: http://" + targetNode.connectTo().ip() + ":" + VisorPort);
     apiInstance.setApiClient(apiClient);
     LOGGER.debug("apiClient: " + apiClient);
 
@@ -111,7 +112,6 @@ public class MonitorHandler {
       System.err.println("Exception when calling DefaultApi#postMonitors");
       e.printStackTrace();
     }
-
     return true;
   }
 
@@ -137,7 +137,12 @@ public class MonitorHandler {
 
       return nodeMessageConverter.applyBack(nodeEntity);
 
-    } catch (Exception e) {
+    }catch (ResponseException re) {
+      if (re.code() == Integer.valueOf(404)/*HttpStatus.SC_NOT_FOUND */){
+        LOGGER.debug("MonitorMode not found");
+      }
+    }
+    catch (Exception e) {
       throw new AssertionError("Problem by getting Node:" + e.getMessage());
     }
   }

@@ -199,5 +199,16 @@ public class MonitorManagementService {
 
   }
 
+  private void monitorupdate(String userId){
+    //checking Monitors in Database
+    //get AllMonitors()
+    List<Monitor>allMonitors = monitorOrchestrationService.getAllMonitors();
+    //forEachMontor get NodeById
+    for (Monitor monitor: allMonitors) {
+      monitorHandler.getNodeById(monitor.getMetric(),userId);
+    }
+
+
+  }
 
 }

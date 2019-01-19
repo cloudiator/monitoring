@@ -35,7 +35,6 @@ public class MonitorQueryListener implements Runnable {
           @Override
           public void accept(String id, MonitorQueryRequest content) {
             try {
-              System.out.println("Got message: ");
 
               List<Monitor> dbmonitors = monitorManagementService.getAllMonitors();
 
