@@ -94,7 +94,8 @@ public class MonitorHandler {
 
     DefaultApi apiInstance = new DefaultApi();
     ApiClient apiClient = new ApiClient();
-    apiClient.setBasePath(targetNode.connectTo().ip());
+    apiClient.setBasePath("http://" + targetNode.connectTo().ip() + ":" + VisorPort);
+    LOGGER.debug("BasePath: http://" + targetNode.connectTo().ip() + ":" + VisorPort);
     apiInstance.setApiClient(apiClient);
     LOGGER.debug("apiClient: " + apiClient);
 
