@@ -3,14 +3,17 @@ package io.github.cloudiator.monitoring.domain;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.inject.Inject;
-import io.github.cloudiator.rest.model.Monitor;
+import io.github.cloudiator.monitoring.converter.MonitorToVisorMonitorConverter;
+import io.github.cloudiator.visor.rest.model.Monitor;
 import io.github.cloudiator.persistance.MonitorDomainRepository;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public class BasicMonitorOrchestrationService implements MonitorOrchestrationService {
 
   private final MonitorDomainRepository monitorDomainRepository;
+  private final MonitorToVisorMonitorConverter visorMonitorConverter = new MonitorToVisorMonitorConverter();
 
 
   @Inject
@@ -25,8 +28,29 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   }
 
   @Override
+  public io.github.cloudiator.rest.model.Monitor createMonitor(
+      io.github.cloudiator.rest.model.Monitor newMonitor) {
+    return null;
+  }
+
+  @Override
   public List<Monitor> getAllMonitors() {
-    return monitorDomainRepository.getAllMonitors();
+    List<Monitor> result = new ArrayList<>();
+    for (io.github.cloudiator.rest.model.Monitor monitor : monitorDomainRepository
+        .getAllMonitors()) {
+      result.add(visorMonitorConverter.apply(monitor));
+    }
+    return result;
+  }
+
+  @Override
+  public void updateMonitor(io.github.cloudiator.rest.model.Monitor monitor) {
+
+  }
+
+  @Override
+  public void deleteMonitor(io.github.cloudiator.rest.model.Monitor monitor) {
+
   }
 
   @Override

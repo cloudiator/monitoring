@@ -8,7 +8,7 @@ public interface MonitorOrchestrationService {
 
   Monitor createMonitor(Monitor newMonitor);
 
-  List<Monitor> getAllMonitors();
+  List<io.github.cloudiator.visor.rest.model.Monitor> getAllMonitors();
 
   void updateMonitor(Monitor monitor);
 

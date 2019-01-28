@@ -1,8 +1,10 @@
 package io.github.cloudiator.monitoring.converter;
 
 import de.uniulm.omi.cloudiator.util.OneWayConverter;
+import de.uniulm.omi.cloudiator.util.TwoWayConverter;
 import io.github.cloudiator.rest.model.DataSink;
 import io.github.cloudiator.rest.model.Interval;
+import io.github.cloudiator.rest.model.Interval.UnitEnum;
 import io.github.cloudiator.rest.model.Monitor;
 import io.github.cloudiator.rest.model.PullSensor;
 import io.github.cloudiator.rest.model.PushSensor;
@@ -16,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MonitorToVisorMonitorConverter implements
-    OneWayConverter<Monitor, io.github.cloudiator.visor.rest.model.Monitor> {
+    TwoWayConverter<Monitor, io.github.cloudiator.visor.rest.model.Monitor> {
 
   private final DataSinkConverter dataSinkConverter = new DataSinkConverter();
   private final IntervalConverter intervalConverter = new IntervalConverter();
@@ -49,6 +51,14 @@ public class MonitorToVisorMonitorConverter implements
     return result;
   }
 
+  @Override
+  public Monitor applyBack(io.github.cloudiator.visor.rest.model.Monitor VisorMonitor) {
+    Monitor result = new Monitor()
+        .metric(VisorMonitor.getMetricName())
+        .sensor()
+    return null;
+  }
+
 
   private class DataSinkConverter implements
       OneWayConverter<List<DataSink>, List<io.github.cloudiator.visor.rest.model.DataSink>> {
@@ -66,13 +76,21 @@ public class MonitorToVisorMonitorConverter implements
   }
 
   private class IntervalConverter implements
-      OneWayConverter<Interval, io.github.cloudiator.visor.rest.model.Interval> {
+      TwoWayConverter<Interval, io.github.cloudiator.visor.rest.model.Interval> {
 
     @Override
     public io.github.cloudiator.visor.rest.model.Interval apply(Interval interval) {
       io.github.cloudiator.visor.rest.model.Interval result = new io.github.cloudiator.visor.rest.model.Interval()
           .period(new BigDecimal(interval.getPeriod()))
           .timeUnit(TimeUnitEnum.fromValue(interval.getUnit().toString()));
+      return result;
+    }
+
+    @Override
+    public Interval applyBack(io.github.cloudiator.visor.rest.model.Interval VisorInterval) {
+      Interval result = new Interval()
+          .period(VisorInterval.getPeriod().longValue())
+          .unit(UnitEnum.valueOf(VisorInterval.getTimeUnit().getValue()));
       return result;
     }
   }

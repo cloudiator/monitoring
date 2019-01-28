@@ -4,8 +4,10 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.TypeLiteral;
 import io.github.cloudiator.util.JpaResultHelper;
+import java.util.List;
 import java.util.Optional;
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
 
 public class MonitorModelRepositoryJpa extends BaseModelRepositoryJpa<MonitorModel> implements
     MonitorModelRepository {
@@ -25,4 +27,12 @@ public class MonitorModelRepositoryJpa extends BaseModelRepositoryJpa<MonitorMod
         .getSingleResultOrNull(em().createQuery(query).setParameter("metric", metric));
     return Optional.ofNullable(monitorModel);
   }
+
+
+  public void deleteAll() {
+    String query = String.format("DELETE FROM %s", type.getName());
+    Query deletequery = em().createQuery(query);
+    deletequery.executeUpdate();
+  }
+
 }

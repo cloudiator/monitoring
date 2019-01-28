@@ -24,15 +24,15 @@ public class MonitorManagementService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(MonitorManagementService.class);
 
-  private final MonitorHandler monitorHandler;
+  private final VisorMonitorHandler visorMonitorHandler;
   private final MonitorOrchestrationService monitorOrchestrationService;
   private final ProcessService processService;
   private final NodeToNodeMessageConverter nodeMessageConverter = NodeToNodeMessageConverter.INSTANCE;
 
   @Inject
-  public MonitorManagementService(MonitorHandler monitorHandler,
+  public MonitorManagementService(VisorMonitorHandler visorMonitorHandler,
       BasicMonitorOrchestrationService monitorOrchestrationService, ProcessService processService) {
-    this.monitorHandler = monitorHandler;
+    this.visorMonitorHandler = visorMonitorHandler;
     this.monitorOrchestrationService = monitorOrchestrationService;
     this.processService = processService;
   }
@@ -73,6 +73,9 @@ public class MonitorManagementService {
 
   @Transactional
   public void checkAndDeleteMonitor(String metric) {
+    LOGGER.debug("checkAndDelete " + metric);
+   // io.github.cloudiator.visor.rest.model.Monitor result= monitorOrchestrationService.getMonitor(metric);
+
     monitorOrchestrationService.deleteMonitor(metric);
   }
 
@@ -88,11 +91,15 @@ public class MonitorManagementService {
 
   public Monitor handleNewMonitor(String userId, Monitor newMonitor) {
     //Target
+    System.out.println("Es werden " + newMonitor.getTargets().size() + " Targets behandel");
+    Integer count = 1;
     for (MonitoringTarget mTarget : newMonitor.getTargets()) {
+      System.out.println("Handling Target " + count);
       //handling
       if (!handleMonitorTarget(userId, mTarget, newMonitor)) {
         throw new AssertionError("Error by handling Target: " + mTarget);
       }
+      count++;
     }
     Monitor requestedMonitor = checkAndCreate(newMonitor);
     if (requestedMonitor == null) {
@@ -104,8 +111,9 @@ public class MonitorManagementService {
   private boolean handleMonitorTarget(String userId, MonitoringTarget target, Monitor monitor) {
     switch (target.getType()) {
       case PROCESS:
+        System.out.println("Handle PROCESS: " + target);
         handleProcess(userId, target, monitor);
-        break;
+        return true;
       case TASK:
         handleTask(userId, target, monitor);
         break;
@@ -127,14 +135,14 @@ public class MonitorManagementService {
 
   private void handleNode(String userId, MonitoringTarget target, Monitor monitor) {
     LOGGER.debug("Starting handleNode ");
-    Node targetNode = monitorHandler.getNodeById(target.getIdentifier(), userId);
+    Node targetNode = visorMonitorHandler.getNodeById(target.getIdentifier(), userId);
 
-    if (!monitorHandler.installVisor(userId, targetNode)) {
+    if (!visorMonitorHandler.installVisor(userId, targetNode)) {
       LOGGER.error("Error by installing Visor on Node ", targetNode);
       throw new IllegalStateException("Error by installing Visor");
     }
 
-    if (!monitorHandler.configureVisor(userId, target, targetNode, monitor)) {
+    if (!visorMonitorHandler.configureVisor(userId, target, targetNode, monitor)) {
       LOGGER.error("Error by configuring Visor on Node ", targetNode);
       throw new IllegalStateException("Error by configuring Visor");
     }
@@ -146,11 +154,11 @@ public class MonitorManagementService {
     final ProcessConverter PROCESS_CONVERTER = ProcessConverter.INSTANCE;
     // only SingleProcess - ClusterProcess not supported
     // getting Process
-    final ProcessQueryRequest processQueryRequest = ProcessQueryRequest.newBuilder()
+    ProcessQueryRequest processQueryRequest = ProcessQueryRequest.newBuilder()
         .setUserId(userId).setProcessId(target.getIdentifier()).build();
     CloudiatorProcess process = null;
     try {
-      final ProcessQueryResponse processQueryResponse = processService
+      ProcessQueryResponse processQueryResponse = processService
           .queryProcesses(processQueryRequest);
       if (processQueryResponse.getProcessesCount() == 0) {
         throw new IllegalStateException("Process not found: " + target);
@@ -168,14 +176,14 @@ public class MonitorManagementService {
     //  handling Process on Node
     if (process instanceof SingleProcess) {
       LOGGER.debug("Start handling SingleProcess");
-      Node processNode = monitorHandler.getNodeById(((SingleProcess) process).getNode(), userId);
+      Node processNode = visorMonitorHandler.getNodeById(((SingleProcess) process).getNode(), userId);
 
-      if (!monitorHandler.installVisor(userId, processNode)) {
+      if (!visorMonitorHandler.installVisor(userId, processNode)) {
         LOGGER.error("Error by installing Visor on Node: " + processNode.name());
         throw new IllegalStateException("Error by installing Visor on Node: " + processNode);
       }
 
-      if (!monitorHandler.configureVisor(userId, target, processNode, monitor)) {
+      if (!visorMonitorHandler.configureVisor(userId, target, processNode, monitor)) {
         LOGGER.error("Error by configuring Visor on Node: " + processNode.name());
         throw new IllegalStateException("Error by configuring Visor on Node: " + processNode);
       }
@@ -199,16 +207,26 @@ public class MonitorManagementService {
 
   }
 
-  private void monitorupdate(String userId){
+  public List<Monitor> monitorupdate(String userId) {
     //checking Monitors in Database
     //get AllMonitors()
-    List<Monitor>allMonitors = monitorOrchestrationService.getAllMonitors();
+    List<Monitor> allMonitors = monitorOrchestrationService.getAllMonitors();
     //forEachMontor get NodeById
-    for (Monitor monitor: allMonitors) {
-      monitorHandler.getNodeById(monitor.getMetric(),userId);
+    for (Monitor monitor : allMonitors) {
+      try {
+        visorMonitorHandler.getNodeById(monitor.getMetric(), userId);
+      } catch (AssertionError ex) {
+        if (ex.getMessage() == "404") {
+          LOGGER.debug("DBMonitor not found - deleting DB-entry");
+          monitorOrchestrationService.deleteMonitor(monitor);
+          allMonitors.remove(monitor);
+
+        }
+      }
+
     }
 
-
+    return allMonitors;
   }
 
 }

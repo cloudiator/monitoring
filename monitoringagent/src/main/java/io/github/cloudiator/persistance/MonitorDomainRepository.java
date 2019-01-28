@@ -63,10 +63,9 @@ public class MonitorDomainRepository {
   }
 
   public List<Monitor> getAllMonitors() {
-    List<Monitor> result = new ArrayList<>();
-    for (MonitorModel monitorModel : monitorModelRepository.findAll()) {
-      result.add(MONITOR_MODEL_CONVERTER.apply(monitorModel));
-    }
+    List<Monitor> result = monitorModelRepository.findAll().stream().map(MONITOR_MODEL_CONVERTER)
+        .collect(Collectors.toList());
+
     return result;
   }
 
@@ -119,7 +118,6 @@ public class MonitorDomainRepository {
           .sinkType(dataSink.getType().name())
           .configuration(dataSink.getConfiguration());
 
-
       monitorModel.addDataSink(createdsink);
     }
     //Tags
@@ -161,13 +159,18 @@ public class MonitorDomainRepository {
   }
 
   public void deleteMonitor(String metric) {
-    Optional<MonitorModel> dbMonitor = monitorModelRepository.findMonitorByMetric(metric);
-    if (!dbMonitor.isPresent()) {
-      throw new IllegalStateException("Monitor does not exist.");
+    if (metric.matches("deleteAll")) {
+      monitorModelRepository.deleteAll();
     } else {
-      monitorModelRepository.delete(dbMonitor.get());
+      Optional<MonitorModel> dbMonitor = monitorModelRepository.findMonitorByMetric(metric);
+      if (!dbMonitor.isPresent()) {
+        throw new IllegalStateException("Monitor does not exist.");
+      } else {
+        monitorModelRepository.delete(dbMonitor.get());
+      }
     }
   }
+
 
 }
 

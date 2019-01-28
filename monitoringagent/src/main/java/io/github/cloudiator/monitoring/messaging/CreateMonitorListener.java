@@ -55,6 +55,11 @@ public class CreateMonitorListener implements Runnable {
                   Error.newBuilder().setCode(400)
                       .setMessage("Illegal Argument by creating Monitor: " + ie.getMessage())
                       .build());
+            } catch (AssertionError ar) {
+              LOGGER.error("AssertionError occures: " + ar.getMessage());
+              messageInterface.reply(CreateMonitorResponse.class, id,
+                  Error.newBuilder().setCode(505).setMessage("AssertionError: " + ar.getMessage())
+                      .build());
             } catch (Exception e) {
               LOGGER.error("Error while creating Monitor. ", e);
               messageInterface.reply(CreateMonitorResponse.class, id,
