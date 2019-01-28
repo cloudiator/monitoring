@@ -131,7 +131,6 @@ public class MonitorHandler {
       } else if (response.getNodesCount() == 0) {
         throw new IllegalStateException("Node not found");
       }
-
       NodeEntities.Node nodeEntity = response.getNodesList().get(0);
       LOGGER.debug("found NodeEntity: " + nodeEntity);
 
@@ -145,6 +144,7 @@ public class MonitorHandler {
     catch (Exception e) {
       throw new AssertionError("Problem by getting Node:" + e.getMessage());
     }
+    return null;
   }
 
 }
