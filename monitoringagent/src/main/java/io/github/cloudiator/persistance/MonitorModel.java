@@ -31,12 +31,15 @@ public class MonitorModel extends Model {
   @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
   private List<MTagModel> monitortags;
 
+  @Column(unique = true)
+  private String uuid;
+
 
   protected MonitorModel() {
   }
 
   public MonitorModel(String metric, List<TargetModel> targets, SensorModel sensor,
-      List<DataSinkModel> datasinks, List<MTagModel> monitortags) {
+      List<DataSinkModel> datasinks, List<MTagModel> monitortags, String uuid) {
     checkNotNull(metric);
     checkNotNull(sensor);
     this.metric = metric;
@@ -44,6 +47,7 @@ public class MonitorModel extends Model {
     this.sensor = sensor;
     this.datasinks = datasinks;
     this.monitortags = monitortags;
+    this.uuid = uuid;
   }
 
   public MonitorModel metric(String metric) {
@@ -51,6 +55,9 @@ public class MonitorModel extends Model {
     return this;
   }
 
+  public String getUuid() {
+    return uuid;
+  }
 
   public String getMetric() {
     return metric;

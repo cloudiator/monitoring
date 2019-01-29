@@ -1,7 +1,7 @@
 package io.github.cloudiator.monitoring.converter;
 
 import de.uniulm.omi.cloudiator.util.OneWayConverter;
-import io.github.cloudiator.monitoring.domain.VisorSensorMonitorModel;
+import io.github.cloudiator.monitoring.models.VisorSensorMonitorModel;
 import io.github.cloudiator.rest.model.Monitor;
 import io.github.cloudiator.rest.model.PullSensor;
 

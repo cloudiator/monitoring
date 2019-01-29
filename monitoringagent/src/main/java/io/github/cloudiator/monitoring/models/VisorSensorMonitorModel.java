@@ -1,4 +1,4 @@
-package io.github.cloudiator.monitoring.domain;
+package io.github.cloudiator.monitoring.models;
 
 import io.github.cloudiator.rest.model.DataSink;
 import io.github.cloudiator.rest.model.Interval;
@@ -7,14 +7,16 @@ import java.util.Map;
 
 public class VisorSensorMonitorModel extends VisorMonitorModel {
 
-  String type;
-  String metricName;
-  String componentId;
-  Map<String, String> monitorContext;
-  List<DataSink> dataSinks;
-  String sensorClassName;
-  Interval interval;
-  Map<String, String> sensorConfiguration;
+  private String type;
+  private String metricName;
+  private String componentId;
+  private Map<String, String> monitorContext;
+  private List<DataSink> dataSinks;
+  private String sensorClassName;
+  private Interval interval;
+  private Map<String, String> sensorConfiguration;
+  private String uuid;
+
 
   public VisorSensorMonitorModel() {
   }
@@ -121,5 +123,13 @@ public class VisorSensorMonitorModel extends VisorMonitorModel {
 
   public void setSensorConfiguration(Map<String, String> sensorConfiguration) {
     this.sensorConfiguration = sensorConfiguration;
+  }
+
+  public String getUuid() {
+    return uuid;
+  }
+
+  public void setUuid(String uuid) {
+    this.uuid = uuid;
   }
 }

@@ -54,8 +54,8 @@ public class MonitorToVisorMonitorConverter implements
   @Override
   public Monitor applyBack(io.github.cloudiator.visor.rest.model.Monitor VisorMonitor) {
     Monitor result = new Monitor()
-        .metric(VisorMonitor.getMetricName())
-        .sensor()
+        .metric(VisorMonitor.getMetricName());
+
     return null;
   }
 
