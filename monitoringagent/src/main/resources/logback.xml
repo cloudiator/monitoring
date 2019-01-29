@@ -36,15 +36,15 @@
 
     <!-- encoder is required -->
     <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-      <customFields>{"service":"installer-agent"}</customFields>
+      <customFields>{"service":"node-agent"}</customFields>
     </encoder>
   </appender>
 
   <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-    <file>logs/installer-agent.log</file>
+    <file>logs/node-agent.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <!-- daily rollover -->
-      <fileNamePattern>logs/installer-agent.%d{yyyy-MM-dd}.log</fileNamePattern>
+      <fileNamePattern>logs/node-agent.%d{yyyy-MM-dd}.log</fileNamePattern>
 
       <!-- keep 30 days' worth of history capped at 3GB total size -->
       <maxHistory>30</maxHistory>
@@ -59,10 +59,7 @@
     </encoder>
   </appender>
 
-  <logger name="io.github.cloudiator.orchestration.installer" level="DEBUG"/>
-  <logger name="org.cloudiator.messaging" level="DEBUG"/>
-  <logger name="de.uniulm.omi.cloudiator.sword" level="DEBUG"/>
-
+  <logger level="DEBUG" name="org.cloudiator.monitoring"/>
 
   <root level="WARN">
     <appender-ref ref="STDOUT"/>
