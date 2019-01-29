@@ -16,7 +16,7 @@ import org.cloudiator.messaging.kafka.KafkaContext;
 import org.cloudiator.messaging.kafka.KafkaMessagingModule;
 import org.cloudiator.messaging.services.MessageServiceModule;
 
-public class monitoringAgent {
+public class MonitoringAgent {
 
   private final static Injector injector = Guice
       .createInjector(new MonitorConfigModule(new MonitorContext(Configuration.conf())),
