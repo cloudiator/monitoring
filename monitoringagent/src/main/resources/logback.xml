@@ -60,6 +60,7 @@
   </appender>
 
   <logger level="DEBUG" name="org.cloudiator.monitoring"/>
+  <logger level="DEBUG" name="org.cloudiator.messaging.kafka"/>
 
   <root level="WARN">
     <appender-ref ref="STDOUT"/>

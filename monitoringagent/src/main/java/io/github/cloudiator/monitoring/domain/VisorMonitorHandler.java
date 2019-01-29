@@ -161,7 +161,6 @@ public class VisorMonitorHandler {
     } catch (Exception e) {
       throw new AssertionError("Problem by getting Node:" + e.getMessage());
     }
-    return null;
   }
 
 }
