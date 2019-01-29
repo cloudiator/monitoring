@@ -14,7 +14,7 @@
   <artifactId>monitoringagent</artifactId>
   <version>0.3.0-SNAPSHOT</version>
   <url>https://github.com/cloudiator/monitoring/</url>
-  <packaging>pom</packaging>
+  <packaging>jar</packaging>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
