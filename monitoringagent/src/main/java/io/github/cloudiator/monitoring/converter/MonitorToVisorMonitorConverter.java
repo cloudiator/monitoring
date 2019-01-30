@@ -68,7 +68,7 @@ public class MonitorToVisorMonitorConverter implements
       List<io.github.cloudiator.visor.rest.model.DataSink> result = new ArrayList<>();
       for (DataSink monitorsink : dataSinks) {
         result.add(new io.github.cloudiator.visor.rest.model.DataSink()
-            .type(TypeEnum.valueOf(monitorsink.getType().toString()))
+            .type(TypeEnum.valueOf(monitorsink.getType().name()))
             .config(new DataSinkConfiguration().values(monitorsink.getConfiguration())));
       }
       return result;
@@ -82,7 +82,7 @@ public class MonitorToVisorMonitorConverter implements
     public io.github.cloudiator.visor.rest.model.Interval apply(Interval interval) {
       io.github.cloudiator.visor.rest.model.Interval result = new io.github.cloudiator.visor.rest.model.Interval()
           .period(new BigDecimal(interval.getPeriod()))
-          .timeUnit(TimeUnitEnum.fromValue(interval.getUnit().toString()));
+          .timeUnit(TimeUnitEnum.fromValue(interval.getUnit().name()));
       return result;
     }
 

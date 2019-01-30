@@ -29,13 +29,6 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
 
   @Override
   public List<Monitor> getAllMonitors() {
-    /*
-    List<Monitor> result = new ArrayList<>();
-    for (io.github.cloudiator.rest.model.Monitor monitor : monitorDomainRepository
-        .getAllMonitors()) {
-      result.add(visorMonitorConverter.apply(monitor));
-    }
-    */
     return monitorDomainRepository
         .getAllMonitors();
   }
