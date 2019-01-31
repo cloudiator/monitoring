@@ -105,7 +105,8 @@ public class MonitorManagementService {
     switch (target.getType()) {
       case PROCESS:
         handleProcess(userId, target, monitor);
-        break;
+
+        return true;
       case TASK:
         handleTask(userId, target, monitor);
         break;
@@ -199,13 +200,13 @@ public class MonitorManagementService {
 
   }
 
-  private void monitorupdate(String userId){
+  private void monitorupdate(String userId) {
     //checking Monitors in Database
     //get AllMonitors()
-    List<Monitor>allMonitors = monitorOrchestrationService.getAllMonitors();
+    List<Monitor> allMonitors = monitorOrchestrationService.getAllMonitors();
     //forEachMontor get NodeById
-    for (Monitor monitor: allMonitors) {
-      monitorHandler.getNodeById(monitor.getMetric(),userId);
+    for (Monitor monitor : allMonitors) {
+      monitorHandler.getNodeById(monitor.getMetric(), userId);
     }
 
 
