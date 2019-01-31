@@ -118,10 +118,11 @@ public class MonitorHandler {
 
   public Node getNodeById(String nodeId, String userId) {
     LOGGER.debug(" Starting getNodeById ");
-    final String decodedId = idEncoder.decode(nodeId);
+    //    deprecated
+    // final String decodedId = idEncoder.decode(nodeId);
     try {
 
-      NodeQueryMessage request = NodeQueryMessage.newBuilder().setNodeId(decodedId)
+      NodeQueryMessage request = NodeQueryMessage.newBuilder().setNodeId(nodeId)
           .setUserId(userId)
           .build();
       NodeQueryResponse response = nodeService.queryNodes(request);
