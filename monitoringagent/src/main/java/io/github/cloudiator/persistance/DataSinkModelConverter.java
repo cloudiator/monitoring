@@ -18,7 +18,7 @@ public class DataSinkModelConverter implements OneWayConverter<DataSinkModel, Da
     Map config = new HashMap();
     config.putAll(dataSinkModel.getConfiguration());
     DataSink result = new DataSink()
-        .type(TypeEnum.valueOf(dataSinkModel.getSinkType().name()))
+        .type(dataSinkModel.getSinkType())
         ._configuration(config);
 
     return result;
