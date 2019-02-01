@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.inject.Inject;
 import io.github.cloudiator.monitoring.converter.MonitorToVisorMonitorConverter;
 
+import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.persistance.MonitorDomainRepository;
 import io.github.cloudiator.rest.model.Monitor;
 import java.util.ArrayList;
@@ -23,12 +24,12 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   }
 
   @Override
-  public Monitor createMonitor(Monitor newMonitor) {
+  public DomainMonitorModel createMonitor(Monitor newMonitor) {
     return monitorDomainRepository.addMonitor(newMonitor);
   }
 
   @Override
-  public List<Monitor> getAllMonitors() {
+  public List<DomainMonitorModel> getAllMonitors() {
     return monitorDomainRepository
         .getAllMonitors();
   }
@@ -50,9 +51,9 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   }
 
   @Override
-  public Optional<Monitor> getMonitor(String monitorMetric) {
+  public Optional<DomainMonitorModel> getMonitor(String monitorMetric) {
     checkNotNull(monitorMetric, "Metric is null");
-    final Monitor result = monitorDomainRepository.findMonitorByMetric(monitorMetric);
+    final DomainMonitorModel result = monitorDomainRepository.findMonitorByMetric(monitorMetric);
     if (result == null) {
       return Optional.empty();
     }

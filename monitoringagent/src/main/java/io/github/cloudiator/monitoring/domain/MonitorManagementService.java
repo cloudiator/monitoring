@@ -3,6 +3,7 @@ package io.github.cloudiator.monitoring.domain;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import io.github.cloudiator.messaging.NodeToNodeMessageConverter;
+import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.rest.converter.ProcessConverter;
 import io.github.cloudiator.rest.model.CloudiatorProcess;
 import io.github.cloudiator.rest.model.ClusterProcess;
@@ -38,8 +39,8 @@ public class MonitorManagementService {
   }
 
   @Transactional
-  public Monitor checkAndCreate(Monitor monitor) {
-    Optional<Monitor> dbMonitor = monitorOrchestrationService
+  public DomainMonitorModel checkAndCreate(Monitor monitor) {
+    Optional<DomainMonitorModel> dbMonitor = monitorOrchestrationService
         .getMonitor(monitor.getMetric());
     if (dbMonitor.isPresent()) {
       return null;
@@ -51,7 +52,7 @@ public class MonitorManagementService {
 
   @Transactional
   public Monitor addTarget2Monitor(Monitor monitor) {
-    Optional<Monitor> dbMonitorRequest = monitorOrchestrationService
+    Optional<DomainMonitorModel> dbMonitorRequest = monitorOrchestrationService
         .getMonitor(monitor.getMetric());
     if (!dbMonitorRequest.isPresent()) {
       throw new IllegalArgumentException("Monitor doesn't exist: " + monitor);
@@ -67,14 +68,14 @@ public class MonitorManagementService {
   }
 
   @Transactional
-  public List<Monitor> getAllMonitors() {
+  public List<DomainMonitorModel> getAllMonitors() {
     return monitorOrchestrationService.getAllMonitors();
   }
 
   @Transactional
   public void checkAndDeleteMonitor(String metric) {
     LOGGER.debug("checkAndDelete " + metric);
-   // io.github.cloudiator.visor.rest.model.Monitor result= monitorOrchestrationService.getMonitor(metric);
+    // io.github.cloudiator.visor.rest.model.Monitor result= monitorOrchestrationService.getMonitor(metric);
 
     monitorOrchestrationService.deleteMonitor(metric);
   }
@@ -89,26 +90,28 @@ public class MonitorManagementService {
   }
 
 
-  public Monitor handleNewMonitor(String userId, Monitor newMonitor) {
+  public DomainMonitorModel handleNewMonitor(String userId, Monitor newMonitor) {
     //Target
+    DomainMonitorModel domainMonitor = new DomainMonitorModel(newMonitor);
     System.out.println("Es werden " + newMonitor.getTargets().size() + " Targets behandel");
     Integer count = 1;
-    for (MonitoringTarget mTarget : newMonitor.getTargets()) {
+    for (MonitoringTarget mTarget : domainMonitor.getTargets()) {
       System.out.println("Handling Target " + count);
       //handling
-      if (!handleMonitorTarget(userId, mTarget, newMonitor)) {
+      if (!handleMonitorTarget(userId, mTarget, domainMonitor)) {
         throw new AssertionError("Error by handling Target: " + mTarget);
       }
       count++;
     }
-    Monitor requestedMonitor = checkAndCreate(newMonitor);
+    DomainMonitorModel requestedMonitor = checkAndCreate(newMonitor);
     if (requestedMonitor == null) {
       throw new IllegalArgumentException("Monitor already exists.");
     }
     return requestedMonitor;
   }
 
-  private boolean handleMonitorTarget(String userId, MonitoringTarget target, Monitor monitor) {
+  private boolean handleMonitorTarget(String userId, MonitoringTarget target,
+      DomainMonitorModel monitor) {
     switch (target.getType()) {
       case PROCESS:
         System.out.println("Handle PROCESS: " + target);
@@ -133,7 +136,7 @@ public class MonitorManagementService {
     return false;
   }
 
-  private void handleNode(String userId, MonitoringTarget target, Monitor monitor) {
+  private void handleNode(String userId, MonitoringTarget target, DomainMonitorModel monitor) {
     LOGGER.debug("Starting handleNode ");
     Node targetNode = visorMonitorHandler.getNodeById(target.getIdentifier(), userId);
 
@@ -150,7 +153,7 @@ public class MonitorManagementService {
     LOGGER.debug("Finished handleNode");
   }
 
-  private void handleProcess(String userId, MonitoringTarget target, Monitor monitor) {
+  private void handleProcess(String userId, MonitoringTarget target, DomainMonitorModel monitor) {
     final ProcessConverter PROCESS_CONVERTER = ProcessConverter.INSTANCE;
     // only SingleProcess - ClusterProcess not supported
     // getting Process
@@ -176,7 +179,8 @@ public class MonitorManagementService {
     //  handling Process on Node
     if (process instanceof SingleProcess) {
       LOGGER.debug("Start handling SingleProcess");
-      Node processNode = visorMonitorHandler.getNodeById(((SingleProcess) process).getNode(), userId);
+      Node processNode = visorMonitorHandler
+          .getNodeById(((SingleProcess) process).getNode(), userId);
 
       if (!visorMonitorHandler.installVisor(userId, processNode)) {
         LOGGER.error("Error by installing Visor on Node: " + processNode.name());
@@ -207,26 +211,11 @@ public class MonitorManagementService {
 
   }
 
-  public List<Monitor> monitorupdate(String userId) {
-    //checking Monitors in Database
-    //get AllMonitors()
-    List<Monitor> allMonitors = monitorOrchestrationService.getAllMonitors();
-    //forEachMontor get NodeById
-    for (Monitor monitor : allMonitors) {
-      try {
-        visorMonitorHandler.getNodeById(monitor.getMetric(), userId);
-      } catch (AssertionError ex) {
-        if (ex.getMessage() == "404") {
-          LOGGER.debug("DBMonitor not found - deleting DB-entry");
-          monitorOrchestrationService.deleteMonitor(monitor);
-          allMonitors.remove(monitor);
+  public DomainMonitorModel updateMonitor(String userId, String metric) {
+    //checking Monitor in Database
+    DomainMonitorModel result = monitorOrchestrationService.getMonitor(metric).get();
 
-        }
-      }
-
-    }
-
-    return allMonitors;
+    return result;
   }
 
 }

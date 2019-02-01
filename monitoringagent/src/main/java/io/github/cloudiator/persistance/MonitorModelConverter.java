@@ -1,11 +1,11 @@
 package io.github.cloudiator.persistance;
 
 import de.uniulm.omi.cloudiator.util.OneWayConverter;
-import io.github.cloudiator.rest.model.Monitor;
+import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.rest.model.MonitoringTag;
 import javax.annotation.Nullable;
 
-public class MonitorModelConverter implements OneWayConverter<MonitorModel, Monitor> {
+public class MonitorModelConverter implements OneWayConverter<MonitorModel, DomainMonitorModel> {
 
   private final DataSinkModelConverter dataSinkModelConverter = new DataSinkModelConverter();
   private final TargetModelConverter targetModelConverter = new TargetModelConverter();
@@ -13,9 +13,9 @@ public class MonitorModelConverter implements OneWayConverter<MonitorModel, Moni
 
   @Nullable
   @Override
-  public Monitor apply(@Nullable MonitorModel monitorModel) {
+  public DomainMonitorModel apply(@Nullable MonitorModel monitorModel) {
     //Metric
-    Monitor result = new Monitor()
+    DomainMonitorModel result = new DomainMonitorModel()
         .metric(monitorModel.getMetric());
     //Target
     for (TargetModel targetModel : monitorModel.getTargets()) {

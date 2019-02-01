@@ -5,7 +5,7 @@ import de.uniulm.omi.cloudiator.util.TwoWayConverter;
 import io.github.cloudiator.rest.model.DataSink;
 import io.github.cloudiator.rest.model.Interval;
 import io.github.cloudiator.rest.model.Interval.UnitEnum;
-import io.github.cloudiator.rest.model.Monitor;
+import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.rest.model.PullSensor;
 import io.github.cloudiator.rest.model.PushSensor;
 import io.github.cloudiator.visor.rest.model.DataSink.TypeEnum;
@@ -18,14 +18,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MonitorToVisorMonitorConverter implements
-    TwoWayConverter<Monitor, io.github.cloudiator.visor.rest.model.Monitor> {
+    TwoWayConverter<DomainMonitorModel, io.github.cloudiator.visor.rest.model.Monitor> {
 
   private final DataSinkConverter dataSinkConverter = new DataSinkConverter();
   private final IntervalConverter intervalConverter = new IntervalConverter();
 
 
   @Override
-  public io.github.cloudiator.visor.rest.model.Monitor apply(Monitor monitor) {
+  public io.github.cloudiator.visor.rest.model.Monitor apply(DomainMonitorModel monitor) {
     io.github.cloudiator.visor.rest.model.Monitor result = null;
     if (monitor.getSensor() instanceof PushSensor) {
       result = new PushMonitor()
@@ -52,8 +52,8 @@ public class MonitorToVisorMonitorConverter implements
   }
 
   @Override
-  public Monitor applyBack(io.github.cloudiator.visor.rest.model.Monitor VisorMonitor) {
-    Monitor result = new Monitor()
+  public DomainMonitorModel applyBack(io.github.cloudiator.visor.rest.model.Monitor VisorMonitor) {
+    DomainMonitorModel result = new DomainMonitorModel()
         .metric(VisorMonitor.getMetricName());
 
     return null;

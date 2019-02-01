@@ -37,16 +37,10 @@ public class UpdateMonitorListener implements Runnable {
           public void accept(String id, UpdateMonitorRequest content) {
             try {
               Monitor dbmonitor = monitorManagementService
-                  .getMonitor(content.getMonitor().getMetric());
-              MonitorEntities.Monitor monitorResult;
+                  .updateMonitor(content.getUserId(), content.getMonitor().getMetric());
+              MonitorEntities.Monitor monitorResult = null;
               if (dbmonitor == null) {
-                monitorResult = MonitorEntities.Monitor.newBuilder()
-                    .setMetric(content.getMonitor().getMetric())
-                    .clearTags()
-                    .clearSensor()
-                    .clearTarget()
-                    .clearDatasink()
-                    .build();
+
               } else {
                 monitorResult = monitorConverter.apply(dbmonitor);
               }

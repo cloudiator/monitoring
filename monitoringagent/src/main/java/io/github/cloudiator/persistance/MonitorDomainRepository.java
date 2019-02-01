@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.inject.Inject;
+import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.rest.model.DataSink;
 import io.github.cloudiator.rest.model.Monitor;
 import io.github.cloudiator.rest.model.MonitoringTag;
@@ -46,7 +47,7 @@ public class MonitorDomainRepository {
     this.intervalModelRepository = intervalModelRepository;
   }
 
-  public Monitor findMonitorByMetric(String metric) {
+  public DomainMonitorModel findMonitorByMetric(String metric) {
     checkNotNull(metric, "Metric is null");
     checkArgument(!metric.isEmpty(), "Metric is empty");
     MonitorModel result = monitorModelRepository.findMonitorByMetric(metric).orElse(null);
@@ -62,14 +63,15 @@ public class MonitorDomainRepository {
     return monitorModelRepository.findMonitorByMetric(metric).isPresent();
   }
 
-  public List<Monitor> getAllMonitors() {
-    List<Monitor> result = monitorModelRepository.findAll().stream().map(MONITOR_MODEL_CONVERTER)
+  public List<DomainMonitorModel> getAllMonitors() {
+    List<DomainMonitorModel> result = monitorModelRepository.findAll().stream()
+        .map(MONITOR_MODEL_CONVERTER)
         .collect(Collectors.toList());
 
     return result;
   }
 
-  public Monitor addMonitor(Monitor monitor) {
+  public DomainMonitorModel addMonitor(Monitor monitor) {
     checkNotNull(monitor, "Monitor is null");
     checkState(!exists(monitor.getMetric()), "Monitormetric already exists. ");
     checkNotNull(monitor.getTargets(), "MonitoringTarget is null");

@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import io.github.cloudiator.domain.Node;
 import io.github.cloudiator.messaging.NodeToNodeMessageConverter;
 import io.github.cloudiator.monitoring.converter.MonitorToVisorMonitorConverter;
+import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.rest.converter.IpAddressConverter;
 import io.github.cloudiator.rest.model.Monitor;
 import io.github.cloudiator.rest.model.MonitoringTarget;
@@ -84,7 +85,7 @@ public class VisorMonitorHandler {
   }
 
   public boolean configureVisor(String userId, MonitoringTarget target, Node targetNode,
-      Monitor monitor) {
+      DomainMonitorModel monitor) {
     LOGGER.debug("Starting VisorConfigurationProcess on: " + targetNode.name());
 
     DefaultApi apiInstance = new DefaultApi();
@@ -134,10 +135,10 @@ public class VisorMonitorHandler {
 
   public Node getNodeById(String nodeId, String userId) {
     LOGGER.debug(" Starting getNodeById ");
-    final String decodedId = idEncoder.decode(nodeId);
+    //final String decodedId = idEncoder.decode(nodeId);
     try {
 
-      NodeQueryMessage request = NodeQueryMessage.newBuilder().setNodeId(decodedId)
+      NodeQueryMessage request = NodeQueryMessage.newBuilder().setNodeId(nodeId)
           .setUserId(userId)
           .build();
       NodeQueryResponse response = nodeService.queryNodes(request);
