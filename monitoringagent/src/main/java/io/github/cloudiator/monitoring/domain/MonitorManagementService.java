@@ -92,31 +92,34 @@ public class MonitorManagementService {
 
   public DomainMonitorModel handleNewMonitor(String userId, Monitor newMonitor) {
     //Target
-    DomainMonitorModel domainMonitor = new DomainMonitorModel(newMonitor);
+    DomainMonitorModel domainMonitor = new DomainMonitorModel(newMonitor.getMetric(),
+        newMonitor.getTargets(), newMonitor.getSensor(), newMonitor.getSinks(),
+        newMonitor.getTags());
     System.out.println("Es werden " + newMonitor.getTargets().size() + " Targets behandel");
+    DomainMonitorModel requestedMonitor = checkAndCreate(newMonitor);
+    System.out.println("Monitor in DB erstellt.");
+
     Integer count = 1;
     for (MonitoringTarget mTarget : domainMonitor.getTargets()) {
       System.out.println("Handling Target " + count);
       //handling
-      if (!handleMonitorTarget(userId, mTarget, domainMonitor)) {
-        throw new AssertionError("Error by handling Target: " + mTarget);
-      }
+      handleMonitorTarget(userId, mTarget, domainMonitor);
       count++;
     }
-    DomainMonitorModel requestedMonitor = checkAndCreate(newMonitor);
+
     if (requestedMonitor == null) {
       throw new IllegalArgumentException("Monitor already exists.");
     }
     return requestedMonitor;
   }
 
-  private boolean handleMonitorTarget(String userId, MonitoringTarget target,
+  private void handleMonitorTarget(String userId, MonitoringTarget target,
       DomainMonitorModel monitor) {
     switch (target.getType()) {
       case PROCESS:
         System.out.println("Handle PROCESS: " + target);
         handleProcess(userId, target, monitor);
-        return true;
+        break;
       case TASK:
         handleTask(userId, target, monitor);
         break;
@@ -126,14 +129,13 @@ public class MonitorManagementService {
       case NODE:
         System.out.println("Handle NODE: " + target);
         handleNode(userId, target, monitor);
-        return true;
+        break;
       case CLOUD:
         handleCloud(userId, target, monitor);
         break;
       default:
         throw new IllegalArgumentException("unkown MonitorTargetType: " + target.getType());
     }
-    return false;
   }
 
   private void handleNode(String userId, MonitoringTarget target, DomainMonitorModel monitor) {

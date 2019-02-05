@@ -17,17 +17,12 @@ public class DomainMonitorModel extends Monitor {
   }
 
   public DomainMonitorModel(String metric, List<MonitoringTarget> targets, Sensor sensor,
-      List<DataSink> sinks, List<MonitoringTag> tags, String uuid) {
+      List<DataSink> sinks, List<MonitoringTag> tags) {
     super.metric(metric);
     super.targets(targets);
     super.sensor(sensor);
     super.sinks(sinks);
     super.tags(tags);
-    this.uuid = uuid;
-  }
-
-  public DomainMonitorModel(Monitor monitor) {
-    super();
     this.uuid = "0";
   }
 
