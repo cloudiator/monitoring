@@ -6,6 +6,7 @@ import io.github.cloudiator.rest.model.MonitoringTag;
 import io.github.cloudiator.rest.model.MonitoringTarget;
 import io.github.cloudiator.rest.model.Sensor;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class DomainMonitorModel extends Monitor {
@@ -17,7 +18,7 @@ public class DomainMonitorModel extends Monitor {
   }
 
   public DomainMonitorModel(String metric, List<MonitoringTarget> targets, Sensor sensor,
-      List<DataSink> sinks, List<MonitoringTag> tags) {
+      List<DataSink> sinks, Map tags) {
     super.metric(metric);
     super.targets(targets);
     super.sensor(sensor);
@@ -30,22 +31,6 @@ public class DomainMonitorModel extends Monitor {
     super.metric(metric);
     return this;
   }
-
-  public DomainMonitorModel targets(List<MonitoringTarget> targets) {
-    super.targets(targets);
-    return this;
-  }
-
-  public DomainMonitorModel sensor(Sensor sensor) {
-    super.sensor(sensor);
-    return this;
-  }
-
-  public DomainMonitorModel sinks(List<DataSink> sinks) {
-    super.sinks(sinks);
-    return this;
-  }
-
 
   public void setUuid(String uuid) {
     this.uuid = uuid;
@@ -86,12 +71,6 @@ public class DomainMonitorModel extends Monitor {
     super.setSensor(sensor);
   }
 
-
-  public DomainMonitorModel addSinksItem(DataSink sinksItem) {
-    super.addSinksItem(sinksItem);
-    return this;
-  }
-
   public List<DataSink> getSinks() {
     return super.getSinks();
   }
@@ -100,21 +79,16 @@ public class DomainMonitorModel extends Monitor {
     super.setSinks(sinks);
   }
 
-  public DomainMonitorModel tags(List<MonitoringTag> tags) {
+  public DomainMonitorModel tags(Map tags) {
     super.tags(tags);
     return this;
   }
 
-  public Monitor addTagsItem(MonitoringTag tagsItem) {
-    super.addTagsItem(tagsItem);
-    return this;
-  }
-
-  public List<MonitoringTag> getTags() {
+  public Map<String, String> getTags() {
     return super.getTags();
   }
 
-  public void setTags(List<MonitoringTag> tags) {
+  public void setTags(Map tags) {
     super.setTags(tags);
   }
 

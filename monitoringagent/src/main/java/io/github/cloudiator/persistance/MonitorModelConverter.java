@@ -28,9 +28,7 @@ public class MonitorModelConverter implements OneWayConverter<MonitorModel, Doma
       result.addSinksItem(dataSinkModelConverter.apply(dataSinkModel));
     }
     //MonitoringTags
-    for (MTagModel tagModel : monitorModel.getMonitortags()) {
-      result.addTagsItem(new MonitoringTag().key(tagModel.getKey()).value(tagModel.getValue()));
-    }
+    result.setTags(monitorModel.getMonitortags());
 
     return result;
   }

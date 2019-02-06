@@ -14,7 +14,9 @@ import io.github.cloudiator.rest.model.PullSensor;
 import io.github.cloudiator.rest.model.PushSensor;
 import io.github.cloudiator.rest.model.Sensor;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -123,12 +125,11 @@ public class MonitorDomainRepository {
       monitorModel.addDataSink(createdsink);
     }
     //Tags
-    for (MonitoringTag monitoringTag : monitor.getTags()) {
-      MTagModel tagModel = new MTagModel(monitoringTag.getKey(),
-          monitoringTag.getValue());
-
-      monitorModel.addMonitoringTag(tagModel);
+    Map<String, String> tags = new HashMap<>();
+    if (!monitor.getTags().isEmpty()) {
+      tags.putAll(monitor.getTags());
     }
+    monitorModel.addMonitoringTag(tags);
 
     /**
      *Save all Models
