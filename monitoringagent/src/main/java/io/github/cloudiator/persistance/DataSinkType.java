@@ -6,7 +6,6 @@ public enum DataSinkType {
   CLI,
   JMS;
 
-
   private DataSinkType() {
   }
 }

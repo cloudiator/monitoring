@@ -135,7 +135,6 @@ public class VisorMonitorHandler {
 
   public Node getNodeById(String nodeId, String userId) {
     LOGGER.debug(" Starting getNodeById ");
-    //final String decodedId = idEncoder.decode(nodeId);
     try {
 
       NodeQueryMessage request = NodeQueryMessage.newBuilder().setNodeId(nodeId)

@@ -119,6 +119,7 @@ public class MonitorManagementService {
       case PROCESS:
         System.out.println("Handle PROCESS: " + target);
         handleProcess(userId, target, monitor);
+
         break;
       case TASK:
         handleTask(userId, target, monitor);
