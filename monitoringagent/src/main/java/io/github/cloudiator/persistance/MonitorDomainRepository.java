@@ -66,7 +66,8 @@ public class MonitorDomainRepository {
   }
 
   public List<DomainMonitorModel> getAllMonitors() {
-    List<DomainMonitorModel> result = monitorModelRepository.findAll().stream()
+    List<DomainMonitorModel> result = new ArrayList<>();
+    result = monitorModelRepository.findAll().stream()
         .map(MONITOR_MODEL_CONVERTER)
         .collect(Collectors.toList());
 
@@ -79,7 +80,7 @@ public class MonitorDomainRepository {
     checkNotNull(monitor.getTargets(), "MonitoringTarget is null");
     checkNotNull(monitor.getSensor(), "Sensor is null.");
     checkNotNull(monitor.getSinks(), "Datasinks is null.");
-    checkNotNull(monitor.getTags(), "Tags is null.");
+    // checkNotNull(monitor.getTags(), "Tags is null.");
 
     /**
      * Create new Models
@@ -129,7 +130,7 @@ public class MonitorDomainRepository {
     if (!monitor.getTags().isEmpty()) {
       tags.putAll(monitor.getTags());
     }
-    monitorModel.addMonitoringTag(tags);
+    monitorModel.setMonitoringTags(tags);
 
     /**
      *Save all Models
