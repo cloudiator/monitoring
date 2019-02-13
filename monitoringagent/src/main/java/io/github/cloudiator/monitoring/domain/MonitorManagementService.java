@@ -12,6 +12,8 @@ import io.github.cloudiator.rest.model.SingleProcess;
 import io.github.cloudiator.domain.Node;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.cloudiator.messages.Process.ProcessQueryRequest;
 import org.cloudiator.messages.Process.ProcessQueryResponse;
 import org.cloudiator.messaging.ResponseException;
@@ -129,7 +131,21 @@ public class MonitorManagementService {
   private void handleNode(String userId, MonitoringTarget target, Monitor monitor) {
     LOGGER.debug("Starting handleNode ");
     Node targetNode = monitorHandler.getNodeById(target.getIdentifier(), userId);
+    ExecutorService executorService = Executors.newSingleThreadExecutor();
 
+    executorService.execute(new Runnable() {
+      public void run() {
+        System.out.println("Asynchronous task");
+        System.out.println("installing visor");
+        monitorHandler.installVisor(userId, targetNode);
+        System.out.println("configuring Visor");
+        monitorHandler.configureVisor(userId, target, targetNode, monitor);
+        System.out.println("visor install and config done");
+      }
+    });
+
+    executorService.shutdown();
+/*
     if (!monitorHandler.installVisor(userId, targetNode)) {
       LOGGER.error("Error by installing Visor on Node ", targetNode);
       throw new IllegalStateException("Error by installing Visor");
@@ -139,7 +155,7 @@ public class MonitorManagementService {
       LOGGER.error("Error by configuring Visor on Node ", targetNode);
       throw new IllegalStateException("Error by configuring Visor");
     }
-
+*/
     LOGGER.debug("Finished handleNode");
   }
 
