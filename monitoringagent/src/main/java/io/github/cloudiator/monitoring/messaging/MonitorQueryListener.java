@@ -1,6 +1,7 @@
 package io.github.cloudiator.monitoring.messaging;
 
 import com.google.inject.Inject;
+import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.rest.converter.MonitorConverter;
 import io.github.cloudiator.monitoring.domain.MonitorManagementService;
 import io.github.cloudiator.rest.model.Monitor;
@@ -36,14 +37,24 @@ public class MonitorQueryListener implements Runnable {
           public void accept(String id, MonitorQueryRequest content) {
             try {
 
-              List<Monitor> dbmonitors = monitorManagementService.getAllMonitors();
-
+              List<DomainMonitorModel> dbmonitors = monitorManagementService.getAllMonitors();
               MonitorQueryResponse.Builder responseBuilder = MonitorQueryResponse.newBuilder();
-              for (Monitor monitor : dbmonitors) {
+              for (DomainMonitorModel monitor : dbmonitors) {
                 responseBuilder.addMonitor(monitorConverter.apply(monitor));
               }
-
               MonitorQueryResponse result = responseBuilder.build();
+
+
+              /*
+              List<Monitor> updatedMonitors = monitorManagementService
+                  .monitorupdate(content.getUserId());
+              MonitorQueryResponse.Builder responseBuilder2 = MonitorQueryResponse.newBuilder();
+              for (Monitor monitor : updatedMonitors) {
+                responseBuilder2.addMonitor(monitorConverter.apply(monitor));
+              }
+              MonitorQueryResponse result2 = responseBuilder2.build();
+              */
+
               System.out.println("Sending result: " + result);
               messageInterface.reply(id, result);
             } catch (Exception e) {

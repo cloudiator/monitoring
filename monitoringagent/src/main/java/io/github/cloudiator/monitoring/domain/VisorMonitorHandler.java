@@ -1,21 +1,18 @@
 package io.github.cloudiator.monitoring.domain;
 
-import static org.reflections.util.ConfigurationBuilder.build;
-
 import com.google.inject.Inject;
 import io.github.cloudiator.domain.Node;
 import io.github.cloudiator.messaging.NodeToNodeMessageConverter;
 import io.github.cloudiator.monitoring.converter.MonitorToVisorMonitorConverter;
+import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.rest.converter.IpAddressConverter;
-import io.github.cloudiator.rest.converter.NodeConverter;
 import io.github.cloudiator.rest.model.Monitor;
 import io.github.cloudiator.rest.model.MonitoringTarget;
 import io.github.cloudiator.util.Base64IdEncoder;
 import io.github.cloudiator.util.IdEncoder;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.math.BigDecimal;
-import org.apache.http.HttpStatus;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.cloudiator.messaging.ResponseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,15 +28,12 @@ import org.cloudiator.messages.NodeEntities;
 import org.cloudiator.messaging.SettableFutureResponseCallback;
 import org.cloudiator.messaging.services.InstallationRequestService;
 import org.cloudiator.messaging.services.NodeService;
-import io.github.cloudiator.rest.model.IpAddress;
 
 import io.github.cloudiator.visor.rest.*;
-import io.github.cloudiator.visor.rest.auth.*;
-import io.github.cloudiator.visor.rest.model.*;
 import io.github.cloudiator.visor.rest.api.DefaultApi;
 
 
-public class MonitorHandler {
+public class VisorMonitorHandler {
 
 
   private final InstallationRequestService installationRequestService;
@@ -50,10 +44,10 @@ public class MonitorHandler {
   private final NodeToNodeMessageConverter nodeMessageConverter = NodeToNodeMessageConverter.INSTANCE;
 
   private final String VisorPort = "31415";
-  private static final Logger LOGGER = LoggerFactory.getLogger(MonitorHandler.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(VisorMonitorHandler.class);
 
   @Inject
-  public MonitorHandler(InstallationRequestService installationRequestService,
+  public VisorMonitorHandler(InstallationRequestService installationRequestService,
       NodeService nodeService) {
     this.installationRequestService = installationRequestService;
     this.nodeService = nodeService;
@@ -91,20 +85,22 @@ public class MonitorHandler {
   }
 
   public boolean configureVisor(String userId, MonitoringTarget target, Node targetNode,
-      Monitor monitor) {
+      DomainMonitorModel monitor) {
     LOGGER.debug("Starting VisorConfigurationProcess on: " + targetNode.name());
 
     DefaultApi apiInstance = new DefaultApi();
     ApiClient apiClient = new ApiClient();
-    apiClient.setBasePath("http://" + targetNode.connectTo().ip() + ":" + VisorPort);
+    String basepath = String.format("http://%s:%s", targetNode.connectTo().ip(), VisorPort);
+    LOGGER.debug("Basepath: " + basepath.toString());
+    apiClient.setBasePath(basepath);
     apiInstance.setApiClient(apiClient);
-    LOGGER.debug("apiClient: " + apiClient);
+    LOGGER.debug("apiClient: " + apiClient.toString());
 
     io.github.cloudiator.visor.rest.model.Monitor visorMonitor = visorMonitorConverter
         .apply(monitor);
     LOGGER.debug("used Monitor: " + visorMonitor);
     try {
-      LOGGER.debug("using DefaultApi and visorMonitor: ", visorMonitor);
+      LOGGER.debug("using DefaultApi and visorMonitor: " + visorMonitor);
       io.github.cloudiator.visor.rest.model.Monitor visorResponse = apiInstance
           .postMonitors(visorMonitor);
       System.out.println(visorResponse);
@@ -115,11 +111,30 @@ public class MonitorHandler {
     return true;
   }
 
+  public boolean deleteVisorMonitor(String userId, Node targetNode, Monitor monitor) {
+    LOGGER.debug("Starting Deleting VisorMonitor");
+
+    return false;
+  }
+
+  public List<io.github.cloudiator.visor.rest.model.Monitor> getAllVisorMonitors(Node targetNode) {
+    LOGGER.debug("GET ALLVISORMONITORS");
+    List<io.github.cloudiator.visor.rest.model.Monitor> allMonitors = new ArrayList<>();
+    String visorpath = String.format("http://%s:%s", targetNode.connectTo().ip(), VisorPort);
+    ApiClient apiClient = new ApiClient().setBasePath(visorpath);
+    DefaultApi api = new DefaultApi(apiClient);
+    try {
+      allMonitors.stream().collect(Collectors.toList()).addAll(api.getMonitors());
+      return allMonitors;
+    } catch (ApiException e) {
+      throw new IllegalStateException("Error while getMonitors: " + e.getMessage());
+
+    }
+  }
+
 
   public Node getNodeById(String nodeId, String userId) {
     LOGGER.debug(" Starting getNodeById ");
-    //    deprecated
-    // final String decodedId = idEncoder.decode(nodeId);
     try {
 
       NodeQueryMessage request = NodeQueryMessage.newBuilder().setNodeId(nodeId)
@@ -137,15 +152,15 @@ public class MonitorHandler {
 
       return nodeMessageConverter.applyBack(nodeEntity);
 
-    }catch (ResponseException re) {
-      if (re.code() == Integer.valueOf(404)/*HttpStatus.SC_NOT_FOUND */){
+    } catch (ResponseException re) {
+      if (re.code() == Integer.valueOf(404)/*HttpStatus.SC_NOT_FOUND */) {
         LOGGER.debug("MonitorMode not found");
+        throw new AssertionError("410");
       }
-    }
-    catch (Exception e) {
+      throw new AssertionError(re.getMessage());
+    } catch (Exception e) {
       throw new AssertionError("Problem by getting Node:" + e.getMessage());
     }
-    return null;
   }
 
 }

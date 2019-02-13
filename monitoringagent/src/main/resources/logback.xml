@@ -36,12 +36,12 @@
 
     <!-- encoder is required -->
     <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-      <customFields>{"service":"node-agent"}</customFields>
+      <customFields>{"service":"monitoring-agent"}</customFields>
     </encoder>
   </appender>
 
   <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-    <file>logs/node-agent.log</file>
+    <file>logs/monitoring-agent.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <!-- daily rollover -->
       <fileNamePattern>logs/node-agent.%d{yyyy-MM-dd}.log</fileNamePattern>
@@ -60,6 +60,7 @@
   </appender>
 
   <logger level="DEBUG" name="org.cloudiator.monitoring"/>
+  <logger level="DEBUG" name="org.cloudiator.messaging.kafka"/>
 
   <root level="WARN">
     <appender-ref ref="STDOUT"/>
