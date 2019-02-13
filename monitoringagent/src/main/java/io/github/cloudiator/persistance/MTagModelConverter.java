@@ -3,7 +3,7 @@ package io.github.cloudiator.persistance;
 import de.uniulm.omi.cloudiator.util.OneWayConverter;
 import io.github.cloudiator.rest.model.MonitoringTag;
 import javax.annotation.Nullable;
-
+@Deprecated
 public class MTagModelConverter implements
     OneWayConverter<MTagModel, MonitoringTag> {
 

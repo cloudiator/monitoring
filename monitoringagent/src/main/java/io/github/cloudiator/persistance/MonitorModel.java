@@ -107,11 +107,11 @@ public class MonitorModel extends Model {
   }
 
 
-  public void addMonitoringTag(Map monitorTag) {
-    if (monitortags == null) {
-      monitortags = new HashMap<>();
+  public void setMonitoringTags(Map monitorTag) {
+    if (this.monitortags == null) {
+      this.monitortags = new HashMap<>();
     }
-    monitortags.putAll(monitorTag);
+    this.monitortags.putAll(monitorTag);
   }
 
 
