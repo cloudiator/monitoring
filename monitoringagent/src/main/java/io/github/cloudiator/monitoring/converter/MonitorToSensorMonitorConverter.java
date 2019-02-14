@@ -1,14 +1,15 @@
 package io.github.cloudiator.monitoring.converter;
 
 import de.uniulm.omi.cloudiator.util.OneWayConverter;
-import io.github.cloudiator.monitoring.domain.VisorSensorMonitorModel;
+import io.github.cloudiator.monitoring.models.DomainMonitorModel;
+import io.github.cloudiator.monitoring.models.VisorSensorMonitorModel;
 import io.github.cloudiator.rest.model.Monitor;
 import io.github.cloudiator.rest.model.PullSensor;
 
-public class MonitorToSensorMonitorConverter implements OneWayConverter<Monitor, VisorSensorMonitorModel> {
+public class MonitorToSensorMonitorConverter implements OneWayConverter<DomainMonitorModel, VisorSensorMonitorModel> {
 
   @Override
-  public VisorSensorMonitorModel apply(Monitor monitor) {
+  public VisorSensorMonitorModel apply(DomainMonitorModel monitor) {
     VisorSensorMonitorModel result = new VisorSensorMonitorModel()
         .metricName(monitor.getMetric())
         .type("SensorMonitor")

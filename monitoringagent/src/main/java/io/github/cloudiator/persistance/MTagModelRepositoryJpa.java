@@ -9,6 +9,7 @@ import java.util.Optional;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
+@Deprecated
 public class MTagModelRepositoryJpa extends
     BaseModelRepositoryJpa<MTagModel> implements MTagModelRepository {
 

@@ -1,7 +1,7 @@
 package io.github.cloudiator.persistance;
 
 
-
+import io.github.cloudiator.rest.model.DataSink;
 import java.util.HashMap;
 import java.util.Map;
 import javax.persistence.Column;
@@ -11,13 +11,12 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 
 
-
 @Entity
 public class DataSinkModel extends Model {
 
   @Enumerated(EnumType.STRING)
   @Column
-  private DataSinkType sinkType;
+  private DataSink.TypeEnum sinkType;
 
 
   @ElementCollection
@@ -27,7 +26,7 @@ public class DataSinkModel extends Model {
   }
 
   public DataSinkModel sinkType(String sinktype) {
-    this.sinkType = DataSinkType.valueOf(sinktype);
+    this.sinkType = DataSink.TypeEnum.valueOf(sinktype);
     return this;
   }
 
@@ -39,7 +38,7 @@ public class DataSinkModel extends Model {
   }
 
 
-  public DataSinkType getSinkType() {
+  public DataSink.TypeEnum getSinkType() {
     return sinkType;
   }
 
@@ -54,7 +53,7 @@ public class DataSinkModel extends Model {
     this.configuration.putAll(configuration);
   }
 
-  public void setSinkType(DataSinkType sinktype) {
+  public void setSinkType(DataSink.TypeEnum sinktype) {
     this.sinkType = sinktype;
   }
 

@@ -1,4 +1,4 @@
-package io.github.cloudiator.monitoring.domain;
+package io.github.cloudiator.monitoring.models;
 
 import io.github.cloudiator.rest.model.DataSink;
 import java.util.List;
@@ -12,6 +12,7 @@ public class VisorPushMonitorModel extends VisorMonitorModel {
   private Map<String, String> monitorContext;
   private List<DataSink> dataSinks;
   private Integer port;
+  private String uuid;
 
   public VisorPushMonitorModel() {
   }
@@ -92,5 +93,13 @@ public class VisorPushMonitorModel extends VisorMonitorModel {
 
   public void setPort(Integer port) {
     this.port = port;
+  }
+
+  public String getUuid() {
+    return uuid;
+  }
+
+  public void setUuid(String uuid) {
+    this.uuid = uuid;
   }
 }

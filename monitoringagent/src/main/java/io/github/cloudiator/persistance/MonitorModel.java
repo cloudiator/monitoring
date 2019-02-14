@@ -4,10 +4,13 @@ package io.github.cloudiator.persistance;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
@@ -28,22 +31,26 @@ public class MonitorModel extends Model {
   @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
   private List<DataSinkModel> datasinks;
 
-  @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<MTagModel> monitortags;
+  @ElementCollection
+  private Map<String, String> monitortags;
+
+  @Column(unique = true)
+  private String uuid;
 
 
   protected MonitorModel() {
   }
 
   public MonitorModel(String metric, List<TargetModel> targets, SensorModel sensor,
-      List<DataSinkModel> datasinks, List<MTagModel> monitortags) {
+      List<DataSinkModel> datasinks, Map monitorTags, String uuid) {
     checkNotNull(metric);
     checkNotNull(sensor);
     this.metric = metric;
     this.targets = targets;
     this.sensor = sensor;
     this.datasinks = datasinks;
-    this.monitortags = monitortags;
+    this.monitortags = monitorTags;
+    this.uuid = uuid;
   }
 
   public MonitorModel metric(String metric) {
@@ -51,6 +58,9 @@ public class MonitorModel extends Model {
     return this;
   }
 
+  public String getUuid() {
+    return uuid;
+  }
 
   public String getMetric() {
     return metric;
@@ -64,7 +74,7 @@ public class MonitorModel extends Model {
     return datasinks;
   }
 
-  public List<MTagModel> getMonitortags() {
+  public Map<String, String> getMonitortags() {
     return monitortags;
   }
 
@@ -97,13 +107,11 @@ public class MonitorModel extends Model {
   }
 
 
-  public void addMonitoringTag(MTagModel tagModel) {
-    if (monitortags == null) {
-      monitortags = new ArrayList<MTagModel>();
+  public void setMonitoringTags(Map monitorTag) {
+    if (this.monitortags == null) {
+      this.monitortags = new HashMap<>();
     }
-    if (!monitortags.contains(tagModel)) {
-      monitortags.add(tagModel);
-    }
+    this.monitortags.putAll(monitorTag);
   }
 
 

@@ -6,7 +6,7 @@ import javax.persistence.Entity;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 
-
+@Deprecated
 @Entity
 public class MTagModel extends Model {
 

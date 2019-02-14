@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.inject.Inject;
+import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.rest.model.DataSink;
 import io.github.cloudiator.rest.model.Monitor;
 import io.github.cloudiator.rest.model.MonitoringTag;
@@ -13,7 +14,9 @@ import io.github.cloudiator.rest.model.PullSensor;
 import io.github.cloudiator.rest.model.PushSensor;
 import io.github.cloudiator.rest.model.Sensor;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -46,7 +49,7 @@ public class MonitorDomainRepository {
     this.intervalModelRepository = intervalModelRepository;
   }
 
-  public Monitor findMonitorByMetric(String metric) {
+  public DomainMonitorModel findMonitorByMetric(String metric) {
     checkNotNull(metric, "Metric is null");
     checkArgument(!metric.isEmpty(), "Metric is empty");
     MonitorModel result = monitorModelRepository.findMonitorByMetric(metric).orElse(null);
@@ -62,21 +65,22 @@ public class MonitorDomainRepository {
     return monitorModelRepository.findMonitorByMetric(metric).isPresent();
   }
 
-  public List<Monitor> getAllMonitors() {
-    List<Monitor> result = new ArrayList<>();
-    for (MonitorModel monitorModel : monitorModelRepository.findAll()) {
-      result.add(MONITOR_MODEL_CONVERTER.apply(monitorModel));
-    }
+  public List<DomainMonitorModel> getAllMonitors() {
+    List<DomainMonitorModel> result = new ArrayList<>();
+    result = monitorModelRepository.findAll().stream()
+        .map(MONITOR_MODEL_CONVERTER)
+        .collect(Collectors.toList());
+
     return result;
   }
 
-  public Monitor addMonitor(Monitor monitor) {
+  public DomainMonitorModel addMonitor(Monitor monitor) {
     checkNotNull(monitor, "Monitor is null");
     checkState(!exists(monitor.getMetric()), "Monitormetric already exists. ");
     checkNotNull(monitor.getTargets(), "MonitoringTarget is null");
     checkNotNull(monitor.getSensor(), "Sensor is null.");
     checkNotNull(monitor.getSinks(), "Datasinks is null.");
-    checkNotNull(monitor.getTags(), "Tags is null.");
+    // checkNotNull(monitor.getTags(), "Tags is null.");
 
     /**
      * Create new Models
@@ -119,16 +123,14 @@ public class MonitorDomainRepository {
           .sinkType(dataSink.getType().name())
           .configuration(dataSink.getConfiguration());
 
-
       monitorModel.addDataSink(createdsink);
     }
     //Tags
-    for (MonitoringTag monitoringTag : monitor.getTags()) {
-      MTagModel tagModel = new MTagModel(monitoringTag.getKey(),
-          monitoringTag.getValue());
-
-      monitorModel.addMonitoringTag(tagModel);
+    Map<String, String> tags = new HashMap<>();
+    if (!monitor.getTags().isEmpty()) {
+      tags.putAll(monitor.getTags());
     }
+    monitorModel.setMonitoringTags(tags);
 
     /**
      *Save all Models
@@ -161,13 +163,18 @@ public class MonitorDomainRepository {
   }
 
   public void deleteMonitor(String metric) {
-    Optional<MonitorModel> dbMonitor = monitorModelRepository.findMonitorByMetric(metric);
-    if (!dbMonitor.isPresent()) {
-      throw new IllegalStateException("Monitor does not exist.");
+    if (metric.matches("deleteAll")) {
+      monitorModelRepository.deleteAll();
     } else {
-      monitorModelRepository.delete(dbMonitor.get());
+      Optional<MonitorModel> dbMonitor = monitorModelRepository.findMonitorByMetric(metric);
+      if (!dbMonitor.isPresent()) {
+        throw new IllegalStateException("Monitor does not exist.");
+      } else {
+        monitorModelRepository.delete(dbMonitor.get());
+      }
     }
   }
+
 
 }
 

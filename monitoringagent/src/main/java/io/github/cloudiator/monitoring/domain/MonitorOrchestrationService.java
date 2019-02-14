@@ -1,14 +1,15 @@
 package io.github.cloudiator.monitoring.domain;
 
+import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.rest.model.Monitor;
 import java.util.List;
 import java.util.Optional;
 
 public interface MonitorOrchestrationService {
 
-  Monitor createMonitor(Monitor newMonitor);
+  DomainMonitorModel createMonitor(Monitor newMonitor);
 
-  List<Monitor> getAllMonitors();
+  List<DomainMonitorModel> getAllMonitors();
 
   void updateMonitor(Monitor monitor);
 
@@ -16,6 +17,6 @@ public interface MonitorOrchestrationService {
 
   void deleteMonitor(String monitormetric);
 
-  Optional<Monitor> getMonitor(String monitorMetric);
+  Optional<DomainMonitorModel> getMonitor(String monitorMetric);
 
 }
