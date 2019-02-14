@@ -13,6 +13,7 @@ import io.github.cloudiator.util.IdEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.cloudiator.messages.InstallationEntities.Tool;
 import org.cloudiator.messaging.ResponseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,8 +61,9 @@ public class VisorMonitorHandler {
     try {
       NodeEntities.Node target = nodeMessageConverter.apply(node);
 
-      final Builder installationBuilder = Installation.newBuilder().setNode(target).addTool(
-          InstallationEntities.Tool.VISOR);
+      final Builder installationBuilder = Installation.newBuilder().setNode(target)
+          .addTool(Tool.EMS_CLIENT).addTool(
+              InstallationEntities.Tool.VISOR);
 
       final InstallationRequest installationRequest = InstallationRequest.newBuilder()
           .setInstallation(installationBuilder.build())
@@ -92,6 +94,7 @@ public class VisorMonitorHandler {
     ApiClient apiClient = new ApiClient();
     String basepath = String.format("http://%s:%s", targetNode.connectTo().ip(), VisorPort);
     LOGGER.debug("Basepath: " + basepath.toString());
+    System.out.println("Basepath: " + basepath.toString());
     apiClient.setBasePath(basepath);
     apiInstance.setApiClient(apiClient);
     LOGGER.debug("apiClient: " + apiClient.toString());
@@ -99,6 +102,7 @@ public class VisorMonitorHandler {
     io.github.cloudiator.visor.rest.model.Monitor visorMonitor = visorMonitorConverter
         .apply(monitor);
     LOGGER.debug("used Monitor: " + visorMonitor);
+    System.out.println("used Monitor: " + visorMonitor);
     try {
       LOGGER.debug("using DefaultApi and visorMonitor: " + visorMonitor);
       io.github.cloudiator.visor.rest.model.Monitor visorResponse = apiInstance
