@@ -13,6 +13,7 @@ import io.github.cloudiator.util.IdEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.cloudiator.messages.InstallationEntities.Tool;
 import org.cloudiator.messaging.ResponseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,8 +61,9 @@ public class VisorMonitorHandler {
     try {
       NodeEntities.Node target = nodeMessageConverter.apply(node);
 
-      final Builder installationBuilder = Installation.newBuilder().setNode(target).addTool(
-          InstallationEntities.Tool.VISOR);
+      final Builder installationBuilder = Installation.newBuilder().setNode(target)
+          .addTool(Tool.EMS_CLIENT).addTool(
+              InstallationEntities.Tool.VISOR);
 
       final InstallationRequest installationRequest = InstallationRequest.newBuilder()
           .setInstallation(installationBuilder.build())

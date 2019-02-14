@@ -59,7 +59,7 @@
     </encoder>
   </appender>
 
-  <logger level="DEBUG" name="org.cloudiator.*"/>
+  <logger level="DEBUG" name="io.github.cloudiator.monitoring"/>
   <logger level="DEBUG" name="org.cloudiator.messaging.kafka"/>
 
   <root level="WARN">
