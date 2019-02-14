@@ -92,6 +92,7 @@ public class VisorMonitorHandler {
     ApiClient apiClient = new ApiClient();
     String basepath = String.format("http://%s:%s", targetNode.connectTo().ip(), VisorPort);
     LOGGER.debug("Basepath: " + basepath.toString());
+    System.out.println("Basepath: " + basepath.toString());
     apiClient.setBasePath(basepath);
     apiInstance.setApiClient(apiClient);
     LOGGER.debug("apiClient: " + apiClient.toString());
@@ -99,6 +100,7 @@ public class VisorMonitorHandler {
     io.github.cloudiator.visor.rest.model.Monitor visorMonitor = visorMonitorConverter
         .apply(monitor);
     LOGGER.debug("used Monitor: " + visorMonitor);
+    System.out.println("used Monitor: " + visorMonitor);
     try {
       LOGGER.debug("using DefaultApi and visorMonitor: " + visorMonitor);
       io.github.cloudiator.visor.rest.model.Monitor visorResponse = apiInstance

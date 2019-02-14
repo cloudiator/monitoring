@@ -201,7 +201,21 @@ public class MonitorManagementService {
       LOGGER.debug("Start handling SingleProcess");
       Node processNode = visorMonitorHandler
           .getNodeById(((SingleProcess) process).getNode(), userId);
+      ExecutorService executorService = Executors.newSingleThreadExecutor();
 
+      executorService.execute(new Runnable() {
+        public void run() {
+          System.out.println("Asynchronous task");
+          System.out.println("installing visor");
+          visorMonitorHandler.installVisor(userId, processNode);
+          System.out.println("configuring Visor");
+          visorMonitorHandler.configureVisor(userId, target, processNode, monitor);
+          System.out.println("visor install and config done");
+        }
+      });
+
+      executorService.shutdown();
+      /*
       if (!visorMonitorHandler.installVisor(userId, processNode)) {
         LOGGER.error("Error by installing Visor on Node: " + processNode.name());
         throw new IllegalStateException("Error by installing Visor on Node: " + processNode);
@@ -211,6 +225,7 @@ public class MonitorManagementService {
         LOGGER.error("Error by configuring Visor on Node: " + processNode.name());
         throw new IllegalStateException("Error by configuring Visor on Node: " + processNode);
       }
+      */
       LOGGER.debug("Finished handling SingleProcess");
 
     } else if (process instanceof ClusterProcess) {
