@@ -44,7 +44,7 @@ public class MonitorManagementService {
   public DomainMonitorModel checkAndCreate(Monitor monitor) {
     Optional<DomainMonitorModel> dbMonitor = monitorOrchestrationService
         .getMonitor(monitor.getMetric());
-    if (dbMonitor.isPresent()) {
+    if (!dbMonitor.isPresent()) {
       return null;
     } else {
       dbMonitor = Optional.of(monitorOrchestrationService.createMonitor(monitor));
@@ -80,6 +80,12 @@ public class MonitorManagementService {
     // io.github.cloudiator.visor.rest.model.Monitor result= monitorOrchestrationService.getMonitor(metric);
 
     monitorOrchestrationService.deleteMonitor(metric);
+  }
+
+  @Transactional
+  public void deleteAll() {
+    LOGGER.debug("DeleteAll executed!");
+    monitorOrchestrationService.deleteAll();
   }
 
   @Transactional

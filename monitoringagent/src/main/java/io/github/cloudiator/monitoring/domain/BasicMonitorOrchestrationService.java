@@ -15,7 +15,6 @@ import java.util.Optional;
 public class BasicMonitorOrchestrationService implements MonitorOrchestrationService {
 
   private final MonitorDomainRepository monitorDomainRepository;
-  private final MonitorToVisorMonitorConverter visorMonitorConverter = new MonitorToVisorMonitorConverter();
 
 
   @Inject
@@ -48,6 +47,11 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   @Override
   public void deleteMonitor(String metric) {
     monitorDomainRepository.deleteMonitor(metric);
+  }
+
+  @Override
+  public void deleteAll() {
+    monitorDomainRepository.deleteAll();
   }
 
   @Override

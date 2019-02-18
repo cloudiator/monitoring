@@ -32,14 +32,18 @@ public class DeleteMonitorListener implements Runnable {
           @Override
           public void accept(String id, DeleteMonitorRequest content) {
             try {
-              System.out.println("Got message: " + content);
-              monitorManagementService
-                  .checkAndDeleteMonitor(content.getMetric());
-
+              System.out.println("Got message: \n" + content + "---");
+              if (content.getMetric().equals("666")) {
+                monitorManagementService.deleteAll();
+                LOGGER.debug("All Monitors deleted from Database! ");
+              } else {
+                monitorManagementService
+                    .checkAndDeleteMonitor(content.getMetric());
+                LOGGER.debug("Deleted Monitor: " + content.getMetric());
+              }
               DeleteMonitorResponse.Builder responseBuilder = DeleteMonitorResponse.newBuilder();
 
               DeleteMonitorResponse result = responseBuilder.build();
-              System.out.println("Sending result: " + result);
               messageInterface.reply(id, result);
             } catch (Exception e) {
               LOGGER.error("Error while deleting Monitor. ", e);

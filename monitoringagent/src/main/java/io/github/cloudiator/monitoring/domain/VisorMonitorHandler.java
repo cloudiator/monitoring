@@ -107,7 +107,7 @@ public class VisorMonitorHandler {
       LOGGER.debug("using DefaultApi and visorMonitor: " + visorMonitor);
       io.github.cloudiator.visor.rest.model.Monitor visorResponse = apiInstance
           .postMonitors(visorMonitor);
-      System.out.println(visorResponse);
+      System.out.println("visorResponse: " + visorResponse);
     } catch (ApiException e) {
       System.err.println("Exception when calling DefaultApi#postMonitors");
       e.printStackTrace();
