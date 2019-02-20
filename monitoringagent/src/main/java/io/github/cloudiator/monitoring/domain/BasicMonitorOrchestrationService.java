@@ -60,8 +60,9 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
     final DomainMonitorModel result = monitorDomainRepository.findMonitorByMetric(monitorMetric);
     if (result == null) {
       return Optional.empty();
+    } else {
+      return Optional.of(result);
     }
-    return Optional.of(result);
   }
 
 

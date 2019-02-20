@@ -44,7 +44,7 @@ public class MonitorManagementService {
   public DomainMonitorModel checkAndCreate(Monitor monitor) {
     Optional<DomainMonitorModel> dbMonitor = monitorOrchestrationService
         .getMonitor(monitor.getMetric());
-    if (!dbMonitor.isPresent()) {
+    if (dbMonitor.isPresent()) {
       return null;
     } else {
       dbMonitor = Optional.of(monitorOrchestrationService.createMonitor(monitor));
@@ -106,6 +106,9 @@ public class MonitorManagementService {
     System.out.println("Es werden " + newMonitor.getTargets().size() + " Targets behandel");
     DomainMonitorModel requestedMonitor = checkAndCreate(newMonitor);
     System.out.println("Monitor in DB erstellt.");
+    if (requestedMonitor == null) {
+      throw new IllegalArgumentException("Monitor already exists.");
+    }
 
     Integer count = 1;
     for (MonitoringTarget mTarget : domainMonitor.getTargets()) {
@@ -115,9 +118,6 @@ public class MonitorManagementService {
       count++;
     }
 
-    if (requestedMonitor == null) {
-      throw new IllegalArgumentException("Monitor already exists.");
-    }
     return requestedMonitor;
   }
 
@@ -164,18 +164,7 @@ public class MonitorManagementService {
     });
 
     executorService.shutdown();
-/*
-    if (!monitorHandler.installVisor(userId, targetNode)) {
-    Node targetNode = visorMonitorHandler.getNodeById(target.getIdentifier(), userId);
-    if (!visorMonitorHandler.installVisor(userId, targetNode)) {
-      LOGGER.error("Error by installing Visor on Node ", targetNode);
-      throw new IllegalStateException("Error by installing Visor");
-    }
-    if (!visorMonitorHandler.configureVisor(userId, target, targetNode, monitor)) {
-      LOGGER.error("Error by configuring Visor on Node ", targetNode);
-      throw new IllegalStateException("Error by configuring Visor");
-    }
-*/
+
     LOGGER.debug("Finished handleNode");
   }
 
@@ -221,17 +210,7 @@ public class MonitorManagementService {
       });
 
       executorService.shutdown();
-      /*
-      if (!visorMonitorHandler.installVisor(userId, processNode)) {
-        LOGGER.error("Error by installing Visor on Node: " + processNode.name());
-        throw new IllegalStateException("Error by installing Visor on Node: " + processNode);
-      }
 
-      if (!visorMonitorHandler.configureVisor(userId, target, processNode, monitor)) {
-        LOGGER.error("Error by configuring Visor on Node: " + processNode.name());
-        throw new IllegalStateException("Error by configuring Visor on Node: " + processNode);
-      }
-      */
       LOGGER.debug("Finished handling SingleProcess");
 
     } else if (process instanceof ClusterProcess) {
