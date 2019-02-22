@@ -83,6 +83,12 @@ public class MonitorManagementService {
   }
 
   @Transactional
+  public void deleteAll() {
+    LOGGER.debug("DeleteAll executed!");
+    monitorOrchestrationService.deleteAll();
+  }
+
+  @Transactional
   public Monitor getMonitor(String metric) {
     Monitor result = monitorOrchestrationService.getMonitor(metric).get();
     if (result == null) {
@@ -97,21 +103,21 @@ public class MonitorManagementService {
     DomainMonitorModel domainMonitor = new DomainMonitorModel(newMonitor.getMetric(),
         newMonitor.getTargets(), newMonitor.getSensor(), newMonitor.getSinks(),
         newMonitor.getTags());
-    System.out.println("Es werden " + newMonitor.getTargets().size() + " Targets behandel");
+    LOGGER.debug("Handling " + newMonitor.getTargets().size() + " Targets");
     DomainMonitorModel requestedMonitor = checkAndCreate(newMonitor);
-    System.out.println("Monitor in DB erstellt.");
+    LOGGER.debug("Monitor in DB created");
+    if (requestedMonitor == null) {
+      throw new IllegalArgumentException("Monitor already exists.");
+    }
 
     Integer count = 1;
     for (MonitoringTarget mTarget : domainMonitor.getTargets()) {
-      System.out.println("Handling Target " + count);
+      LOGGER.debug("Handling Target " + count);
       //handling
       handleMonitorTarget(userId, mTarget, domainMonitor);
       count++;
     }
 
-    if (requestedMonitor == null) {
-      throw new IllegalArgumentException("Monitor already exists.");
-    }
     return requestedMonitor;
   }
 
@@ -119,7 +125,7 @@ public class MonitorManagementService {
       DomainMonitorModel monitor) {
     switch (target.getType()) {
       case PROCESS:
-        System.out.println("Handle PROCESS: " + target);
+        LOGGER.debug("Handle PROCESS: " + target);
         handleProcess(userId, target, monitor);
 
         break;
@@ -130,7 +136,7 @@ public class MonitorManagementService {
         handleJob(userId, target, monitor);
         break;
       case NODE:
-        System.out.println("Handle NODE: " + target);
+        LOGGER.debug("Handle NODE: " + target);
         handleNode(userId, target, monitor);
         break;
       case CLOUD:
@@ -148,28 +154,15 @@ public class MonitorManagementService {
 
     executorService.execute(new Runnable() {
       public void run() {
-        System.out.println("Asynchronous task");
-        System.out.println("installing visor");
+        LOGGER.debug("starting asynchronous task");
         visorMonitorHandler.installVisor(userId, targetNode);
-        System.out.println("configuring Visor");
-        visorMonitorHandler.configureVisor(userId, target, targetNode, monitor);
-        System.out.println("visor install and config done");
+        visorMonitorHandler.configureVisor(targetNode, monitor);
+        LOGGER.debug("visor install and config done");
       }
     });
 
     executorService.shutdown();
-/*
-    if (!monitorHandler.installVisor(userId, targetNode)) {
-    Node targetNode = visorMonitorHandler.getNodeById(target.getIdentifier(), userId);
-    if (!visorMonitorHandler.installVisor(userId, targetNode)) {
-      LOGGER.error("Error by installing Visor on Node ", targetNode);
-      throw new IllegalStateException("Error by installing Visor");
-    }
-    if (!visorMonitorHandler.configureVisor(userId, target, targetNode, monitor)) {
-      LOGGER.error("Error by configuring Visor on Node ", targetNode);
-      throw new IllegalStateException("Error by configuring Visor");
-    }
-*/
+
     LOGGER.debug("Finished handleNode");
   }
 
@@ -201,31 +194,19 @@ public class MonitorManagementService {
       LOGGER.debug("Start handling SingleProcess");
       Node processNode = visorMonitorHandler
           .getNodeById(((SingleProcess) process).getNode(), userId);
+
       ExecutorService executorService = Executors.newSingleThreadExecutor();
 
       executorService.execute(new Runnable() {
         public void run() {
-          System.out.println("Asynchronous task");
-          System.out.println("installing visor");
+          LOGGER.debug("starting asynchronous task");
           visorMonitorHandler.installVisor(userId, processNode);
-          System.out.println("configuring Visor");
-          visorMonitorHandler.configureVisor(userId, target, processNode, monitor);
-          System.out.println("visor install and config done");
+          visorMonitorHandler.configureVisor(processNode, monitor);
+          LOGGER.debug("visor install and config done");
         }
       });
-
       executorService.shutdown();
-      /*
-      if (!visorMonitorHandler.installVisor(userId, processNode)) {
-        LOGGER.error("Error by installing Visor on Node: " + processNode.name());
-        throw new IllegalStateException("Error by installing Visor on Node: " + processNode);
-      }
 
-      if (!visorMonitorHandler.configureVisor(userId, target, processNode, monitor)) {
-        LOGGER.error("Error by configuring Visor on Node: " + processNode.name());
-        throw new IllegalStateException("Error by configuring Visor on Node: " + processNode);
-      }
-      */
       LOGGER.debug("Finished handling SingleProcess");
 
     } else if (process instanceof ClusterProcess) {

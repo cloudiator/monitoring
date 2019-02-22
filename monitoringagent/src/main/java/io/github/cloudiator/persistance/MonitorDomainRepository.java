@@ -28,7 +28,6 @@ public class MonitorDomainRepository {
   private final SensorDomainRepository sensorDomainRepository;
   private final TargetDomainRepository targetDomainRepository;
 
-  private final MTagModelRepository MTagModelRepository;
   private final DataSinkModelRepository dataSinkModelRepository;
   private final MonitorModelRepository monitorModelRepository;
   private final IntervalModelRepository intervalModelRepository;
@@ -36,13 +35,11 @@ public class MonitorDomainRepository {
 
   @Inject
   public MonitorDomainRepository(DataSinkModelRepository dataSinkModelRepository,
-      MTagModelRepository MTagModelRepository,
       MonitorModelRepository monitorModelRepository,
       TargetDomainRepository targetDomainRepository,
       SensorDomainRepository sensorDomainRepository,
       IntervalModelRepository intervalModelRepository) {
     this.dataSinkModelRepository = dataSinkModelRepository;
-    this.MTagModelRepository = MTagModelRepository;
     this.monitorModelRepository = monitorModelRepository;
     this.targetDomainRepository = targetDomainRepository;
     this.sensorDomainRepository = sensorDomainRepository;
@@ -163,16 +160,16 @@ public class MonitorDomainRepository {
   }
 
   public void deleteMonitor(String metric) {
-    if (metric.matches("deleteAll")) {
-      monitorModelRepository.deleteAll();
+    Optional<MonitorModel> dbMonitor = monitorModelRepository.findMonitorByMetric(metric);
+    if (!dbMonitor.isPresent()) {
+      throw new IllegalStateException("Monitor does not exist.");
     } else {
-      Optional<MonitorModel> dbMonitor = monitorModelRepository.findMonitorByMetric(metric);
-      if (!dbMonitor.isPresent()) {
-        throw new IllegalStateException("Monitor does not exist.");
-      } else {
-        monitorModelRepository.delete(dbMonitor.get());
-      }
+      monitorModelRepository.delete(dbMonitor.get());
     }
+  }
+
+  public void deleteAll() {
+    monitorModelRepository.deleteAll();
   }
 
 

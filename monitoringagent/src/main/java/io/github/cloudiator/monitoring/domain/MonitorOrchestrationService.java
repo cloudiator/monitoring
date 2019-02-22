@@ -17,6 +17,8 @@ public interface MonitorOrchestrationService {
 
   void deleteMonitor(String monitormetric);
 
+  void deleteAll();
+
   Optional<DomainMonitorModel> getMonitor(String monitorMetric);
 
 }

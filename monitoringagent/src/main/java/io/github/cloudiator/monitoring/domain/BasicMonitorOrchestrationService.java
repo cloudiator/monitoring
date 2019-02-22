@@ -15,7 +15,6 @@ import java.util.Optional;
 public class BasicMonitorOrchestrationService implements MonitorOrchestrationService {
 
   private final MonitorDomainRepository monitorDomainRepository;
-  private final MonitorToVisorMonitorConverter visorMonitorConverter = new MonitorToVisorMonitorConverter();
 
 
   @Inject
@@ -51,13 +50,19 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   }
 
   @Override
+  public void deleteAll() {
+    monitorDomainRepository.deleteAll();
+  }
+
+  @Override
   public Optional<DomainMonitorModel> getMonitor(String monitorMetric) {
     checkNotNull(monitorMetric, "Metric is null");
     final DomainMonitorModel result = monitorDomainRepository.findMonitorByMetric(monitorMetric);
     if (result == null) {
       return Optional.empty();
+    } else {
+      return Optional.of(result);
     }
-    return Optional.of(result);
   }
 
 

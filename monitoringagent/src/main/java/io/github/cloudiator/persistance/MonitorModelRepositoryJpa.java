@@ -28,9 +28,9 @@ public class MonitorModelRepositoryJpa extends BaseModelRepositoryJpa<MonitorMod
     return Optional.ofNullable(monitorModel);
   }
 
-
+  @Override
   public void deleteAll() {
-    String query = String.format("DELETE FROM %s", type.getName());
+    String query = String.format("DELETE FROM MonitorModel ");
     Query deletequery = em().createQuery(query);
     deletequery.executeUpdate();
   }
