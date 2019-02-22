@@ -44,18 +44,7 @@ public class MonitorQueryListener implements Runnable {
               }
               MonitorQueryResponse result = responseBuilder.build();
 
-
-              /*
-              List<Monitor> updatedMonitors = monitorManagementService
-                  .monitorupdate(content.getUserId());
-              MonitorQueryResponse.Builder responseBuilder2 = MonitorQueryResponse.newBuilder();
-              for (Monitor monitor : updatedMonitors) {
-                responseBuilder2.addMonitor(monitorConverter.apply(monitor));
-              }
-              MonitorQueryResponse result2 = responseBuilder2.build();
-              */
-
-              System.out.println("Sending result: " + result);
+              LOGGER.debug("Sending response for MonitorQueryRequest ");
               messageInterface.reply(id, result);
             } catch (Exception e) {
               LOGGER.error("Error while searching for Monitors. ", e);
