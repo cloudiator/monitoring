@@ -1,5 +1,11 @@
 package io.github.cloudiator.monitoring.domain;
 
+import com.github.rholder.retry.RetryException;
+import com.github.rholder.retry.Retryer;
+import com.github.rholder.retry.RetryerBuilder;
+import com.github.rholder.retry.StopStrategies;
+import com.github.rholder.retry.WaitStrategies;
+import com.google.common.base.Predicates;
 import com.google.inject.Inject;
 import io.github.cloudiator.domain.Node;
 import io.github.cloudiator.messaging.NodeToNodeMessageConverter;
@@ -10,8 +16,12 @@ import io.github.cloudiator.rest.model.Monitor;
 import io.github.cloudiator.rest.model.MonitoringTarget;
 import io.github.cloudiator.util.Base64IdEncoder;
 import io.github.cloudiator.util.IdEncoder;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.cloudiator.messages.InstallationEntities.Tool;
 import org.cloudiator.messaging.ResponseException;
@@ -86,28 +96,50 @@ public class VisorMonitorHandler {
     return true;
   }
 
-  public boolean configureVisor(String userId, MonitoringTarget target, Node targetNode,
-      DomainMonitorModel monitor) {
+  public boolean configureVisor(Node targetNode, DomainMonitorModel monitor) {
     LOGGER.debug("Starting VisorConfigurationProcess on: " + targetNode.name());
 
     DefaultApi apiInstance = new DefaultApi();
     ApiClient apiClient = new ApiClient();
     String basepath = String.format("http://%s:%s", targetNode.connectTo().ip(), VisorPort);
     LOGGER.debug("Basepath: " + basepath.toString());
-    System.out.println("Basepath: " + basepath.toString());
     apiClient.setBasePath(basepath);
     apiInstance.setApiClient(apiClient);
     LOGGER.debug("apiClient: " + apiClient.toString());
 
+    Callable<Boolean> visorready = new Callable<Boolean>() {
+      @Override
+      public Boolean call() throws Exception {
+        LOGGER.debug(" - calling Visor - ");
+        return (apiInstance.getMonitors() != null);
+      }
+    };
+
+    Retryer<Boolean> retryer = RetryerBuilder.<Boolean>newBuilder()
+        .retryIfResult(Predicates.<Boolean>isNull())
+        .retryIfExceptionOfType(ApiException.class)
+        .retryIfRuntimeException()
+        .withWaitStrategy(WaitStrategies.fixedWait(500, TimeUnit.MILLISECONDS))
+        .withStopStrategy(StopStrategies.stopAfterDelay(10000, TimeUnit.MILLISECONDS))
+        .build();
+
+    try {
+      retryer.call(visorready);
+    } catch (RetryException e) {
+      e.printStackTrace();
+    } catch (ExecutionException e) {
+      e.printStackTrace();
+    }
+
+    LOGGER.debug("- calling Visor successful - ");
     io.github.cloudiator.visor.rest.model.Monitor visorMonitor = visorMonitorConverter
         .apply(monitor);
-    LOGGER.debug("used Monitor: " + visorMonitor);
-    System.out.println("used Monitor: " + visorMonitor);
+
     try {
-      LOGGER.debug("using DefaultApi and visorMonitor: " + visorMonitor);
+      LOGGER.debug("POSTing Monitor ");
       io.github.cloudiator.visor.rest.model.Monitor visorResponse = apiInstance
           .postMonitors(visorMonitor);
-      System.out.println("visorResponse: " + visorResponse);
+
     } catch (ApiException e) {
       System.err.println("Exception when calling DefaultApi#postMonitors");
       e.printStackTrace();
@@ -152,7 +184,7 @@ public class VisorMonitorHandler {
         throw new IllegalStateException("Node not found");
       }
       NodeEntities.Node nodeEntity = response.getNodesList().get(0);
-      LOGGER.debug("found NodeEntity: " + nodeEntity);
+      LOGGER.debug("found NodeEntity ");
 
       return nodeMessageConverter.applyBack(nodeEntity);
 
