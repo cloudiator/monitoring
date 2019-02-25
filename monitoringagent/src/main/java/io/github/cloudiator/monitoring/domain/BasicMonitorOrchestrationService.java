@@ -3,6 +3,7 @@ package io.github.cloudiator.monitoring.domain;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.inject.Inject;
+import com.google.protobuf.MapEntry;
 import io.github.cloudiator.monitoring.converter.MonitorToVisorMonitorConverter;
 
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
@@ -11,6 +12,7 @@ import io.github.cloudiator.rest.model.Monitor;
 import io.github.cloudiator.rest.model.MonitoringTarget;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class BasicMonitorOrchestrationService implements MonitorOrchestrationService {
@@ -30,10 +32,12 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
       Monitor test = new Monitor().metric(
           newMonitor.getMetric().concat("+++").concat(target.getType().name()).concat("+++")
               .concat(target.getIdentifier()));
-      test.setTags(newMonitor.getTags());
       test.setSensor(newMonitor.getSensor());
       test.setSinks(newMonitor.getSinks());
       test.setTargets(newMonitor.getTargets());
+      Map<String, String> tagtargets = newMonitor.getTags();
+      tagtargets.put(target.getType().name(), target.getIdentifier());
+      test.setTags(tagtargets);
       result = monitorDomainRepository.addMonitor(test);
     }
     return result;
