@@ -25,7 +25,18 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
 
   @Override
   public DomainMonitorModel createMonitor(Monitor newMonitor) {
-    return monitorDomainRepository.addMonitor(newMonitor);
+    DomainMonitorModel result = null;
+    for (MonitoringTarget target : newMonitor.getTargets()) {
+      Monitor test = new Monitor().metric(
+          newMonitor.getMetric().concat("+++").concat(target.getType().name()).concat("+++")
+              .concat(target.getIdentifier()));
+      test.setTags(newMonitor.getTags());
+      test.setSensor(newMonitor.getSensor());
+      test.setSinks(newMonitor.getSinks());
+      test.setTargets(newMonitor.getTargets());
+      result = monitorDomainRepository.addMonitor(test);
+    }
+    return result;
   }
 
   @Override

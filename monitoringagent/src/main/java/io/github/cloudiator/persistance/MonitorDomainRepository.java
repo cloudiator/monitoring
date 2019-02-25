@@ -140,18 +140,22 @@ public class MonitorDomainRepository {
      *Save all Monitors
      * for every MonitorTarget one Monitor is added in DB
      */
-
+    /*
     for (TargetModel targetModel : monitorModel.getTargets()) {
       LOGGER.debug("handle Target: " + targetModel.getIdentifier());
-      String dbMetric = new String(
-          monitorModel.getMetric().concat("+++").concat(targetModel.getTargetType().name())
-              .concat("+++").concat(targetModel.getIdentifier()));
-      monitorModel.setMetric(dbMetric);
-      monitorModelRepository.save(monitorModel);
-      LOGGER.debug("saved MonitorModel: " + monitorModel.getMetric());
+      MonitorModel target = monitorModel;
+
+      target.setMetric(monitorModel.getMetric().concat("+++")
+          .concat(targetModel.getTargetType().name())
+          .concat("+++").concat(targetModel.getIdentifier()));
+      LOGGER.debug("dbMetric: " + target.getMetric());
+      monitorModelRepository.save(target);
+      LOGGER.debug("saved MonitorModel: " + target.getMetric());
       monitorModel.setMetric(monitorModel.getMetric().split("[+++]", 2)[0]);
-      LOGGER.debug("reset metric" + monitorModel.getMetric());
+      LOGGER.debug("reset metric " + monitorModel.getMetric());
     }
+    */
+    monitorModelRepository.save(monitorModel);
 
     return MONITOR_MODEL_CONVERTER.apply(monitorModel);
   }

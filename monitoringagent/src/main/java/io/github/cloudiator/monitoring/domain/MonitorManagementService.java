@@ -51,6 +51,7 @@ public class MonitorManagementService {
       dbMonitor = monitorOrchestrationService
           .getMonitor(dbMetric);
       if (dbMonitor.isPresent()) {
+        LOGGER.debug("found Monitor: " + dbMonitor.get());
         check = true;
         break;
       }
@@ -130,11 +131,11 @@ public class MonitorManagementService {
     LOGGER.debug("Handling " + newMonitor.getTargets().size() + " Targets");
 
     DomainMonitorModel requestedMonitor = checkAndCreate(newMonitor);
-    LOGGER.debug("Monitor in DB created");
+
     if (requestedMonitor == null) {
       throw new IllegalArgumentException("Monitor already exists.");
     }
-
+    LOGGER.debug("Monitor(s) in DB created");
     Integer count = 1;
     for (MonitoringTarget mTarget : domainMonitor.getTargets()) {
       LOGGER.debug("Handling Target " + count);
