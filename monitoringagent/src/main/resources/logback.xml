@@ -61,6 +61,7 @@
 
   <logger level="DEBUG" name="io.github.cloudiator.monitoring"/>
   <logger level="DEBUG" name="org.cloudiator.messaging.kafka"/>
+  <logger level="DEBUG" name="io.github.cloudiator.persistance"/>
 
   <root level="WARN">
     <appender-ref ref="STDOUT"/>

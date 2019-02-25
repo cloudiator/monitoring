@@ -8,6 +8,7 @@ import io.github.cloudiator.monitoring.converter.MonitorToVisorMonitorConverter;
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.persistance.MonitorDomainRepository;
 import io.github.cloudiator.rest.model.Monitor;
+import io.github.cloudiator.rest.model.MonitoringTarget;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;

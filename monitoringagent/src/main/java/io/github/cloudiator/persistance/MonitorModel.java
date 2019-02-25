@@ -66,6 +66,10 @@ public class MonitorModel extends Model {
     return metric;
   }
 
+  public void setMetric(String metric) {
+    this.metric = metric;
+  }
+
   public List<TargetModel> getTargets() {
     return targets;
   }

@@ -18,11 +18,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class MonitorDomainRepository {
 
   final static MonitorModelConverter MONITOR_MODEL_CONVERTER = new MonitorModelConverter();
+  private static final Logger LOGGER = LoggerFactory.getLogger(MonitorDomainRepository.class);
 
 
   private final SensorDomainRepository sensorDomainRepository;
@@ -84,6 +89,7 @@ public class MonitorDomainRepository {
      */
 
     MonitorModel monitorModel = new MonitorModel().metric(monitor.getMetric());
+
     //include Targets
     for (MonitoringTarget monitoringTarget : monitor.getTargets()) {
       TargetModel targetModel = new TargetModel()
@@ -91,7 +97,6 @@ public class MonitorDomainRepository {
           .targetType(TargetType.valueOf(monitoringTarget.getType().name()));
       monitorModel.addTarget(targetModel);
     }
-
     //include Sensor
     Sensor sensor = monitor.getSensor();
     switch (sensor.getType()) {
@@ -129,12 +134,24 @@ public class MonitorDomainRepository {
     }
     monitorModel.setMonitoringTags(tags);
 
+    // monitorModel is fully initialized
+
     /**
-     *Save all Models
-     * Monitor has CasdaceType.All by all references
+     *Save all Monitors
+     * for every MonitorTarget one Monitor is added in DB
      */
 
-    monitorModelRepository.save(monitorModel);
+    for (TargetModel targetModel : monitorModel.getTargets()) {
+      LOGGER.debug("handle Target: " + targetModel.getIdentifier());
+      String dbMetric = new String(
+          monitorModel.getMetric().concat("+++").concat(targetModel.getTargetType().name())
+              .concat("+++").concat(targetModel.getIdentifier()));
+      monitorModel.setMetric(dbMetric);
+      monitorModelRepository.save(monitorModel);
+      LOGGER.debug("saved MonitorModel: " + monitorModel.getMetric());
+      monitorModel.setMetric(monitorModel.getMetric().split("[+++]", 2)[0]);
+      LOGGER.debug("reset metric" + monitorModel.getMetric());
+    }
 
     return MONITOR_MODEL_CONVERTER.apply(monitorModel);
   }
