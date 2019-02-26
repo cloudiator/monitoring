@@ -13,8 +13,6 @@ public interface MonitorOrchestrationService {
 
   void updateMonitor(Monitor monitor);
 
-  void deleteMonitor(Monitor monitor);
-
   void deleteMonitor(String monitormetric);
 
   void deleteAll();

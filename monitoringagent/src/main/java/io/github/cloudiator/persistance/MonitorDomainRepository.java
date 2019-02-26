@@ -169,22 +169,14 @@ public class MonitorDomainRepository {
     // NOT Implemented
   }
 
-  public void deleteMonitor(Monitor monitor) {
-    Optional<MonitorModel> dbMonitor = monitorModelRepository
-        .findMonitorByMetric(monitor.getMetric());
-    if (!dbMonitor.isPresent()) {
-      throw new IllegalStateException("Monitor does not exist.");
-    } else {
-      monitorModelRepository.delete(dbMonitor.get());
-    }
-
-  }
 
   public void deleteMonitor(String metric) {
     Optional<MonitorModel> dbMonitor = monitorModelRepository.findMonitorByMetric(metric);
+    LOGGER.debug("Check Monitor for deleting.");
     if (!dbMonitor.isPresent()) {
       throw new IllegalStateException("Monitor does not exist.");
     } else {
+      LOGGER.debug("Deleting Monitor now! ");
       monitorModelRepository.delete(dbMonitor.get());
     }
   }

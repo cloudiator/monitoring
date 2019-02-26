@@ -56,11 +56,6 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   }
 
   @Override
-  public void deleteMonitor(Monitor monitor) {
-    monitorDomainRepository.deleteMonitor(monitor);
-  }
-
-  @Override
   public void deleteMonitor(String metric) {
     monitorDomainRepository.deleteMonitor(metric);
   }

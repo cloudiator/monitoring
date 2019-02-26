@@ -100,11 +100,11 @@ public class MonitorManagementService {
   }
 
   @Transactional
-  public void checkAndDeleteMonitor(String metric) {
-    LOGGER.debug("checkAndDelete " + metric);
-    // io.github.cloudiator.visor.rest.model.Monitor result= monitorOrchestrationService.getMonitor(metric);
-
-    monitorOrchestrationService.deleteMonitor(metric);
+  public void checkAndDeleteMonitor(String metric, MonitoringTarget target) {
+    LOGGER.debug("starting checkAndDelete ");
+    monitorOrchestrationService.deleteMonitor(
+        metric.concat("+++").concat(target.getType().name()).concat("+++")
+            .concat(target.getIdentifier()));
   }
 
   @Transactional
@@ -114,8 +114,10 @@ public class MonitorManagementService {
   }
 
   @Transactional
-  public Monitor getMonitor(String metric) {
-    Monitor result = monitorOrchestrationService.getMonitor(metric).get();
+  public Monitor getMonitor(String metric, MonitoringTarget target) {
+    DomainMonitorModel result = monitorOrchestrationService
+        .getMonitor(metric.concat("+++")
+            .concat(target.getType().name().concat("+++").concat(target.getIdentifier()))).get();
     if (result == null) {
       throw new IllegalArgumentException("Monitor not found. ");
     }
