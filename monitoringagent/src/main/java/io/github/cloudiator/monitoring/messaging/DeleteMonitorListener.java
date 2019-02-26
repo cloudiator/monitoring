@@ -3,6 +3,7 @@ package io.github.cloudiator.monitoring.messaging;
 import com.google.inject.Inject;
 import io.github.cloudiator.rest.converter.MonitorConverter;
 import io.github.cloudiator.monitoring.domain.MonitorManagementService;
+import io.github.cloudiator.rest.converter.MonitorTargetConverter;
 import org.cloudiator.messages.Monitor.DeleteMonitorRequest;
 import org.cloudiator.messages.Monitor.DeleteMonitorResponse;
 import org.cloudiator.messaging.MessageCallback;
@@ -16,7 +17,7 @@ public class DeleteMonitorListener implements Runnable {
   private static final Logger LOGGER = LoggerFactory.getLogger(DeleteMonitorListener.class);
   private final MessageInterface messageInterface;
   private final MonitorManagementService monitorManagementService;
-  private final MonitorConverter monitorConverter = new MonitorConverter();
+  private final MonitorTargetConverter targetConverter = MonitorTargetConverter.INSTANCE;
 
   @Inject
   public DeleteMonitorListener(MessageInterface messageInterface,
@@ -33,14 +34,12 @@ public class DeleteMonitorListener implements Runnable {
           public void accept(String id, DeleteMonitorRequest content) {
             try {
               System.out.println("Got message: \n" + content + "---");
-              if (content.getMetric().equals("666")) {
-                monitorManagementService.deleteAll();
-                LOGGER.debug("All Monitors deleted from Database! ");
-              } else {
+
                 monitorManagementService
-                    .checkAndDeleteMonitor(content.getMetric());
-                LOGGER.debug("Deleted Monitor: " + content.getMetric());
-              }
+                    .checkAndDeleteMonitor(content.getMetric(), targetConverter.applyBack(content.getTarget()));
+
+                LOGGER.debug("Deleted Monitor: ");
+
               DeleteMonitorResponse.Builder responseBuilder = DeleteMonitorResponse.newBuilder();
 
               DeleteMonitorResponse result = responseBuilder.build();
