@@ -39,14 +39,12 @@ public class CreateMonitorListener implements Runnable {
 
               Monitor contentMonitor = monitorConverter.applyBack(content.getNewmonitor());
 
-              System.out.println("\n Got this Monitor: " + contentMonitor);
-
               Monitor createdMonitor = monitorManagementService
                   .handleNewMonitor(content.getUserId(), contentMonitor);
 
               CreateMonitorResponse monitorResponse = CreateMonitorResponse.newBuilder()
                   .setMonitor(monitorConverter.apply(createdMonitor)).build();
-              System.out.println("This is my Response: " + monitorResponse);
+              LOGGER.debug(" CreateMonitorRequest responded ");
               messageInterface.reply(id, monitorResponse);
 
             } catch (IllegalArgumentException ie) {

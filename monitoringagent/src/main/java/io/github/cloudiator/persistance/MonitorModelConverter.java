@@ -18,7 +18,7 @@ public class MonitorModelConverter implements OneWayConverter<MonitorModel, Doma
   public DomainMonitorModel apply(@Nullable MonitorModel monitorModel) {
     //Metric
     DomainMonitorModel result = new DomainMonitorModel()
-        .metric(monitorModel.getMetric());
+        .metric(monitorModel.getMetric().split("[+++]", 2)[0]);
     //Target
     for (TargetModel targetModel : monitorModel.getTargets()) {
       result.addTargetsItem(targetModelConverter.apply(targetModel));

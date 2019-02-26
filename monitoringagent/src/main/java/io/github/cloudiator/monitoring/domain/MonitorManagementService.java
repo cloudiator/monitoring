@@ -42,6 +42,31 @@ public class MonitorManagementService {
 
   @Transactional
   public DomainMonitorModel checkAndCreate(Monitor monitor) {
+    Boolean check = false;
+    Optional<DomainMonitorModel> dbMonitor = null;
+    for (MonitoringTarget mTarget : monitor.getTargets()) {
+      String dbMetric = new String(
+          monitor.getMetric() + "+++" + mTarget.getType().name() + "+++" + mTarget.getIdentifier());
+      //monitor.setMetric(dbMetric);
+      dbMonitor = monitorOrchestrationService
+          .getMonitor(dbMetric);
+      if (dbMonitor.isPresent()) {
+        LOGGER.debug("found Monitor: " + dbMonitor.get());
+        check = true;
+        break;
+      }
+    }
+    //Optional<DomainMonitorModel> dbMonitor = monitorOrchestrationService.getMonitor(monitor.getMetric());
+    if (check) {
+      return null;
+    } else {
+      dbMonitor = Optional.of(monitorOrchestrationService.createMonitor(monitor));
+      return dbMonitor.get();
+    }
+  }
+
+  @Transactional
+  public DomainMonitorModel checkMonitor(Monitor monitor) {
     Optional<DomainMonitorModel> dbMonitor = monitorOrchestrationService
         .getMonitor(monitor.getMetric());
     if (dbMonitor.isPresent()) {
@@ -104,12 +129,13 @@ public class MonitorManagementService {
         newMonitor.getTargets(), newMonitor.getSensor(), newMonitor.getSinks(),
         newMonitor.getTags());
     LOGGER.debug("Handling " + newMonitor.getTargets().size() + " Targets");
+
     DomainMonitorModel requestedMonitor = checkAndCreate(newMonitor);
-    LOGGER.debug("Monitor in DB created");
+
     if (requestedMonitor == null) {
       throw new IllegalArgumentException("Monitor already exists.");
     }
-
+    LOGGER.debug("Monitor(s) in DB created");
     Integer count = 1;
     for (MonitoringTarget mTarget : domainMonitor.getTargets()) {
       LOGGER.debug("Handling Target " + count);
