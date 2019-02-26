@@ -35,10 +35,11 @@ public class DeleteMonitorListener implements Runnable {
             try {
               System.out.println("Got message: \n" + content + "---");
 
-                monitorManagementService
-                    .checkAndDeleteMonitor(content.getMetric(), targetConverter.applyBack(content.getTarget()));
+              monitorManagementService
+                  .checkAndDeleteMonitor(content.getMetric(),
+                      targetConverter.applyBack(content.getTarget()));
 
-                LOGGER.debug("Deleted Monitor: ");
+              LOGGER.debug("Done deleting Monitor ");
 
               DeleteMonitorResponse.Builder responseBuilder = DeleteMonitorResponse.newBuilder();
 
