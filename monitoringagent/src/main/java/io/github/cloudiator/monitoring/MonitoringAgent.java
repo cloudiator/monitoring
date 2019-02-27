@@ -9,6 +9,7 @@ import io.github.cloudiator.monitoring.config.MonitorContext;
 import de.uniulm.omi.cloudiator.util.configuration.Configuration;
 import io.github.cloudiator.monitoring.messaging.CreateMonitorListener;
 import io.github.cloudiator.monitoring.messaging.DeleteMonitorListener;
+import io.github.cloudiator.monitoring.messaging.GetMonitorListener;
 import io.github.cloudiator.monitoring.messaging.MonitorQueryListener;
 import io.github.cloudiator.monitoring.messaging.UpdateMonitorListener;
 import io.github.cloudiator.util.JpaContext;
@@ -38,5 +39,7 @@ public class MonitoringAgent {
     final UpdateMonitorListener updateMonitorListener = injector
         .getInstance(UpdateMonitorListener.class);
     updateMonitorListener.run();
+    final GetMonitorListener getMonitorListener = injector.getInstance(GetMonitorListener.class);
+    getMonitorListener.run();
   }
 }

@@ -15,13 +15,20 @@ import io.github.cloudiator.visor.rest.model.PushMonitor;
 import io.github.cloudiator.visor.rest.model.SensorMonitor;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MonitorToVisorMonitorConverter implements
     TwoWayConverter<DomainMonitorModel, io.github.cloudiator.visor.rest.model.Monitor> {
 
+  public static final MonitorToVisorMonitorConverter INSTANCE = new MonitorToVisorMonitorConverter();
+
   private final DataSinkConverter dataSinkConverter = new DataSinkConverter();
   private final IntervalConverter intervalConverter = new IntervalConverter();
+
+  private MonitorToVisorMonitorConverter() {
+  }
 
 
   @Override
@@ -52,16 +59,19 @@ public class MonitorToVisorMonitorConverter implements
   }
 
   @Override
-  public DomainMonitorModel applyBack(io.github.cloudiator.visor.rest.model.Monitor VisorMonitor) {
+  public DomainMonitorModel applyBack(io.github.cloudiator.visor.rest.model.Monitor visorMonitor) {
     DomainMonitorModel result = new DomainMonitorModel()
-        .metric(VisorMonitor.getMetricName());
+        .metric(visorMonitor.getMetricName());
+    result.setSinks(dataSinkConverter.applyBack(visorMonitor.getDataSinks()));
 
-    return null;
+    result.setTags(visorMonitor.getMonitorContext());
+
+    return result;
   }
 
 
   private class DataSinkConverter implements
-      OneWayConverter<List<DataSink>, List<io.github.cloudiator.visor.rest.model.DataSink>> {
+      TwoWayConverter<List<DataSink>, List<io.github.cloudiator.visor.rest.model.DataSink>> {
 
     @Override
     public List<io.github.cloudiator.visor.rest.model.DataSink> apply(List<DataSink> dataSinks) {
@@ -70,6 +80,18 @@ public class MonitorToVisorMonitorConverter implements
         result.add(new io.github.cloudiator.visor.rest.model.DataSink()
             .type(TypeEnum.valueOf(monitorsink.getType().name()))
             .config(new DataSinkConfiguration().values(monitorsink.getConfiguration())));
+      }
+      return result;
+    }
+
+    @Override
+    public List<DataSink> applyBack(
+        List<io.github.cloudiator.visor.rest.model.DataSink> visorDataSinks) {
+      List<DataSink> result = new ArrayList<>();
+      for (io.github.cloudiator.visor.rest.model.DataSink visorDataSink : visorDataSinks) {
+        result.add(new DataSink()
+            .type(DataSink.TypeEnum.valueOf(visorDataSink.getType().name()))
+            ._configuration(visorDataSink.getConfig().getValues()));
       }
       return result;
     }

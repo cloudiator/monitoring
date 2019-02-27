@@ -40,8 +40,11 @@ public class GetMonitorListener implements Runnable {
           @Override
           public void accept(String id, GetMonitorRequest content) {
             try {
-              Monitor dbmonitor = monitorManagementService
-                  .getMonitor(content.getMetric(), targetConverter.applyBack(content.getTarget()));
+              Monitor dbmonitor = null;
+
+              dbmonitor = monitorManagementService
+                  .getMonitor(content.getMetric(),
+                      targetConverter.applyBack(content.getTarget()));
 
               GetMonitorResponse.Builder responseBuilder = GetMonitorResponse.newBuilder()
                   .setMonitor(monitorConverter.apply(dbmonitor));
@@ -50,16 +53,16 @@ public class GetMonitorListener implements Runnable {
               messageInterface.reply(id, result);
             } catch (IllegalArgumentException e) {
               LOGGER.error("Requested Monitor not present. ", e);
-              messageInterface.reply(UpdateMonitorResponse.class, id,
+              messageInterface.reply(GetMonitorResponse.class, id,
                   Error.newBuilder().setCode(404).setMessage("Monitor not found").build());
             } catch (NoSuchElementException e) {
               LOGGER.error("No Monitor found. ", e);
-              messageInterface.reply(UpdateMonitorResponse.class, id,
+              messageInterface.reply(GetMonitorResponse.class, id,
                   Error.newBuilder().setCode(400).setMessage("Monitor not found.").build());
             } catch (Exception e) {
               LOGGER.error("Error while searching for Monitors. ", e);
               messageInterface
-                  .reply(UpdateMonitorResponse.class, id, Error.newBuilder().setCode(500)
+                  .reply(GetMonitorResponse.class, id, Error.newBuilder().setCode(500)
                       .setMessage("Error while searching for Monitors " + e.getMessage()).build());
             }
           }
