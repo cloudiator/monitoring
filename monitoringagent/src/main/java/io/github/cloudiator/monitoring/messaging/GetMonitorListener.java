@@ -41,16 +41,11 @@ public class GetMonitorListener implements Runnable {
           public void accept(String id, GetMonitorRequest content) {
             try {
               Monitor dbmonitor = null;
-              if (content.getMetric().matches("getAllMonitors")) {
-                LOGGER.debug("searching vor VisorMonitors");
-                dbmonitor = monitorManagementService.getAllVisor(content.getUserId(),
-                    targetConverter.applyBack(content.getTarget()));
-              } else {
-                dbmonitor = monitorManagementService
-                    .getMonitor(content.getMetric(),
-                        targetConverter.applyBack(content.getTarget()));
-              }
 
+              dbmonitor = monitorManagementService
+                  .getMonitor(content.getMetric(),
+                      targetConverter.applyBack(content.getTarget()));
+              
               GetMonitorResponse.Builder responseBuilder = GetMonitorResponse.newBuilder()
                   .setMonitor(monitorConverter.apply(dbmonitor));
 
