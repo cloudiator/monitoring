@@ -3,6 +3,7 @@ package io.github.cloudiator.monitoring.domain;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import io.github.cloudiator.messaging.NodeToNodeMessageConverter;
+import io.github.cloudiator.monitoring.converter.MonitorToVisorMonitorConverter;
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.rest.converter.ProcessConverter;
 import io.github.cloudiator.rest.model.CloudiatorProcess;
@@ -30,7 +31,7 @@ public class MonitorManagementService {
   private final VisorMonitorHandler visorMonitorHandler;
   private final MonitorOrchestrationService monitorOrchestrationService;
   private final ProcessService processService;
-  private final NodeToNodeMessageConverter nodeMessageConverter = NodeToNodeMessageConverter.INSTANCE;
+  private final MonitorToVisorMonitorConverter visorMonitorConverter = MonitorToVisorMonitorConverter.INSTANCE;
 
   @Inject
   public MonitorManagementService(VisorMonitorHandler visorMonitorHandler,
@@ -183,6 +184,7 @@ public class MonitorManagementService {
     executorService.execute(new Runnable() {
       public void run() {
         LOGGER.debug("starting asynchronous task");
+        visorMonitorHandler.installEMSClient(userId, targetNode);
         visorMonitorHandler.installVisor(userId, targetNode);
         visorMonitorHandler.configureVisor(targetNode, monitor);
         LOGGER.debug("visor install and config done");
@@ -228,6 +230,14 @@ public class MonitorManagementService {
       executorService.execute(new Runnable() {
         public void run() {
           LOGGER.debug("starting asynchronous task");
+          try {
+            visorMonitorHandler.installEMSClient(userId, processNode);
+          } catch (IllegalStateException e) {
+            LOGGER.debug("Exception during EMSInstallation: " + e);
+            LOGGER.debug("---");
+          } catch (Exception re) {
+            LOGGER.debug("Exception while EMSInstallation " + re);
+          }
           visorMonitorHandler.installVisor(userId, processNode);
           visorMonitorHandler.configureVisor(processNode, monitor);
           LOGGER.debug("visor install and config done");
@@ -259,6 +269,18 @@ public class MonitorManagementService {
     //checking Monitor in Database
     DomainMonitorModel result = monitorOrchestrationService.getMonitor(metric).get();
 
+    return result;
+  }
+
+  public DomainMonitorModel getAllVisor(String userId, MonitoringTarget target) {
+    Node targetNode = visorMonitorHandler.getNodeById(target.getIdentifier(), userId);
+    LOGGER.debug("Got Node ");
+    List<io.github.cloudiator.visor.rest.model.Monitor> testresult = visorMonitorHandler
+        .getAllVisorMonitors(targetNode);
+    LOGGER.debug("got monitors ");
+
+    DomainMonitorModel result = visorMonitorConverter.applyBack(testresult.get(0));
+    LOGGER.debug("made output " + result);
     return result;
   }
 

@@ -49,9 +49,7 @@ public class VisorMonitorHandler {
 
   private final InstallationRequestService installationRequestService;
   private final NodeService nodeService;
-  private final IpAddressConverter ipConverter;
-  private final IdEncoder idEncoder = Base64IdEncoder.create();
-  private final MonitorToVisorMonitorConverter visorMonitorConverter = new MonitorToVisorMonitorConverter();
+  private final MonitorToVisorMonitorConverter visorMonitorConverter = MonitorToVisorMonitorConverter.INSTANCE;
   private final NodeToNodeMessageConverter nodeMessageConverter = NodeToNodeMessageConverter.INSTANCE;
 
   private final String VisorPort = "31415";
@@ -62,18 +60,15 @@ public class VisorMonitorHandler {
       NodeService nodeService) {
     this.installationRequestService = installationRequestService;
     this.nodeService = nodeService;
-    this.ipConverter = new IpAddressConverter();
   }
 
-
-  public boolean installVisor(String userId, Node node) {
-    LOGGER.debug(" Starting VisorInstallationProcess on: " + node.name());
+  public boolean installEMSClient(String userId, Node node) {
+    LOGGER.debug(" Starting EMSClientInstallationProcess on: " + node.name());
     try {
       NodeEntities.Node target = nodeMessageConverter.apply(node);
 
       final Builder installationBuilder = Installation.newBuilder().setNode(target)
-          .addTool(Tool.EMS_CLIENT).addTool(
-              InstallationEntities.Tool.VISOR);
+          .addTool(Tool.EMS_CLIENT);
 
       final InstallationRequest installationRequest = InstallationRequest.newBuilder()
           .setInstallation(installationBuilder.build())
@@ -87,10 +82,41 @@ public class VisorMonitorHandler {
 
       futureResponseCallback.get();
     } catch (InterruptedException e) {
-      throw new IllegalStateException(
-          "VISOR Installation was interrupted during installation request.", e);
+      LOGGER.debug("EMS install Exception catched: " + e);
+      // throw new IllegalStateException("EMS Installation was interrupted during installation request.", e);
     } catch (ExecutionException e) {
-      throw new IllegalStateException("Error during VisorInstallation", e.getCause());
+      LOGGER.debug("EMS install ExecutionException catched: " + e);
+      // throw new IllegalStateException("Error during EMSInstallation", e.getCause());
+    }
+    LOGGER.debug("finished EMSClientInstallationProcess on: " + node.name());
+    return true;
+  }
+
+  public boolean installVisor(String userId, Node node) {
+    LOGGER.debug(" Starting VisorInstallationProcess on: " + node.name());
+    try {
+      NodeEntities.Node target = nodeMessageConverter.apply(node);
+
+      final Builder installationBuilder = Installation.newBuilder().setNode(target)
+          .addTool(InstallationEntities.Tool.VISOR);
+
+      final InstallationRequest installationRequest = InstallationRequest.newBuilder()
+          .setInstallation(installationBuilder.build())
+          .setUserId(userId).build();
+
+      final SettableFutureResponseCallback<InstallationResponse, InstallationResponse> futureResponseCallback = SettableFutureResponseCallback
+          .create();
+
+      installationRequestService
+          .createInstallationRequestAsync(installationRequest, futureResponseCallback);
+
+      futureResponseCallback.get();
+    } catch (InterruptedException e) {
+      LOGGER.debug("Exception catched: " + e);
+      // throw new IllegalStateException("VISOR Installation was interrupted during installation request.", e);
+    } catch (ExecutionException e) {
+      LOGGER.debug("ExecutionException catched: " + e);
+      // throw new IllegalStateException("Error during VisorInstallation", e.getCause());
     }
     LOGGER.debug("finished VisorInstallationProcess on: " + node.name());
     return true;
@@ -160,7 +186,8 @@ public class VisorMonitorHandler {
     ApiClient apiClient = new ApiClient().setBasePath(visorpath);
     DefaultApi api = new DefaultApi(apiClient);
     try {
-      allMonitors.stream().collect(Collectors.toList()).addAll(api.getMonitors());
+      allMonitors.addAll(api.getMonitors());
+      LOGGER.debug("Monitors: " + allMonitors);
       return allMonitors;
     } catch (ApiException e) {
       throw new IllegalStateException("Error while getMonitors: " + e.getMessage());
