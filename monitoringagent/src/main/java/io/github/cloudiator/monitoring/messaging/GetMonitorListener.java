@@ -45,7 +45,7 @@ public class GetMonitorListener implements Runnable {
               dbmonitor = monitorManagementService
                   .getMonitor(content.getMetric(),
                       targetConverter.applyBack(content.getTarget()));
-              
+
               GetMonitorResponse.Builder responseBuilder = GetMonitorResponse.newBuilder()
                   .setMonitor(monitorConverter.apply(dbmonitor));
 

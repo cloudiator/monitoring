@@ -112,11 +112,11 @@ public class VisorMonitorHandler {
 
       futureResponseCallback.get();
     } catch (InterruptedException e) {
-      LOGGER.debug("Exception catched: " + e);
-      // throw new IllegalStateException("VISOR Installation was interrupted during installation request.", e);
+      //LOGGER.debug("Exception catched: " + e);
+       throw new IllegalStateException("VISOR Installation was interrupted during installation request.", e);
     } catch (ExecutionException e) {
-      LOGGER.debug("ExecutionException catched: " + e);
-      // throw new IllegalStateException("Error during VisorInstallation", e.getCause());
+      //LOGGER.debug("ExecutionException catched: " + e);
+       throw new IllegalStateException("Error during VisorInstallation", e.getCause());
     }
     LOGGER.debug("finished VisorInstallationProcess on: " + node.name());
     return true;

@@ -102,7 +102,9 @@ public class MonitorManagementService {
 
   @Transactional
   public void checkAndDeleteMonitor(String metric, MonitoringTarget target) {
-    LOGGER.debug("starting checkAndDelete ");
+    LOGGER.debug("starting checkAndDelete :" + metric.concat("+++").concat(target.getType().name())
+        .concat("+++")
+        .concat(target.getIdentifier()));
     monitorOrchestrationService.deleteMonitor(
         metric.concat("+++").concat(target.getType().name()).concat("+++")
             .concat(target.getIdentifier()));
@@ -184,7 +186,14 @@ public class MonitorManagementService {
     executorService.execute(new Runnable() {
       public void run() {
         LOGGER.debug("starting asynchronous task");
-        visorMonitorHandler.installEMSClient(userId, targetNode);
+        try {
+          visorMonitorHandler.installEMSClient(userId, targetNode);
+        } catch (IllegalStateException e) {
+          LOGGER.debug("Exception during EMSInstallation: " + e);
+          LOGGER.debug("---");
+        } catch (Exception re) {
+          LOGGER.debug("Exception while EMSInstallation " + re);
+        }
         visorMonitorHandler.installVisor(userId, targetNode);
         visorMonitorHandler.configureVisor(targetNode, monitor);
         LOGGER.debug("visor install and config done");
