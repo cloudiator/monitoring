@@ -177,6 +177,7 @@ public class MonitorManagementService {
     //writing NodeState into DB Model
     Map tags = monitor.getTags();
     tags.put("NodeState", targetNode.state().name());
+    tags.put("IP", targetNode.connectTo().ip());
     monitor.setTags(tags);
     DomainMonitorModel result = checkAndCreate(monitor);
     if (result == null) {
@@ -239,6 +240,7 @@ public class MonitorManagementService {
       //writing NodeState into DB Model
       Map tags = monitor.getTags();
       tags.put("NodeState", processNode.state().name());
+      tags.put("IP", processNode.connectTo().ip());
       monitor.setTags(tags);
       DomainMonitorModel result = checkAndCreate(monitor);
       if (result == null) {
