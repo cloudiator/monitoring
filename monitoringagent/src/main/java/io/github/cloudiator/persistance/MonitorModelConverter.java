@@ -35,6 +35,7 @@ public class MonitorModelConverter implements OneWayConverter<MonitorModel, Doma
       tags.putAll(monitorModel.getMonitortags());
     }
     result.setTags(tags);
+    result.setUuid(monitorModel.getUuid());
 
     return result;
   }
