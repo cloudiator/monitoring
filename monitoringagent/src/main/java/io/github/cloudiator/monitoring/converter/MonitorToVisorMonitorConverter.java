@@ -40,7 +40,8 @@ public class MonitorToVisorMonitorConverter implements
           .metricName(monitor.getMetric())
           .dataSinks(dataSinkConverter.apply(monitor.getSinks()))
           .type(io.github.cloudiator.visor.rest.model.Monitor.TypeEnum.PUSHMONITOR)
-          .componentId("1");
+          .componentId("1")
+          .uuid(monitor.getUuid());
       //missing ComponentId, MonitorContext
     } else if (monitor.getSensor() instanceof PullSensor) {
       result = new SensorMonitor()
@@ -50,7 +51,8 @@ public class MonitorToVisorMonitorConverter implements
           .metricName(monitor.getMetric())
           .dataSinks(dataSinkConverter.apply(monitor.getSinks()))
           .type(io.github.cloudiator.visor.rest.model.Monitor.TypeEnum.SENSORMONITOR)
-          .componentId("1");
+          .componentId("1")
+          .uuid(monitor.getUuid());
       //missing ComponentId, MonitorContext
     } else {
       throw new IllegalStateException("Unkown Sensortype: " + monitor.getSensor().getType());
@@ -63,8 +65,8 @@ public class MonitorToVisorMonitorConverter implements
     DomainMonitorModel result = new DomainMonitorModel()
         .metric(visorMonitor.getMetricName());
     result.setSinks(dataSinkConverter.applyBack(visorMonitor.getDataSinks()));
-
     result.setTags(visorMonitor.getMonitorContext());
+    result.setUuid(visorMonitor.getUuid());
 
     return result;
   }

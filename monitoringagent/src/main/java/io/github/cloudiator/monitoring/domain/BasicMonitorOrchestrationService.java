@@ -37,6 +37,7 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
       test.setTargets(newMonitor.getTargets());
       Map<String, String> tagtargets = newMonitor.getTags();
       tagtargets.put(target.getType().name(), target.getIdentifier());
+
       test.setTags(tagtargets);
       result = monitorDomainRepository.addMonitor(test);
     }

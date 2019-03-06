@@ -175,7 +175,6 @@ public class VisorMonitorHandler {
 
   public boolean deleteVisorMonitor(String userId, Node targetNode, Monitor monitor) {
     LOGGER.debug("Starting Deleting VisorMonitor");
-
     return false;
   }
 
@@ -191,7 +190,6 @@ public class VisorMonitorHandler {
       return allMonitors;
     } catch (ApiException e) {
       throw new IllegalStateException("Error while getMonitors: " + e.getMessage());
-
     }
   }
 
@@ -199,7 +197,6 @@ public class VisorMonitorHandler {
   public Node getNodeById(String nodeId, String userId) {
     LOGGER.debug(" Starting getNodeById ");
     try {
-
       NodeQueryMessage request = NodeQueryMessage.newBuilder().setNodeId(nodeId)
           .setUserId(userId)
           .build();
@@ -212,9 +209,7 @@ public class VisorMonitorHandler {
       }
       NodeEntities.Node nodeEntity = response.getNodesList().get(0);
       LOGGER.debug("found NodeEntity ");
-
       return nodeMessageConverter.applyBack(nodeEntity);
-
     } catch (ResponseException re) {
       if (re.code() == Integer.valueOf(404)/*HttpStatus.SC_NOT_FOUND */) {
         LOGGER.debug("MonitorMode not found");
