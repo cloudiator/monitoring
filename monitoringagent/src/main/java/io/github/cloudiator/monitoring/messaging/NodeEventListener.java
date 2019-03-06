@@ -4,10 +4,8 @@ import com.google.inject.Inject;
 import io.github.cloudiator.monitoring.domain.MonitorManagementService;
 import io.github.cloudiator.rest.converter.MonitorConverter;
 import org.cloudiator.messages.General.Error;
-import org.cloudiator.messages.General.Response;
 import org.cloudiator.messages.Monitor.MonitorQueryRequest;
 import org.cloudiator.messages.Monitor.MonitorQueryResponse;
-import org.cloudiator.messages.Node.NodeDeleteResponseMessage;
 import org.cloudiator.messages.Node.NodeEvent;
 import org.cloudiator.messaging.MessageCallback;
 import org.cloudiator.messaging.MessageInterface;
@@ -38,16 +36,13 @@ public class NodeEventListener implements Runnable {
           @Override
           public void accept(String id, NodeEvent nodeEvent) {
             try {
-              LOGGER.debug("Got one NodeEvent: " + nodeEvent.toString());
-              System.out.println("GOT ONE EVENT: " + nodeEvent.toString());
 
-              Response response = Response.newBuilder().setCorrelation("nice try").build();
 
-              messageInterface.reply(id, response);
+              messageInterface.reply(id, null);
             } catch (Exception e) {
-              LOGGER.error("Error getting NodeEvent. ", e);
-              messageInterface.reply(NodeEvent.class, id, Error.newBuilder().setCode(500)
-                  .setMessage("Error while getting NodeEvent " + e.getMessage()).build());
+              LOGGER.error("Error while searching for Monitors. ", e);
+              messageInterface.reply(MonitorQueryResponse.class, id, Error.newBuilder().setCode(500)
+                  .setMessage("Error while searching for Monitors " + e.getMessage()).build());
             }
           }
         });
