@@ -29,7 +29,7 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   public DomainMonitorModel createMonitor(Monitor newMonitor) {
     DomainMonitorModel result = null;
     for (MonitoringTarget target : newMonitor.getTargets()) {
-      Monitor test = new Monitor().metric(
+      DomainMonitorModel test = new DomainMonitorModel().metric(
           newMonitor.getMetric().concat("+++").concat(target.getType().name()).concat("+++")
               .concat(target.getIdentifier()));
       test.setSensor(newMonitor.getSensor());
