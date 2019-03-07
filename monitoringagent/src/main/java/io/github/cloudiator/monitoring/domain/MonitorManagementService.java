@@ -195,9 +195,12 @@ public class MonitorManagementService {
             LOGGER.debug("Exception during EMSInstallation: " + e);
             LOGGER.debug("---");
           }
-          visorMonitorHandler.installVisor(userId, targetNode);
-          visorMonitorHandler.configureVisor(targetNode, monitor);
+          visorMonitorHandler.configureVisortest(targetNode, monitor);
+          //visorMonitorHandler.installVisor(userId, targetNode);
+          //visorMonitorHandler.configureVisor(targetNode, monitor);
           LOGGER.debug("visor install and config done");
+          //List test = visorMonitorHandler.getAllVisorMonitors(targetNode);
+          //System.out.println(test);
         }
       });
       executorService.shutdown();

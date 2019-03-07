@@ -113,10 +113,11 @@ public class VisorMonitorHandler {
       futureResponseCallback.get();
     } catch (InterruptedException e) {
       //LOGGER.debug("Exception catched: " + e);
-       throw new IllegalStateException("VISOR Installation was interrupted during installation request.", e);
+      throw new IllegalStateException(
+          "VISOR Installation was interrupted during installation request.", e);
     } catch (ExecutionException e) {
       //LOGGER.debug("ExecutionException catched: " + e);
-       throw new IllegalStateException("Error during VisorInstallation", e.getCause());
+      throw new IllegalStateException("Error during VisorInstallation", e.getCause());
     }
     LOGGER.debug("finished VisorInstallationProcess on: " + node.name());
     return true;
@@ -162,12 +163,66 @@ public class VisorMonitorHandler {
         .apply(monitor);
 
     try {
-      LOGGER.debug("POSTing Monitor ");
+      LOGGER.debug("POSTing Monitor: ");
+      LOGGER.debug(visorMonitor.toString());
+
       io.github.cloudiator.visor.rest.model.Monitor visorResponse = apiInstance
           .postMonitors(visorMonitor);
 
     } catch (ApiException e) {
-      System.err.println("Exception when calling DefaultApi#postMonitors");
+      System.err.println("Exception when calling DefaultApi#postMonitors:"+ e.getResponseBody());
+      e.printStackTrace();
+    }
+    return true;
+  }
+
+  public boolean configureVisortest(Node targetNode, DomainMonitorModel monitor) {
+    LOGGER.debug("Starting VisorConfigurationProcess on: localhost" );
+
+    DefaultApi apiInstance = new DefaultApi();
+    ApiClient apiClient = new ApiClient();
+    String basepath = String.format("http://localhost:31415");
+    LOGGER.debug("Basepath: " + basepath.toString());
+    apiClient.setBasePath(basepath);
+    apiInstance.setApiClient(apiClient);
+    LOGGER.debug("apiClient: " + apiClient.toString());
+
+    Callable<Boolean> visorready = new Callable<Boolean>() {
+      @Override
+      public Boolean call() throws Exception {
+        LOGGER.debug(" - calling Visor - ");
+        return (apiInstance.getMonitors() != null);
+      }
+    };
+
+    Retryer<Boolean> retryer = RetryerBuilder.<Boolean>newBuilder()
+        .retryIfResult(Predicates.<Boolean>isNull())
+        .retryIfExceptionOfType(ApiException.class)
+        .retryIfRuntimeException()
+        .withWaitStrategy(WaitStrategies.fixedWait(500, TimeUnit.MILLISECONDS))
+        .withStopStrategy(StopStrategies.stopAfterDelay(10000, TimeUnit.MILLISECONDS))
+        .build();
+
+    try {
+      retryer.call(visorready);
+    } catch (RetryException e) {
+      e.printStackTrace();
+    } catch (ExecutionException e) {
+      e.printStackTrace();
+    }
+
+    LOGGER.debug("- calling Visor successful - ");
+    io.github.cloudiator.visor.rest.model.Monitor visorMonitor = visorMonitorConverter
+        .apply(monitor);
+
+    try {
+      LOGGER.debug("POSTing Monitor: ");
+
+      io.github.cloudiator.visor.rest.model.Monitor visorResponse = apiInstance
+          .postMonitors(visorMonitor);
+
+    } catch (ApiException e) {
+      System.err.println("Exception when calling DefaultApi#postMonitors:"+ e.getResponseBody());
       e.printStackTrace();
     }
     return true;
@@ -182,7 +237,8 @@ public class VisorMonitorHandler {
     LOGGER.debug("GET ALLVISORMONITORS");
     List<io.github.cloudiator.visor.rest.model.Monitor> allMonitors = new ArrayList<>();
     String visorpath = String.format("http://%s:%s", targetNode.connectTo().ip(), VisorPort);
-    ApiClient apiClient = new ApiClient().setBasePath(visorpath);
+    String localpath = String.format("http://localhost:31415");
+    ApiClient apiClient = new ApiClient().setBasePath(localpath);
     DefaultApi api = new DefaultApi(apiClient);
     try {
       allMonitors.addAll(api.getMonitors());
