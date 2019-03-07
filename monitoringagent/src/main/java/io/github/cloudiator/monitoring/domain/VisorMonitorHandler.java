@@ -238,7 +238,7 @@ public class VisorMonitorHandler {
     List<io.github.cloudiator.visor.rest.model.Monitor> allMonitors = new ArrayList<>();
     String visorpath = String.format("http://%s:%s", targetNode.connectTo().ip(), VisorPort);
     String localpath = String.format("http://localhost:31415");
-    ApiClient apiClient = new ApiClient().setBasePath(localpath);
+    ApiClient apiClient = new ApiClient().setBasePath(visorpath);
     DefaultApi api = new DefaultApi(apiClient);
     try {
       allMonitors.addAll(api.getMonitors());
