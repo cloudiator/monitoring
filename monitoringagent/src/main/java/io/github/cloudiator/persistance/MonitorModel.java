@@ -34,7 +34,7 @@ public class MonitorModel extends Model {
   @ElementCollection
   private Map<String, String> monitortags;
 
-  @Column(unique = false)
+  @Column(unique = true)
   private String uuid;
 
 

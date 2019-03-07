@@ -64,8 +64,8 @@ public class MonitorToVisorMonitorConverter implements
     DomainMonitorModel result = new DomainMonitorModel()
         .metric(visorMonitor.getMetricName());
     result.setSinks(dataSinkConverter.applyBack(visorMonitor.getDataSinks()));
+
     result.setTags(visorMonitor.getMonitorContext());
-    result.setUuid(visorMonitor.getUuid());
 
     return result;
   }
