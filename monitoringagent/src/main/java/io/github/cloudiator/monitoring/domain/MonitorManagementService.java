@@ -2,7 +2,6 @@ package io.github.cloudiator.monitoring.domain;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
-import io.github.cloudiator.messaging.NodeToNodeMessageConverter;
 import io.github.cloudiator.monitoring.converter.MonitorToVisorMonitorConverter;
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.rest.converter.ProcessConverter;
@@ -146,6 +145,7 @@ public class MonitorManagementService {
         case PROCESS:
           LOGGER.debug("Handle PROCESS: " + mTarget);
           requestedMonitor = handleProcess(userId, mTarget, domainMonitor);
+
           break;
         case TASK:
           requestedMonitor = handleTask(userId, mTarget, domainMonitor);
@@ -165,13 +165,13 @@ public class MonitorManagementService {
       }
       count++;
     }
-
     return requestedMonitor;
   }
 
   private DomainMonitorModel handleNode(String userId, MonitoringTarget target,
       DomainMonitorModel monitor) {
     LOGGER.debug("Starting handleNode ");
+
     Node targetNode = visorMonitorHandler.getNodeById(target.getIdentifier(), userId);
 
     //writing NodeState into DB Model
@@ -198,18 +198,17 @@ public class MonitorManagementService {
           visorMonitorHandler.installVisor(userId, targetNode);
           visorMonitorHandler.configureVisor(targetNode, monitor);
           LOGGER.debug("visor install and config done");
-
         }
       });
       executorService.shutdown();
-
       LOGGER.debug("Finished handleNode");
       return result;
     }
   }
 
+
   private DomainMonitorModel handleProcess(String userId, MonitoringTarget target,
-      DomainMonitorModel monitor) {
+      DomainMonitorModel domainMonitor) {
     final ProcessConverter PROCESS_CONVERTER = ProcessConverter.INSTANCE;
     // only SingleProcess - ClusterProcess not supported
     // getting Process
@@ -239,16 +238,18 @@ public class MonitorManagementService {
           .getNodeById(((SingleProcess) process).getNode(), userId);
 
       //writing NodeState into DB Model
-      Map tags = monitor.getTags();
+      Map tags = domainMonitor.getTags();
       tags.put("NodeState", processNode.state().name());
       tags.put("IP", processNode.connectTo().ip());
-      monitor.setTags(tags);
-      DomainMonitorModel result = checkAndCreate(monitor);
+      domainMonitor.setTags(tags);
+      DomainMonitorModel result = checkAndCreate(domainMonitor);
       if (result == null) {
         throw new IllegalArgumentException("Monitor already exists.");
       } else {
+        LOGGER.debug("Monitor in DB created");
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
+
         executorService.execute(new Runnable() {
           public void run() {
             LOGGER.debug("starting asynchronous task");
@@ -261,11 +262,12 @@ public class MonitorManagementService {
               LOGGER.debug("Exception while EMSInstallation " + re);
             }
             visorMonitorHandler.installVisor(userId, processNode);
-            visorMonitorHandler.configureVisor(processNode, monitor);
+            visorMonitorHandler.configureVisor(processNode, domainMonitor);
             LOGGER.debug("visor install and config done");
           }
         });
         executorService.shutdown();
+
         LOGGER.debug("Finished handling SingleProcess");
       }
       return result;
@@ -277,16 +279,20 @@ public class MonitorManagementService {
     return null;
   }
 
-  private DomainMonitorModel handleTask(String userId, MonitoringTarget target, Monitor monitor) {
-    return null;
-  }
-
-  private DomainMonitorModel handleJob(String userId, MonitoringTarget target, Monitor monitor) {
+  private DomainMonitorModel handleJob(String userId, MonitoringTarget target, Monitor
+      monitor) {
     //
     return null;
   }
 
-  private DomainMonitorModel handleCloud(String userId, MonitoringTarget target, Monitor monitor) {
+  private DomainMonitorModel handleTask(String userId, MonitoringTarget target, Monitor
+      monitor) {
+    //
+    return null;
+  }
+
+  private DomainMonitorModel handleCloud(String userId, MonitoringTarget target, Monitor
+      monitor) {
     // NodeGroups:
     return null;
   }
