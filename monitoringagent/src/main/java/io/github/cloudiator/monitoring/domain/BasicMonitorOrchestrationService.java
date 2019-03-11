@@ -28,18 +28,8 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   @Override
   public DomainMonitorModel createMonitor(Monitor newMonitor) {
     DomainMonitorModel result = null;
-    for (MonitoringTarget target : newMonitor.getTargets()) {
-      DomainMonitorModel test = new DomainMonitorModel().metric(
-          newMonitor.getMetric().concat("+++").concat(target.getType().name()).concat("+++")
-              .concat(target.getIdentifier()));
-      test.setSensor(newMonitor.getSensor());
-      test.setSinks(newMonitor.getSinks());
-      test.setTargets(newMonitor.getTargets());
-      Map<String, String> tagtargets = newMonitor.getTags();
-      tagtargets.put(target.getType().name(), target.getIdentifier());
-      test.setTags(tagtargets);
-      result = monitorDomainRepository.addMonitor(test);
-    }
+    result = monitorDomainRepository.addMonitor(newMonitor);
+
     return result;
   }
 

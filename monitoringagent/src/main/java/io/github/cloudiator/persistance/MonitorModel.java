@@ -12,12 +12,41 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import org.hibernate.annotations.GenericGenerator;
 
 
 @Entity
 public class MonitorModel extends Model {
+
+  @Id
+  @GenericGenerator(
+      name = "sequenceGenerator",
+      strategy = "enhanced-sequence",
+      parameters = {
+          @org.hibernate.annotations.Parameter(
+              name = "optimizer",
+              value = "pooled-lo"
+          ),
+          @org.hibernate.annotations.Parameter(
+              name = "initial_value",
+              value = "1"
+          ),
+          @org.hibernate.annotations.Parameter(
+              name = "increment_size",
+              value = "3"
+          )
+      }
+  )
+  @GeneratedValue(
+      strategy = GenerationType.SEQUENCE,
+      generator = "sequenceGenerator"
+  )
+  private Long id;
 
   @Column(nullable = false, unique = true, updatable = false)
   private String metric;
