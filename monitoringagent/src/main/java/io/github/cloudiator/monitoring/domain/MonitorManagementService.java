@@ -143,7 +143,7 @@ public class MonitorManagementService {
             domainMonitor.getMetric() + "+++" + mTarget.getType().name() + "+++" + mTarget
                 .getIdentifier());
         domainMonitor.setMetric(dbMetric);
-        System.out.println("DB-Metric: " + dbMetric);
+
         switch (mTarget.getType()) {
           case PROCESS:
             LOGGER.debug("Handle PROCESS: " + mTarget);

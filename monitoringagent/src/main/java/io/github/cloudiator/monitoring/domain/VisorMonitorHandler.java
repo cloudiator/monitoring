@@ -127,7 +127,6 @@ public class VisorMonitorHandler {
     LOGGER.debug("Starting VisorConfigurationProcess on: " + targetNode.name());
 
     String metric = monitor.getMetric().split("[+++]", 3)[0];
-    System.out.println(metric);
     monitor.setMetric(metric);
 
     DefaultApi apiInstance = new DefaultApi();
