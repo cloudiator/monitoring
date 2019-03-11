@@ -133,7 +133,7 @@ public class MonitorManagementService {
 
     Integer count = 1;
     for (MonitoringTarget mTarget : newMonitor.getTargets()) {
-      try {
+
         DomainMonitorModel domainMonitor = new DomainMonitorModel(newMonitor.getMetric(),
             newMonitor.getTargets(), newMonitor.getSensor(), newMonitor.getSinks(),
             newMonitor.getTags());
@@ -166,12 +166,10 @@ public class MonitorManagementService {
             throw new IllegalArgumentException("unkown MonitorTargetType: " + mTarget.getType());
         }
         count++;
-        TimeUnit.MILLISECONDS.sleep(500);
+        //  TimeUnit.MILLISECONDS.sleep(500);
 
-      } catch (InterruptedException iex) {
-        LOGGER.debug("InterruptExecption: " + iex);
 
-      }
+
     }
     return requestedMonitor;
   }
