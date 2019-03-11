@@ -134,41 +134,43 @@ public class MonitorManagementService {
     Integer count = 1;
     for (MonitoringTarget mTarget : newMonitor.getTargets()) {
 
-        DomainMonitorModel domainMonitor = new DomainMonitorModel(newMonitor.getMetric(),
-            newMonitor.getTargets(), newMonitor.getSensor(), newMonitor.getSinks(),
-            newMonitor.getTags());
-        LOGGER.debug("Handling Target " + count);
-        //handling
-        String dbMetric = new String(
-            domainMonitor.getMetric() + "+++" + mTarget.getType().name() + "+++" + mTarget
-                .getIdentifier());
-        domainMonitor.setMetric(dbMetric);
+      DomainMonitorModel domainMonitor = new DomainMonitorModel(newMonitor.getMetric(),
+          newMonitor.getTargets(), newMonitor.getSensor(), newMonitor.getSinks(),
+          newMonitor.getTags());
+      LOGGER.debug("Handling Target " + count);
+      //handling
+      String dbMetric = new String(
+          domainMonitor.getMetric() + "+++" + mTarget.getType().name() + "+++" + mTarget
+              .getIdentifier());
+      domainMonitor.setMetric(dbMetric);
+      System.out.println("DB-Metric: " + domainMonitor.getMetric());
 
-        switch (mTarget.getType()) {
-          case PROCESS:
-            LOGGER.debug("Handle PROCESS: " + mTarget);
-            requestedMonitor = handleProcess(userId, mTarget, domainMonitor);
-            break;
-          case TASK:
-            requestedMonitor = handleTask(userId, mTarget, domainMonitor);
-            break;
-          case JOB:
-            requestedMonitor = handleJob(userId, mTarget, domainMonitor);
-            break;
-          case NODE:
-            LOGGER.debug("Handle NODE: " + mTarget);
-            requestedMonitor = handleNode(userId, mTarget, domainMonitor);
-            break;
-          case CLOUD:
-            requestedMonitor = handleCloud(userId, mTarget, domainMonitor);
-            break;
-          default:
-            throw new IllegalArgumentException("unkown MonitorTargetType: " + mTarget.getType());
-        }
-        count++;
-        //  TimeUnit.MILLISECONDS.sleep(500);
+      switch (mTarget.getType()) {
+        case PROCESS:
+          LOGGER.debug("Handle PROCESS: " + mTarget);
+          requestedMonitor = handleProcess(userId, mTarget, domainMonitor);
+          break;
+        case TASK:
+          requestedMonitor = handleTask(userId, mTarget, domainMonitor);
+          break;
+        case JOB:
+          requestedMonitor = handleJob(userId, mTarget, domainMonitor);
+          break;
+        case NODE:
+          LOGGER.debug("Handle NODE: " + mTarget);
+          requestedMonitor = handleNode(userId, mTarget, domainMonitor);
+          break;
+        case CLOUD:
+          requestedMonitor = handleCloud(userId, mTarget, domainMonitor);
+          break;
+        default:
+          throw new IllegalArgumentException("unkown MonitorTargetType: " + mTarget.getType());
+      }
+      count++;
 
-
+      domainMonitor.setMetric(newMonitor.getMetric());
+      System.out.println("MonitorMetric: " + domainMonitor.getMetric());
+      //  TimeUnit.MILLISECONDS.sleep(500);
 
     }
     return requestedMonitor;
@@ -184,6 +186,7 @@ public class MonitorManagementService {
     Map tags = monitor.getTags();
     tags.put("NodeState", targetNode.state().name());
     tags.put("IP", targetNode.connectTo().ip());
+    tags.put(target.getType().toString(), target.getIdentifier());
     monitor.setTags(tags);
     DomainMonitorModel result = checkAndCreate(monitor);
     if (result == null) {
@@ -247,6 +250,7 @@ public class MonitorManagementService {
       Map tags = domainMonitor.getTags();
       tags.put("NodeState", processNode.state().name());
       tags.put("IP", processNode.connectTo().ip());
+      tags.put(target.getType().toString(), target.getIdentifier());
       domainMonitor.setTags(tags);
       DomainMonitorModel result = checkAndCreate(domainMonitor);
       if (result == null) {
