@@ -126,6 +126,9 @@ public class VisorMonitorHandler {
   public boolean configureVisor(Node targetNode, DomainMonitorModel monitor) {
     LOGGER.debug("Starting VisorConfigurationProcess on: " + targetNode.name());
 
+    String metric = monitor.getMetric().split("[+++]", 3)[0];
+    monitor.setMetric(metric);
+
     DefaultApi apiInstance = new DefaultApi();
     ApiClient apiClient = new ApiClient();
     String basepath = String.format("http://%s:%s", targetNode.connectTo().ip(), VisorPort);
@@ -170,14 +173,14 @@ public class VisorMonitorHandler {
           .postMonitors(visorMonitor);
 
     } catch (ApiException e) {
-      System.err.println("Exception when calling DefaultApi#postMonitors:"+ e.getResponseBody());
+      System.err.println("Exception when calling DefaultApi#postMonitors:" + e.getResponseBody());
       e.printStackTrace();
     }
     return true;
   }
 
   public boolean configureVisortest(Node targetNode, DomainMonitorModel monitor) {
-    LOGGER.debug("Starting VisorConfigurationProcess on: localhost" );
+    LOGGER.debug("Starting VisorConfigurationProcess on: localhost");
 
     DefaultApi apiInstance = new DefaultApi();
     ApiClient apiClient = new ApiClient();
@@ -222,7 +225,7 @@ public class VisorMonitorHandler {
           .postMonitors(visorMonitor);
 
     } catch (ApiException e) {
-      System.err.println("Exception when calling DefaultApi#postMonitors:"+ e.getResponseBody());
+      System.err.println("Exception when calling DefaultApi#postMonitors:" + e.getResponseBody());
       e.printStackTrace();
     }
     return true;

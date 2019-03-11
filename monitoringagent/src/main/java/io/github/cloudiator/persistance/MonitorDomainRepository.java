@@ -29,26 +29,12 @@ public class MonitorDomainRepository {
   final static MonitorModelConverter MONITOR_MODEL_CONVERTER = new MonitorModelConverter();
   private static final Logger LOGGER = LoggerFactory.getLogger(MonitorDomainRepository.class);
 
-
-  private final SensorDomainRepository sensorDomainRepository;
-  private final TargetDomainRepository targetDomainRepository;
-
-  private final DataSinkModelRepository dataSinkModelRepository;
   private final MonitorModelRepository monitorModelRepository;
-  private final IntervalModelRepository intervalModelRepository;
-
 
   @Inject
-  public MonitorDomainRepository(DataSinkModelRepository dataSinkModelRepository,
-      MonitorModelRepository monitorModelRepository,
-      TargetDomainRepository targetDomainRepository,
-      SensorDomainRepository sensorDomainRepository,
-      IntervalModelRepository intervalModelRepository) {
-    this.dataSinkModelRepository = dataSinkModelRepository;
+  public MonitorDomainRepository(MonitorModelRepository monitorModelRepository
+      ) {
     this.monitorModelRepository = monitorModelRepository;
-    this.targetDomainRepository = targetDomainRepository;
-    this.sensorDomainRepository = sensorDomainRepository;
-    this.intervalModelRepository = intervalModelRepository;
   }
 
   public DomainMonitorModel findMonitorByMetric(String metric) {

@@ -2,7 +2,7 @@ package io.github.cloudiator.persistance;
 
 import javax.persistence.Column;
 import javax.persistence.ManyToOne;
-
+@Deprecated
 public class ConfigurationModel extends Model{
 
   @Column(nullable = false)

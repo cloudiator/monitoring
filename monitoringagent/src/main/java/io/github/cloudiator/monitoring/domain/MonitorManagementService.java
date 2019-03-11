@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import org.cloudiator.messages.Process.ProcessQueryRequest;
 import org.cloudiator.messages.Process.ProcessQueryResponse;
 import org.cloudiator.messaging.ResponseException;
@@ -45,18 +46,14 @@ public class MonitorManagementService {
   public DomainMonitorModel checkAndCreate(Monitor monitor) {
     Boolean check = false;
     Optional<DomainMonitorModel> dbMonitor = null;
-    for (MonitoringTarget mTarget : monitor.getTargets()) {
-      String dbMetric = new String(
-          monitor.getMetric() + "+++" + mTarget.getType().name() + "+++" + mTarget.getIdentifier());
-      //monitor.setMetric(dbMetric);
-      dbMonitor = monitorOrchestrationService
-          .getMonitor(dbMetric);
-      if (dbMonitor.isPresent()) {
-        LOGGER.debug("found Monitor: " + dbMonitor.get());
-        check = true;
-        break;
-      }
+    //monitor.setMetric(dbMetric);
+    dbMonitor = monitorOrchestrationService
+        .getMonitor(monitor.getMetric());
+    if (dbMonitor.isPresent()) {
+      LOGGER.debug("found Monitor: " + dbMonitor.get());
+      check = true;
     }
+
     //Optional<DomainMonitorModel> dbMonitor = monitorOrchestrationService.getMonitor(monitor.getMetric());
     if (check) {
       return null;
@@ -130,40 +127,51 @@ public class MonitorManagementService {
 
   public DomainMonitorModel handleNewMonitor(String userId, Monitor newMonitor) {
     //Target
-    DomainMonitorModel domainMonitor = new DomainMonitorModel(newMonitor.getMetric(),
-        newMonitor.getTargets(), newMonitor.getSensor(), newMonitor.getSinks(),
-        newMonitor.getTags());
     LOGGER.debug("Handling " + newMonitor.getTargets().size() + " Targets");
 
     DomainMonitorModel requestedMonitor = null;
 
     Integer count = 1;
-    for (MonitoringTarget mTarget : domainMonitor.getTargets()) {
-      LOGGER.debug("Handling Target " + count);
-      //handling
-      switch (mTarget.getType()) {
-        case PROCESS:
-          LOGGER.debug("Handle PROCESS: " + mTarget);
-          requestedMonitor = handleProcess(userId, mTarget, domainMonitor);
+    for (MonitoringTarget mTarget : newMonitor.getTargets()) {
+      try {
+        DomainMonitorModel domainMonitor = new DomainMonitorModel(newMonitor.getMetric(),
+            newMonitor.getTargets(), newMonitor.getSensor(), newMonitor.getSinks(),
+            newMonitor.getTags());
+        LOGGER.debug("Handling Target " + count);
+        //handling
+        String dbMetric = new String(
+            domainMonitor.getMetric() + "+++" + mTarget.getType().name() + "+++" + mTarget
+                .getIdentifier());
+        domainMonitor.setMetric(dbMetric);
 
-          break;
-        case TASK:
-          requestedMonitor = handleTask(userId, mTarget, domainMonitor);
-          break;
-        case JOB:
-          requestedMonitor = handleJob(userId, mTarget, domainMonitor);
-          break;
-        case NODE:
-          LOGGER.debug("Handle NODE: " + mTarget);
-          requestedMonitor = handleNode(userId, mTarget, domainMonitor);
-          break;
-        case CLOUD:
-          requestedMonitor = handleCloud(userId, mTarget, domainMonitor);
-          break;
-        default:
-          throw new IllegalArgumentException("unkown MonitorTargetType: " + mTarget.getType());
+        switch (mTarget.getType()) {
+          case PROCESS:
+            LOGGER.debug("Handle PROCESS: " + mTarget);
+            requestedMonitor = handleProcess(userId, mTarget, domainMonitor);
+            break;
+          case TASK:
+            requestedMonitor = handleTask(userId, mTarget, domainMonitor);
+            break;
+          case JOB:
+            requestedMonitor = handleJob(userId, mTarget, domainMonitor);
+            break;
+          case NODE:
+            LOGGER.debug("Handle NODE: " + mTarget);
+            requestedMonitor = handleNode(userId, mTarget, domainMonitor);
+            break;
+          case CLOUD:
+            requestedMonitor = handleCloud(userId, mTarget, domainMonitor);
+            break;
+          default:
+            throw new IllegalArgumentException("unkown MonitorTargetType: " + mTarget.getType());
+        }
+        count++;
+        TimeUnit.MILLISECONDS.sleep(500);
+
+      } catch (InterruptedException iex) {
+        LOGGER.debug("InterruptExecption: " + iex);
+
       }
-      count++;
     }
     return requestedMonitor;
   }
@@ -181,7 +189,7 @@ public class MonitorManagementService {
     monitor.setTags(tags);
     DomainMonitorModel result = checkAndCreate(monitor);
     if (result == null) {
-      throw new IllegalArgumentException("Monitor already exists.");
+      throw new IllegalArgumentException("Monitor already exists:" + monitor.getMetric());
     } else {
       LOGGER.debug("Monitor in DB created");
 
