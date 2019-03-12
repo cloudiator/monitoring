@@ -66,7 +66,7 @@ public class MonitorManagementService {
     }
   }
 
-  @Transactional
+  //@Transactional
   public DomainMonitorModel checkMonitor(Monitor monitor) {
     Optional<DomainMonitorModel> dbMonitor = monitorOrchestrationService
         .getMonitor(monitor.getMetric());
@@ -79,7 +79,7 @@ public class MonitorManagementService {
     }
   }
 
-  @Transactional
+  //@Transactional
   public Monitor addTarget2Monitor(Monitor monitor) {
     Optional<DomainMonitorModel> dbMonitorRequest = monitorOrchestrationService
         .getMonitor(monitor.getMetric());
