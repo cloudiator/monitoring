@@ -9,6 +9,8 @@ import javax.annotation.Nullable;
 
 public class MonitorModelConverter implements OneWayConverter<MonitorModel, DomainMonitorModel> {
 
+  public static final MonitorModelConverter INSTANCE = new MonitorModelConverter();
+
   private final DataSinkModelConverter dataSinkModelConverter = new DataSinkModelConverter();
   private final TargetModelConverter targetModelConverter = new TargetModelConverter();
   private final SensorModelConverter sensorModelConverter = new SensorModelConverter();

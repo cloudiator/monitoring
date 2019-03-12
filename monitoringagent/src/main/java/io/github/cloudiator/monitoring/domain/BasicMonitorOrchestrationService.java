@@ -8,6 +8,7 @@ import io.github.cloudiator.monitoring.converter.MonitorToVisorMonitorConverter;
 
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.persistance.MonitorDomainRepository;
+import io.github.cloudiator.persistance.MonitorModel;
 import io.github.cloudiator.rest.model.Monitor;
 import io.github.cloudiator.rest.model.MonitoringTarget;
 import java.util.ArrayList;
@@ -26,10 +27,9 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   }
 
   @Override
-  public DomainMonitorModel createMonitor(Monitor newMonitor) {
-    DomainMonitorModel result = null;
+  public MonitorModel createMonitor(Monitor newMonitor) {
+    MonitorModel result = null;
     result = monitorDomainRepository.addMonitor(newMonitor);
-
     return result;
   }
 
@@ -64,6 +64,12 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
     } else {
       return Optional.of(result);
     }
+  }
+
+  @Override
+  public MonitorModel persistMonitor(MonitorModel monitorModel) {
+    monitorDomainRepository.persistMonitor(monitorModel);
+    return monitorModel;
   }
 
 

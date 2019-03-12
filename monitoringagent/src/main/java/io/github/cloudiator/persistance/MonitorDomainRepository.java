@@ -33,7 +33,7 @@ public class MonitorDomainRepository {
 
   @Inject
   public MonitorDomainRepository(MonitorModelRepository monitorModelRepository
-      ) {
+  ) {
     this.monitorModelRepository = monitorModelRepository;
   }
 
@@ -62,7 +62,13 @@ public class MonitorDomainRepository {
     return result;
   }
 
-  public DomainMonitorModel addMonitor(Monitor monitor) {
+  public MonitorModel persistMonitor(MonitorModel monitorModel) {
+    monitorModelRepository.save(monitorModel);
+    return monitorModel;
+  }
+
+
+  public MonitorModel addMonitor(Monitor monitor) {
     checkNotNull(monitor, "Monitor is null");
     checkState(!exists(monitor.getMetric()), "Monitormetric already exists. ");
     checkNotNull(monitor.getTargets(), "MonitoringTarget is null");
@@ -141,9 +147,8 @@ public class MonitorDomainRepository {
       LOGGER.debug("reset metric " + monitorModel.getMetric());
     }
     */
-    monitorModelRepository.save(monitorModel);
 
-    return MONITOR_MODEL_CONVERTER.apply(monitorModel);
+    return monitorModel;
   }
 
   public void updateMonitor(Monitor monitor) {
