@@ -1,6 +1,7 @@
 package io.github.cloudiator.monitoring.domain;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.persist.Transactional;
 import io.github.cloudiator.monitoring.converter.MonitorToVisorMonitorConverter;
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
@@ -26,7 +27,7 @@ import org.cloudiator.messaging.services.ProcessService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
+@Singleton
 public class MonitorManagementService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(MonitorManagementService.class);
@@ -65,22 +66,6 @@ public class MonitorManagementService {
     }
   }
 
-  //@Transactional
-  public Monitor addTarget2Monitor(Monitor monitor) {
-    Optional<DomainMonitorModel> dbMonitorRequest = monitorOrchestrationService
-        .getMonitor(monitor.getMetric());
-    if (!dbMonitorRequest.isPresent()) {
-      throw new IllegalArgumentException("Monitor doesn't exist: " + monitor);
-    }
-    Monitor dbMonitor = dbMonitorRequest.get();
-    for (MonitoringTarget target : monitor.getTargets()) {
-      if (!dbMonitor.getTargets().contains(target)) {
-        dbMonitor.addTargetsItem(target);
-      }
-    }
-    monitorOrchestrationService.updateMonitor(dbMonitor);
-    return dbMonitor;
-  }
 
   //@Transactional
   public List<DomainMonitorModel> getAllMonitors() {
