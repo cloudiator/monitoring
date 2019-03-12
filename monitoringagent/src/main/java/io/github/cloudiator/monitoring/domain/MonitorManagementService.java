@@ -60,22 +60,8 @@ public class MonitorManagementService {
       LOGGER.debug("found Monitor: " + dbMonitor.get());
       return null;
     } else {
-      MonitorModel add = monitorOrchestrationService.createMonitor(monitor);
-      persistMonitor(add);
-      return monitorModelConverter.apply(add);
-    }
-  }
-
-  //@Transactional
-  public DomainMonitorModel checkMonitor(Monitor monitor) {
-    Optional<DomainMonitorModel> dbMonitor = monitorOrchestrationService
-        .getMonitor(monitor.getMetric());
-    if (dbMonitor.isPresent()) {
-      return null;
-    } else {
-      dbMonitor = Optional
-          .of(monitorModelConverter.apply(monitorOrchestrationService.createMonitor(monitor)));
-      return dbMonitor.get();
+      DomainMonitorModel add = monitorOrchestrationService.createMonitor(monitor);
+      return add;
     }
   }
 

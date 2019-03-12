@@ -3,6 +3,7 @@ package io.github.cloudiator.monitoring.domain;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 import com.google.protobuf.MapEntry;
 import io.github.cloudiator.monitoring.converter.MonitorToVisorMonitorConverter;
 
@@ -27,8 +28,8 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   }
 
   @Override
-  public MonitorModel createMonitor(Monitor newMonitor) {
-    MonitorModel result = null;
+  public DomainMonitorModel createMonitor(Monitor newMonitor) {
+    DomainMonitorModel result = null;
     result = monitorDomainRepository.addMonitor(newMonitor);
     return result;
   }

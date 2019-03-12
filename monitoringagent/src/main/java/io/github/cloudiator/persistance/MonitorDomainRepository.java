@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.rest.model.DataSink;
 import io.github.cloudiator.rest.model.Monitor;
@@ -62,19 +63,19 @@ public class MonitorDomainRepository {
     return result;
   }
 
+  @Transactional
   public MonitorModel persistMonitor(MonitorModel monitorModel) {
     monitorModelRepository.save(monitorModel);
     return monitorModel;
   }
 
 
-  public MonitorModel addMonitor(Monitor monitor) {
+  public DomainMonitorModel addMonitor(Monitor monitor) {
     checkNotNull(monitor, "Monitor is null");
     checkState(!exists(monitor.getMetric()), "Monitormetric already exists. ");
     checkNotNull(monitor.getTargets(), "MonitoringTarget is null");
     checkNotNull(monitor.getSensor(), "Sensor is null.");
     checkNotNull(monitor.getSinks(), "Datasinks is null.");
-    // checkNotNull(monitor.getTags(), "Tags is null.");
 
     /**
      * Create new Models
@@ -128,27 +129,9 @@ public class MonitorDomainRepository {
 
     // monitorModel is fully initialized
 
-    /**
-     *Save all Monitors
-     * for every MonitorTarget one Monitor is added in DB
-     */
-    /*
-    for (TargetModel targetModel : monitorModel.getTargets()) {
-      LOGGER.debug("handle Target: " + targetModel.getIdentifier());
-      MonitorModel target = monitorModel;
+    persistMonitor(monitorModel);
 
-      target.setMetric(monitorModel.getMetric().concat("+++")
-          .concat(targetModel.getTargetType().name())
-          .concat("+++").concat(targetModel.getIdentifier()));
-      LOGGER.debug("dbMetric: " + target.getMetric());
-      monitorModelRepository.save(target);
-      LOGGER.debug("saved MonitorModel: " + target.getMetric());
-      monitorModel.setMetric(monitorModel.getMetric().split("[+++]", 2)[0]);
-      LOGGER.debug("reset metric " + monitorModel.getMetric());
-    }
-    */
-
-    return monitorModel;
+    return MONITOR_MODEL_CONVERTER.apply(monitorModel);
   }
 
   public void updateMonitor(Monitor monitor) {
