@@ -4,6 +4,8 @@ import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import io.github.cloudiator.monitoring.converter.MonitorToVisorMonitorConverter;
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
+import io.github.cloudiator.persistance.MonitorModel;
+import io.github.cloudiator.persistance.MonitorModelConverter;
 import io.github.cloudiator.rest.converter.ProcessConverter;
 import io.github.cloudiator.rest.model.CloudiatorProcess;
 import io.github.cloudiator.rest.model.ClusterProcess;
@@ -33,6 +35,7 @@ public class MonitorManagementService {
   private final MonitorOrchestrationService monitorOrchestrationService;
   private final ProcessService processService;
   private final MonitorToVisorMonitorConverter visorMonitorConverter = MonitorToVisorMonitorConverter.INSTANCE;
+  private final MonitorModelConverter monitorModelConverter = MonitorModelConverter.INSTANCE;
 
   @Inject
   public MonitorManagementService(VisorMonitorHandler visorMonitorHandler,
@@ -43,39 +46,40 @@ public class MonitorManagementService {
   }
 
   @Transactional
+  public MonitorModel persistMonitor(MonitorModel monitorModel) {
+    monitorOrchestrationService.persistMonitor(monitorModel);
+    return monitorModel;
+  }
+
+
   public DomainMonitorModel checkAndCreate(Monitor monitor) {
-    Boolean check = false;
     Optional<DomainMonitorModel> dbMonitor = null;
-    //monitor.setMetric(dbMetric);
     dbMonitor = monitorOrchestrationService
         .getMonitor(monitor.getMetric());
     if (dbMonitor.isPresent()) {
       LOGGER.debug("found Monitor: " + dbMonitor.get());
-      check = true;
-    }
-
-    //Optional<DomainMonitorModel> dbMonitor = monitorOrchestrationService.getMonitor(monitor.getMetric());
-    if (check) {
       return null;
     } else {
-      dbMonitor = Optional.of(monitorOrchestrationService.createMonitor(monitor));
-      return dbMonitor.get();
+      MonitorModel add = monitorOrchestrationService.createMonitor(monitor);
+      persistMonitor(add);
+      return monitorModelConverter.apply(add);
     }
   }
 
-  @Transactional
+  //@Transactional
   public DomainMonitorModel checkMonitor(Monitor monitor) {
     Optional<DomainMonitorModel> dbMonitor = monitorOrchestrationService
         .getMonitor(monitor.getMetric());
     if (dbMonitor.isPresent()) {
       return null;
     } else {
-      dbMonitor = Optional.of(monitorOrchestrationService.createMonitor(monitor));
+      dbMonitor = Optional
+          .of(monitorModelConverter.apply(monitorOrchestrationService.createMonitor(monitor)));
       return dbMonitor.get();
     }
   }
 
-  @Transactional
+  //@Transactional
   public Monitor addTarget2Monitor(Monitor monitor) {
     Optional<DomainMonitorModel> dbMonitorRequest = monitorOrchestrationService
         .getMonitor(monitor.getMetric());
@@ -92,7 +96,7 @@ public class MonitorManagementService {
     return dbMonitor;
   }
 
-  @Transactional
+  //@Transactional
   public List<DomainMonitorModel> getAllMonitors() {
     return monitorOrchestrationService.getAllMonitors();
   }
@@ -113,7 +117,7 @@ public class MonitorManagementService {
     monitorOrchestrationService.deleteAll();
   }
 
-  @Transactional
+  //@Transactional
   public Monitor getMonitor(String metric, MonitoringTarget target) {
     DomainMonitorModel result = monitorOrchestrationService
         .getMonitor(metric.concat("+++")
