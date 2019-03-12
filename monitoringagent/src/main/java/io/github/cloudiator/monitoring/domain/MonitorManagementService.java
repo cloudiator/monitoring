@@ -102,6 +102,7 @@ public class MonitorManagementService {
 
   public DomainMonitorModel handleNewMonitor(String userId, Monitor newMonitor) {
     //Target
+    LOGGER.debug("newMonitorCall: " + newMonitor.toString());
     LOGGER.debug("Handling " + newMonitor.getTargets().size() + " Targets");
 
     DomainMonitorModel requestedMonitor = null;
