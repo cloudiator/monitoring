@@ -1,6 +1,7 @@
 package io.github.cloudiator.monitoring.domain;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.persist.Transactional;
 import io.github.cloudiator.monitoring.converter.MonitorToVisorMonitorConverter;
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
@@ -26,7 +27,7 @@ import org.cloudiator.messaging.services.ProcessService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
+@Singleton
 public class MonitorManagementService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(MonitorManagementService.class);
@@ -121,19 +122,50 @@ public class MonitorManagementService {
 
     DomainMonitorModel requestedMonitor = null;
 
-    Integer count = 1;
-    for (MonitoringTarget mTarget : newMonitor.getTargets()) {
+    DomainMonitorModel domainMonitor = new DomainMonitorModel(newMonitor.getMetric(),
+        newMonitor.getTargets(), newMonitor.getSensor(), newMonitor.getSinks(),
+        newMonitor.getTags());
 
-      DomainMonitorModel domainMonitor = new DomainMonitorModel(newMonitor.getMetric(),
+    Integer dbcount = 1;
+    for (MonitoringTarget mTarget : newMonitor.getTargets()) {
+      DomainMonitorModel dbmonitor = new DomainMonitorModel(newMonitor.getMetric(),
           newMonitor.getTargets(), newMonitor.getSensor(), newMonitor.getSinks(),
           newMonitor.getTags());
-      LOGGER.debug("Handling Target " + count);
       //handling
       String dbMetric = new String(
           domainMonitor.getMetric() + "+++" + mTarget.getType().name() + "+++" + mTarget
               .getIdentifier());
-      domainMonitor.setMetric(dbMetric);
-      System.out.println("DB-Metric: " + domainMonitor.getMetric());
+      dbmonitor.setMetric(dbMetric);
+      Node targetNode = null;
+      switch (mTarget.getType()) {
+        case NODE:
+          targetNode = visorMonitorHandler.getNodeById(mTarget.getIdentifier(), userId);
+          break;
+        case PROCESS:
+          targetNode = getNodeFromProcess(userId, mTarget);
+          break;
+        default:
+          throw new IllegalArgumentException("unkown MonitorTargetType: " + mTarget.getType());
+      }
+
+      //writing NodeState into DB Model
+      Map tags = domainMonitor.getTags();
+      tags.put("NodeState", targetNode.state().name());
+      tags.put("IP", targetNode.connectTo().ip());
+      tags.put(mTarget.getType().toString(), mTarget.getIdentifier());
+      dbmonitor.setTags(tags);
+      DomainMonitorModel result = checkAndCreate(dbmonitor);
+      if (result == null) {
+        throw new IllegalArgumentException("Monitor already exists:" + dbmonitor.getMetric());
+      } else {
+        LOGGER.debug("Monitor " + dbcount + " in DB created");
+        dbcount++;
+      }
+
+    }
+
+    Integer count = 1;
+    for (MonitoringTarget mTarget : newMonitor.getTargets()) {
 
       switch (mTarget.getType()) {
         case PROCESS:
@@ -171,7 +203,7 @@ public class MonitorManagementService {
     LOGGER.debug("Starting handleNode ");
 
     Node targetNode = visorMonitorHandler.getNodeById(target.getIdentifier(), userId);
-
+/*
     //writing NodeState into DB Model
     Map tags = monitor.getTags();
     tags.put("NodeState", targetNode.state().name());
@@ -183,26 +215,62 @@ public class MonitorManagementService {
       throw new IllegalArgumentException("Monitor already exists:" + monitor.getMetric());
     } else {
       LOGGER.debug("Monitor in DB created");
-
-      ExecutorService executorService = Executors.newSingleThreadExecutor();
-      executorService.execute(new Runnable() {
-        public void run() {
-          LOGGER.debug("starting asynchronous task");
-          try {
-            visorMonitorHandler.installEMSClient(userId, targetNode);
-          } catch (IllegalStateException e) {
-            LOGGER.debug("Exception during EMSInstallation: " + e);
-            LOGGER.debug("---");
-          }
-          visorMonitorHandler.installVisor(userId, targetNode);
-          visorMonitorHandler.configureVisor(targetNode, monitor);
-          LOGGER.debug("visor install and config done");
+*/
+    ExecutorService executorService = Executors.newSingleThreadExecutor();
+    executorService.execute(new Runnable() {
+      public void run() {
+        LOGGER.debug("starting asynchronous task");
+        try {
+          visorMonitorHandler.installEMSClient(userId, targetNode);
+        } catch (IllegalStateException e) {
+          LOGGER.debug("Exception during EMSInstallation: " + e);
+          LOGGER.debug("---");
         }
-      });
-      executorService.shutdown();
-      LOGGER.debug("Finished handleNode");
-      return result;
+        visorMonitorHandler.installVisor(userId, targetNode);
+        visorMonitorHandler.configureVisor(targetNode, monitor);
+        LOGGER.debug("visor install and config done");
+      }
+    });
+    executorService.shutdown();
+    LOGGER.debug("Finished handleNode");
+    return monitor;
+//    }
+  }
+
+  private Node getNodeFromProcess(String userId, MonitoringTarget target) {
+    final ProcessConverter PROCESS_CONVERTER = ProcessConverter.INSTANCE;
+    // only SingleProcess - ClusterProcess not supported
+    // getting Process
+    ProcessQueryRequest processQueryRequest = ProcessQueryRequest.newBuilder()
+        .setUserId(userId).setProcessId(target.getIdentifier()).build();
+    CloudiatorProcess process = null;
+    try {
+      ProcessQueryResponse processQueryResponse = processService
+          .queryProcesses(processQueryRequest);
+      if (processQueryResponse.getProcessesCount() == 0) {
+        throw new IllegalStateException("Process not found: " + target);
+      }
+      if (processQueryResponse.getProcessesCount() > 1) {
+        throw new IllegalStateException("More than one Process found: " + target);
+      }
+      process = PROCESS_CONVERTER
+          .applyBack(processQueryResponse.getProcesses(0));
+
+    } catch (ResponseException e) {
+      LOGGER.error("handleProcess threw ResponseException: ", e);
+      throw new IllegalStateException("Exception while handling Process: ", e);
     }
+    //  handling Process on Node
+    if (process instanceof SingleProcess) {
+      Node processNode = visorMonitorHandler
+          .getNodeById(((SingleProcess) process).getNode(), userId);
+      return processNode;
+    } else if (process instanceof ClusterProcess) {
+      //not implemented
+      throw new IllegalStateException("ClusterProcess not implemented");
+    }
+    //should never be reached
+    return null;
   }
 
 
@@ -235,7 +303,7 @@ public class MonitorManagementService {
       LOGGER.debug("Start handling SingleProcess");
       Node processNode = visorMonitorHandler
           .getNodeById(((SingleProcess) process).getNode(), userId);
-
+/*
       //writing NodeState into DB Model
       Map tags = domainMonitor.getTags();
       tags.put("NodeState", processNode.state().name());
@@ -247,30 +315,30 @@ public class MonitorManagementService {
         throw new IllegalArgumentException("Monitor already exists.");
       } else {
         LOGGER.debug("Monitor in DB created");
+*/
+      ExecutorService executorService = Executors.newSingleThreadExecutor();
 
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-
-        executorService.execute(new Runnable() {
-          public void run() {
-            LOGGER.debug("starting asynchronous task");
-            try {
-              visorMonitorHandler.installEMSClient(userId, processNode);
-            } catch (IllegalStateException e) {
-              LOGGER.debug("Exception during EMSInstallation: " + e);
-              LOGGER.debug("---");
-            } catch (Exception re) {
-              LOGGER.debug("Exception while EMSInstallation " + re);
-            }
-            visorMonitorHandler.installVisor(userId, processNode);
-            visorMonitorHandler.configureVisor(processNode, domainMonitor);
-            LOGGER.debug("visor install and config done");
+      executorService.execute(new Runnable() {
+        public void run() {
+          LOGGER.debug("starting asynchronous task");
+          try {
+            visorMonitorHandler.installEMSClient(userId, processNode);
+          } catch (IllegalStateException e) {
+            LOGGER.debug("Exception during EMSInstallation: " + e);
+            LOGGER.debug("---");
+          } catch (Exception re) {
+            LOGGER.debug("Exception while EMSInstallation " + re);
           }
-        });
-        executorService.shutdown();
+          visorMonitorHandler.installVisor(userId, processNode);
+          visorMonitorHandler.configureVisor(processNode, domainMonitor);
+          LOGGER.debug("visor install and config done");
+        }
+      });
+      executorService.shutdown();
 
-        LOGGER.debug("Finished handling SingleProcess");
-      }
-      return result;
+      LOGGER.debug("Finished handling SingleProcess");
+//      }
+      return domainMonitor;
     } else if (process instanceof ClusterProcess) {
       //not implemented
       throw new IllegalStateException("ClusterProcess not implemented");
