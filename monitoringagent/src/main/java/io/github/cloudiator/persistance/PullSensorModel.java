@@ -20,7 +20,6 @@ import org.hibernate.annotations.Cascade;
 class PullSensorModel extends SensorModel {
 
   @Column
-  @Lob
   private String className;
 
   @ElementCollection

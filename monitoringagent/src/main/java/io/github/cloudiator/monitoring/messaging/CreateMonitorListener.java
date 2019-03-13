@@ -38,7 +38,7 @@ public class CreateMonitorListener implements Runnable {
             try {
 
               Monitor contentMonitor = monitorConverter.applyBack(content.getNewmonitor());
-              LOGGER.debug("Got CreateMonitorCall: " + contentMonitor.toString());
+              //LOGGER.debug("Got CreateMonitorCall: " + contentMonitor.toString());
 
               Monitor createdMonitor = monitorManagementService
                   .handleNewMonitor(content.getUserId(), contentMonitor);

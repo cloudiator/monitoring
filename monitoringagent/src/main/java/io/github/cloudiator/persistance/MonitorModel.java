@@ -12,9 +12,11 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.MapsId;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import org.hibernate.annotations.GenericGenerator;
@@ -29,7 +31,7 @@ public class MonitorModel extends Model {
   @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
   private List<TargetModel> targets;
 
-  @OneToOne(optional = false, orphanRemoval = true, cascade = CascadeType.ALL)
+  @OneToOne(orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   private SensorModel sensor;
 
   @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)

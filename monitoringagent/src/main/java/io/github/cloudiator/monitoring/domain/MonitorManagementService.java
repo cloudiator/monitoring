@@ -119,7 +119,6 @@ public class MonitorManagementService {
           domainMonitor.getMetric() + "+++" + mTarget.getType().name() + "+++" + mTarget
               .getIdentifier());
       domainMonitor.setMetric(dbMetric);
-      System.out.println("DB-Metric: " + domainMonitor.getMetric());
 
       switch (mTarget.getType()) {
         case PROCESS:
@@ -145,7 +144,6 @@ public class MonitorManagementService {
       count++;
 
       domainMonitor.setMetric(newMonitor.getMetric());
-      System.out.println("MonitorMetric: " + domainMonitor.getMetric());
       //  TimeUnit.MILLISECONDS.sleep(500);
 
     }
