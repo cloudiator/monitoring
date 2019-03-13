@@ -119,12 +119,13 @@ public class VisorMonitorHandler {
       //LOGGER.debug("ExecutionException catched: " + e);
       throw new IllegalStateException("Error during VisorInstallation", e.getCause());
     }
-    LOGGER.debug("finished VisorInstallationProcess on: " + node.name());
+    LOGGER.debug("finished VisorInstallationProcess on: " + node.connectTo().ip().toString());
     return true;
   }
 
   public boolean configureVisor(Node targetNode, DomainMonitorModel monitor) {
-    LOGGER.debug("Starting VisorConfigurationProcess on: " + targetNode.name());
+    LOGGER
+        .debug("Starting VisorConfigurationProcess on: " + targetNode.connectTo().ip().toString());
 
     String metric = monitor.getMetric().split("[+++]", 3)[0];
     monitor.setMetric(metric);

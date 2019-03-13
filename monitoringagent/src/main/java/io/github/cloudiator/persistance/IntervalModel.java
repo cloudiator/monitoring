@@ -8,11 +8,11 @@ import javax.persistence.Enumerated;
 @Entity
 public class IntervalModel extends Model {
 
-  @Column(nullable = false)
+  @Column
   private Long period;
 
   @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
+  @Column
   private Unit unit;
 
   protected IntervalModel() {

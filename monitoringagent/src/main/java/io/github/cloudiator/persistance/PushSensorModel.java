@@ -8,8 +8,7 @@ import javax.persistence.Lob;
 @Entity
 class PushSensorModel extends SensorModel {
 
-  @Column(nullable = false)
-  @Lob
+  @Column
   private Integer port;
 
   protected PushSensorModel() {
