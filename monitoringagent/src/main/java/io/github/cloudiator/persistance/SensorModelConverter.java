@@ -14,7 +14,6 @@ public class SensorModelConverter implements OneWayConverter<SensorModel, Sensor
   @Override
   public Sensor apply(@Nullable SensorModel sensorModel) {
     if (sensorModel instanceof PullSensorModel) {
-      System.out.println("PullSensorConverter");
       return pullSensorModelConverter.apply((PullSensorModel) sensorModel);
     } else if (sensorModel instanceof PushSensorModel) {
       return pushSensorModelConverter.apply((PushSensorModel) sensorModel);
