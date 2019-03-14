@@ -9,7 +9,6 @@ import com.google.inject.persist.Transactional;
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.rest.model.DataSink;
 import io.github.cloudiator.rest.model.Monitor;
-import io.github.cloudiator.rest.model.MonitoringTag;
 import io.github.cloudiator.rest.model.MonitoringTarget;
 import io.github.cloudiator.rest.model.PullSensor;
 import io.github.cloudiator.rest.model.PushSensor;
@@ -31,11 +30,20 @@ public class MonitorDomainRepository {
   private static final Logger LOGGER = LoggerFactory.getLogger(MonitorDomainRepository.class);
 
   private final MonitorModelRepository monitorModelRepository;
+  private final TargetDomainRepository targetDomainRepository;
+  private final SensorDomainRepository sensorDomainRepository;
+  private final DataSinkModelRepository dataSinkModelRepository;
 
   @Inject
-  public MonitorDomainRepository(MonitorModelRepository monitorModelRepository
+  public MonitorDomainRepository(MonitorModelRepository monitorModelRepository,
+      TargetDomainRepository targetDomainRepository,
+      SensorDomainRepository sensorDomainRepository,
+      DataSinkModelRepository dataSinkModelRepository
   ) {
     this.monitorModelRepository = monitorModelRepository;
+    this.targetDomainRepository = targetDomainRepository;
+    this.sensorDomainRepository = sensorDomainRepository;
+    this.dataSinkModelRepository = dataSinkModelRepository;
   }
 
   public DomainMonitorModel findMonitorByMetric(String metric) {
@@ -67,6 +75,50 @@ public class MonitorDomainRepository {
   public MonitorModel persistMonitor(MonitorModel monitorModel) {
     monitorModelRepository.save(monitorModel);
     return monitorModel;
+  }
+
+  public DomainMonitorModel createDBMonitor(DomainMonitorModel domainMonitorModel) {
+    MonitorModel monitorModel = new MonitorModel()
+        .metric(domainMonitorModel.getMetric());
+    //Targets
+    for (MonitoringTarget target : domainMonitorModel.getTargets()) {
+      monitorModel.addTarget(targetDomainRepository
+          .createTarget(TargetType.valueOf(target.getType().name()), target.getIdentifier()));
+    }
+    //Sensor
+    Sensor sensor = domainMonitorModel.getSensor();
+    switch (sensor.getType()) {
+      case "PullSensor":
+        monitorModel.setSensor(sensorDomainRepository.createPullSensor((PullSensor) sensor));
+        break;
+      case "PushSensor":
+        monitorModel
+            .setSensor(sensorDomainRepository.createPushSensor(((PushSensor) sensor).getPort()));
+        break;
+      default:
+        throw new IllegalArgumentException(
+            "MonitorceationError: No valid Sensor: " + domainMonitorModel.getSensor().getType());
+    }
+    //Sinks
+    for (DataSink dataSink : domainMonitorModel.getSinks()) {
+      DataSinkModel createdsink = new DataSinkModel()
+          .sinkType(dataSink.getType().name())
+          .configuration(dataSink.getConfiguration());
+
+      dataSinkModelRepository.save(createdsink);
+      monitorModel.addDataSink(createdsink);
+    }
+    //Tags
+    Map<String, String> tags = new HashMap<>();
+    if (!domainMonitorModel.getTags().isEmpty()) {
+      tags.putAll(domainMonitorModel.getTags());
+    }
+    monitorModel.setMonitoringTags(tags);
+    // monitorModel is fully initialized
+
+    monitorModelRepository.save(monitorModel);
+
+    return MONITOR_MODEL_CONVERTER.apply(monitorModel);
   }
 
 

@@ -25,6 +25,7 @@ public class MonitorModelConverter implements OneWayConverter<MonitorModel, Doma
     for (TargetModel targetModel : monitorModel.getTargets()) {
       result.addTargetsItem(targetModelConverter.apply(targetModel));
     }
+    System.out.println("targets done");
     //Sensor
     result.setSensor(sensorModelConverter.apply(monitorModel.getSensor()));
     //DataSink
@@ -38,6 +39,7 @@ public class MonitorModelConverter implements OneWayConverter<MonitorModel, Doma
     }
     result.setTags(tags);
     result.setUuid(monitorModel.getUuid());
+    System.out.println(result.toString());
 
     return result;
   }

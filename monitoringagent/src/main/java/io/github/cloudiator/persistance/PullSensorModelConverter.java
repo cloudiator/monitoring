@@ -13,6 +13,9 @@ public class PullSensorModelConverter implements OneWayConverter<PullSensorModel
   @Nullable
   @Override
   public PullSensor apply(@Nullable PullSensorModel pullSensorModel) {
+    if (pullSensorModel == null) {
+      return null;
+    }
     PullSensor result = new PullSensor().className(pullSensorModel.getClassName())
         .interval(intervalModelConverter.apply(pullSensorModel.getInterval()));
     result.setType(PullSensor.class.getSimpleName());

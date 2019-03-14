@@ -53,7 +53,7 @@ public class MonitorManagementService {
   }
 
 
-  public DomainMonitorModel checkAndCreate(Monitor monitor) {
+  public DomainMonitorModel checkAndCreate(DomainMonitorModel monitor) {
     Optional<DomainMonitorModel> dbMonitor = null;
     dbMonitor = monitorOrchestrationService
         .getMonitor(monitor.getMetric());
