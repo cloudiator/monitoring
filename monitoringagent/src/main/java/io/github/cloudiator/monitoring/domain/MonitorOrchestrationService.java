@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public interface MonitorOrchestrationService {
 
-  DomainMonitorModel createMonitor(Monitor newMonitor);
+  DomainMonitorModel createMonitor(DomainMonitorModel newMonitor);
 
   List<DomainMonitorModel> getAllMonitors();
 

@@ -19,6 +19,7 @@ import javax.persistence.Id;
 import javax.persistence.MapsId;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 
 
@@ -28,13 +29,16 @@ public class MonitorModel extends Model {
   @Column(nullable = false, unique = true, updatable = false)
   private String metric;
 
-  @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(orphanRemoval = true)
+  @Cascade(org.hibernate.annotations.CascadeType.DELETE)
   private List<TargetModel> targets;
 
-  @OneToOne(orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  @OneToOne(orphanRemoval = true)
+  @Cascade(org.hibernate.annotations.CascadeType.DELETE)
   private SensorModel sensor;
 
-  @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(orphanRemoval = true)
+  @Cascade(org.hibernate.annotations.CascadeType.DELETE)
   private List<DataSinkModel> datasinks;
 
   @ElementCollection

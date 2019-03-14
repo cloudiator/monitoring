@@ -2,6 +2,7 @@ package io.github.cloudiator.persistance;
 
 import de.uniulm.omi.cloudiator.util.OneWayConverter;
 import io.github.cloudiator.rest.model.Sensor;
+import javax.annotation.Nullable;
 
 
 public class SensorModelConverter implements OneWayConverter<SensorModel, Sensor> {
@@ -11,7 +12,7 @@ public class SensorModelConverter implements OneWayConverter<SensorModel, Sensor
 
 
   @Override
-  public Sensor apply(SensorModel sensorModel) {
+  public Sensor apply(@Nullable SensorModel sensorModel) {
     if (sensorModel instanceof PullSensorModel) {
       return pullSensorModelConverter.apply((PullSensorModel) sensorModel);
     } else if (sensorModel instanceof PushSensorModel) {

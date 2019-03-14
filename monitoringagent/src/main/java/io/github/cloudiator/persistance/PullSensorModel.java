@@ -25,16 +25,14 @@ class PullSensorModel extends SensorModel {
   @ElementCollection
   private Map<String, String> configuration;
 
-  @OneToOne(optional = false, cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToOne(orphanRemoval = true)
+  @Cascade(org.hibernate.annotations.CascadeType.DELETE)
   private IntervalModel interval;
 
   protected PullSensorModel() {
   }
 
   public PullSensorModel(String className, java.util.Map configuration, IntervalModel interval) {
-    checkNotNull(className);
-    checkNotNull(configuration);
-    checkNotNull(interval);
     this.className = className;
     this.interval = interval;
     this.configuration.putAll(configuration);

@@ -46,4 +46,10 @@ public class TargetDomainRepository {
     targetModelRepository.save(targetModel);
   }
 
+  public TargetModel createTarget(TargetType targetType, String identifier){
+      TargetModel result = new TargetModel(targetType,identifier);
+      targetModelRepository.save(result);
+      return result;
+  }
+
 }
