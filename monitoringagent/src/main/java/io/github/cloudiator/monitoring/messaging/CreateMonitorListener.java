@@ -45,7 +45,6 @@ public class CreateMonitorListener implements Runnable {
 
               CreateMonitorResponse monitorResponse = CreateMonitorResponse.newBuilder()
                   .setMonitor(monitorConverter.apply(createdMonitor)).build();
-              LOGGER.debug(" CreateMonitorRequest responded ");
               messageInterface.reply(id, monitorResponse);
 
             } catch (IllegalArgumentException ie) {

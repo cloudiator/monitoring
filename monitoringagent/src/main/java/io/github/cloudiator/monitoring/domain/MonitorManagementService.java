@@ -58,7 +58,6 @@ public class MonitorManagementService {
     dbMonitor = monitorOrchestrationService
         .getMonitor(monitor.getMetric());
     if (dbMonitor.isPresent()) {
-      LOGGER.debug("found Monitor: " + dbMonitor.get());
       return null;
     } else {
       DomainMonitorModel add = monitorOrchestrationService.createMonitor(monitor);
@@ -74,9 +73,6 @@ public class MonitorManagementService {
 
   @Transactional
   public void checkAndDeleteMonitor(String metric, MonitoringTarget target) {
-    LOGGER.debug("starting checkAndDelete :" + metric.concat("+++").concat(target.getType().name())
-        .concat("+++")
-        .concat(target.getIdentifier()));
     monitorOrchestrationService.deleteMonitor(
         metric.concat("+++").concat(target.getType().name()).concat("+++")
             .concat(target.getIdentifier()));
@@ -102,18 +98,16 @@ public class MonitorManagementService {
 
   public DomainMonitorModel handleNewMonitor(String userId, Monitor newMonitor) {
     //Target
-    LOGGER.debug("newMonitorCall: " + newMonitor.toString());
     LOGGER.debug("Handling " + newMonitor.getTargets().size() + " Targets");
 
     DomainMonitorModel requestedMonitor = null;
-
     Integer count = 1;
     for (MonitoringTarget mTarget : newMonitor.getTargets()) {
 
       DomainMonitorModel domainMonitor = new DomainMonitorModel(newMonitor.getMetric(),
           newMonitor.getTargets(), newMonitor.getSensor(), newMonitor.getSinks(),
           newMonitor.getTags());
-      LOGGER.debug("Handling Target " + count);
+      LOGGER.debug("Handling Target of " + newMonitor.getMetric() + "Target: " + count);
       //handling
       String dbMetric = new String(
           domainMonitor.getMetric() + "+++" + mTarget.getType().name() + "+++" + mTarget
@@ -122,7 +116,6 @@ public class MonitorManagementService {
 
       switch (mTarget.getType()) {
         case PROCESS:
-          LOGGER.debug("Handle PROCESS: " + mTarget);
           requestedMonitor = handleProcess(userId, mTarget, domainMonitor);
           break;
         case TASK:
@@ -132,7 +125,6 @@ public class MonitorManagementService {
           requestedMonitor = handleJob(userId, mTarget, domainMonitor);
           break;
         case NODE:
-          LOGGER.debug("Handle NODE: " + mTarget);
           requestedMonitor = handleNode(userId, mTarget, domainMonitor);
           break;
         case CLOUD:
@@ -152,7 +144,6 @@ public class MonitorManagementService {
 
   private DomainMonitorModel handleNode(String userId, MonitoringTarget target,
       DomainMonitorModel monitor) {
-    LOGGER.debug("Starting handleNode ");
 
     Node targetNode = visorMonitorHandler.getNodeById(target.getIdentifier(), userId);
 
@@ -171,7 +162,6 @@ public class MonitorManagementService {
       ExecutorService executorService = Executors.newSingleThreadExecutor();
       executorService.execute(new Runnable() {
         public void run() {
-          LOGGER.debug("starting asynchronous task");
           try {
             visorMonitorHandler.installEMSClient(userId, targetNode);
           } catch (IllegalStateException e) {
@@ -184,7 +174,6 @@ public class MonitorManagementService {
         }
       });
       executorService.shutdown();
-      LOGGER.debug("Finished handleNode");
       return result;
     }
   }
@@ -216,7 +205,6 @@ public class MonitorManagementService {
     }
     //  handling Process on Node
     if (process instanceof SingleProcess) {
-      LOGGER.debug("Start handling SingleProcess");
       Node processNode = visorMonitorHandler
           .getNodeById(((SingleProcess) process).getNode(), userId);
 
@@ -236,7 +224,6 @@ public class MonitorManagementService {
 
         executorService.execute(new Runnable() {
           public void run() {
-            LOGGER.debug("starting asynchronous task");
             try {
               visorMonitorHandler.installEMSClient(userId, processNode);
             } catch (IllegalStateException e) {
@@ -251,8 +238,6 @@ public class MonitorManagementService {
           }
         });
         executorService.shutdown();
-
-        LOGGER.debug("Finished handling SingleProcess");
       }
       return result;
     } else if (process instanceof ClusterProcess) {

@@ -33,7 +33,6 @@ public class DeleteMonitorListener implements Runnable {
           @Override
           public void accept(String id, DeleteMonitorRequest content) {
             try {
-              System.out.println("Got message: \n" + content + "---");
 
               monitorManagementService
                   .checkAndDeleteMonitor(content.getMetric(),
