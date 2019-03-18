@@ -51,7 +51,7 @@ public class MonitorManagementService {
     return monitorModel;
   }
 
-
+  @Transactional
   public DomainMonitorModel checkAndCreate(DomainMonitorModel monitor) {
     Optional<DomainMonitorModel> dbMonitor = null;
     dbMonitor = monitorOrchestrationService
