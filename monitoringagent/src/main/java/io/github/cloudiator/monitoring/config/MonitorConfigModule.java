@@ -20,8 +20,6 @@ public class MonitorConfigModule extends AbstractModule {
   protected void configure() {
     bind(Init.class).asEagerSingleton();
     bind(MonitorOrchestrationService.class).to(BasicMonitorOrchestrationService.class);
-    bind(MonitorManagementService.class).asEagerSingleton();
-
   }
 
 }

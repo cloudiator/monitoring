@@ -63,7 +63,9 @@ public class VisorMonitorHandler {
   }
 
   public boolean installEMSClient(String userId, Node node) {
-    LOGGER.debug(" Starting EMSClientInstallationProcess on: " + node.name());
+    LOGGER.debug(
+        " Starting EMSClientInstallationProcess on: " + node.name() + " IP: " + node.connectTo()
+            .ip().toString());
     try {
       NodeEntities.Node target = nodeMessageConverter.apply(node);
 
@@ -88,12 +90,16 @@ public class VisorMonitorHandler {
       LOGGER.debug("EMS install ExecutionException catched: " + e);
       // throw new IllegalStateException("Error during EMSInstallation", e.getCause());
     }
-    LOGGER.debug("finished EMSClientInstallationProcess on: " + node.name());
+    LOGGER.debug(
+        "finished EMSClientInstallationProcess on: " + node.name() + " IP: " + node.connectTo()
+            .ip().toString());
     return true;
   }
 
   public boolean installVisor(String userId, Node node) {
-    LOGGER.debug(" Starting VisorInstallationProcess on: " + node.name());
+    LOGGER
+        .debug(" Starting VisorInstallationProcess on: " + node.name() + " IP: " + node.connectTo()
+            .ip().toString());
     try {
       NodeEntities.Node target = nodeMessageConverter.apply(node);
 
@@ -119,7 +125,9 @@ public class VisorMonitorHandler {
       //LOGGER.debug("ExecutionException catched: " + e);
       throw new IllegalStateException("Error during VisorInstallation", e.getCause());
     }
-    LOGGER.debug("finished VisorInstallationProcess on: " + node.connectTo().ip().toString());
+    LOGGER.debug(
+        "finished VisorInstallationProcess on: " + node.name() + " IP: " + node.connectTo().ip()
+            .toString());
     return true;
   }
 
@@ -133,10 +141,8 @@ public class VisorMonitorHandler {
     DefaultApi apiInstance = new DefaultApi();
     ApiClient apiClient = new ApiClient();
     String basepath = String.format("http://%s:%s", targetNode.connectTo().ip(), VisorPort);
-    LOGGER.debug("Basepath: " + basepath.toString());
     apiClient.setBasePath(basepath);
     apiInstance.setApiClient(apiClient);
-    LOGGER.debug("apiClient: " + apiClient.toString());
 
     Callable<Boolean> visorready = new Callable<Boolean>() {
       @Override
@@ -167,8 +173,6 @@ public class VisorMonitorHandler {
         .apply(monitor);
 
     try {
-      LOGGER.debug("POSTing Monitor: ");
-      LOGGER.debug(visorMonitor.toString());
 
       io.github.cloudiator.visor.rest.model.Monitor visorResponse = apiInstance
           .postMonitors(visorMonitor);
@@ -247,7 +251,6 @@ public class VisorMonitorHandler {
     DefaultApi api = new DefaultApi(apiClient);
     try {
       allMonitors.addAll(api.getMonitors());
-      LOGGER.debug("Monitors: " + allMonitors);
       return allMonitors;
     } catch (ApiException e) {
       throw new IllegalStateException("Error while getMonitors: " + e.getMessage());
@@ -257,7 +260,6 @@ public class VisorMonitorHandler {
 
 
   public Node getNodeById(String nodeId, String userId) {
-    LOGGER.debug(" Starting getNodeById ");
     try {
 
       NodeQueryMessage request = NodeQueryMessage.newBuilder().setNodeId(nodeId)
@@ -271,13 +273,12 @@ public class VisorMonitorHandler {
         throw new IllegalStateException("Node not found");
       }
       NodeEntities.Node nodeEntity = response.getNodesList().get(0);
-      LOGGER.debug("found NodeEntity ");
 
       return nodeMessageConverter.applyBack(nodeEntity);
 
     } catch (ResponseException re) {
       if (re.code() == Integer.valueOf(404)/*HttpStatus.SC_NOT_FOUND */) {
-        LOGGER.debug("MonitorMode not found");
+        LOGGER.debug("MonitorNode not found");
         throw new AssertionError("410");
       }
       throw new AssertionError(re.getMessage());
