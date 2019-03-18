@@ -27,7 +27,6 @@ import org.cloudiator.messaging.services.ProcessService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Singleton
 public class MonitorManagementService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(MonitorManagementService.class);
