@@ -95,7 +95,8 @@ public class MonitorManagementService {
   }
 
 
-  public DomainMonitorModel handleNewMonitor(String userId, Monitor newMonitor) {
+
+  public synchronized DomainMonitorModel handleNewMonitor(String userId, Monitor newMonitor) {
     //Target
     LOGGER.debug("Handling " + newMonitor.getTargets().size() + " Targets");
 
