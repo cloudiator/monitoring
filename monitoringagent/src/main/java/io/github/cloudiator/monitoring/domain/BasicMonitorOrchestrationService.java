@@ -28,6 +28,7 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   }
 
   @Override
+  @Transactional
   public DomainMonitorModel createMonitor(DomainMonitorModel newMonitor) {
     DomainMonitorModel result = monitorDomainRepository.createDBMonitor(newMonitor);
     return result;
