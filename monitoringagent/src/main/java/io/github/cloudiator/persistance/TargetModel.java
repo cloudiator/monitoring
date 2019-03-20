@@ -7,7 +7,7 @@ import javax.persistence.Enumerated;
 import javax.persistence.ManyToOne;
 
 @Entity
-public class TargetModel extends Model {
+public class TargetModel extends BaseModel {
 
   @Column
   @Enumerated(EnumType.STRING)

@@ -12,7 +12,7 @@ import javax.persistence.Enumerated;
 
 
 @Entity
-public class DataSinkModel extends Model {
+public class DataSinkModel extends BaseModel {
 
   @Enumerated(EnumType.STRING)
   @Column
