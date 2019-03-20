@@ -44,7 +44,7 @@
     <file>logs/monitoring-agent.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <!-- daily rollover -->
-      <fileNamePattern>logs/node-agent.%d{yyyy-MM-dd}.log</fileNamePattern>
+      <fileNamePattern>logs/monitoring-agent.%d{yyyy-MM-dd}.log</fileNamePattern>
 
       <!-- keep 30 days' worth of history capped at 3GB total size -->
       <maxHistory>30</maxHistory>
@@ -60,7 +60,6 @@
   </appender>
 
   <logger level="DEBUG" name="io.github.cloudiator.monitoring"/>
-  <!--<logger level="DEBUG" name="org.cloudiator.messaging.kafka"/>-->
   <logger level="DEBUG" name="io.github.cloudiator.persistance"/>
   <logger level="DEBUG" name="org.hibernate"/>
 
