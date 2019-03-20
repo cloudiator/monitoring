@@ -6,7 +6,7 @@ import com.google.inject.TypeLiteral;
 import java.util.Collection;
 import javax.persistence.EntityManager;
 
-public class PushSensorModelRepositoryJpa extends BaseModelRepositoryJpa<PushSensorModel> implements
+public class PushSensorModelRepositoryJpa extends MonitoringBaseModelRepositoryJpa<PushSensorModel> implements
     PushSensorModelRepository {
 
   @Inject

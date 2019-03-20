@@ -6,7 +6,7 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 
 @Entity
-public class IntervalModel extends Model {
+public class IntervalModel extends BaseModel {
 
   @Column
   private Long period;

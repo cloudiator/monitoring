@@ -11,7 +11,7 @@ import java.util.Optional;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
-public class DataSinkModelRepositoryJpa extends BaseModelRepositoryJpa<DataSinkModel> implements
+public class DataSinkModelRepositoryJpa extends MonitoringBaseModelRepositoryJpa<DataSinkModel> implements
     DataSinkModelRepository {
 
   @Inject

@@ -24,7 +24,7 @@ import org.hibernate.annotations.GenericGenerator;
 
 
 @Entity
-public class MonitorModel extends Model {
+public class MonitorModel extends BaseModel {
 
   @Column(nullable = false, unique = true, updatable = false)
   private String metric;

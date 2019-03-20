@@ -9,7 +9,7 @@ import java.util.Optional;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
-public class MonitorModelRepositoryJpa extends BaseModelRepositoryJpa<MonitorModel> implements
+public class MonitorModelRepositoryJpa extends MonitoringBaseModelRepositoryJpa<MonitorModel> implements
     MonitorModelRepository {
 
   @Inject
