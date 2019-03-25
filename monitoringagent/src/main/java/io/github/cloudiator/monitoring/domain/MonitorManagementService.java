@@ -162,15 +162,15 @@ public class MonitorManagementService {
       executorService.execute(new Runnable() {
         public void run() {
           try {
-            //visorMonitorHandler.installEMSClient(userId, targetNode);
+            visorMonitorHandler.installEMSClient(userId, targetNode);
           } catch (IllegalStateException e) {
             LOGGER.debug("Exception during EMSInstallation: " + e);
             LOGGER.debug("---");
           }
           visorMonitorHandler.installVisor(userId, targetNode);
-          //visorMonitorHandler.configureVisor(targetNode, monitor);
+          visorMonitorHandler.configureVisor(targetNode, monitor);
           /* for testing: ignoring target and configures localhost*/
-          visorMonitorHandler.configureVisortest(targetNode, monitor);
+          //visorMonitorHandler.configureVisortest(targetNode, monitor);
           /*   --------------------------------------------------    */
           LOGGER.debug("visor install and config done");
         }
@@ -227,14 +227,14 @@ public class MonitorManagementService {
         executorService.execute(new Runnable() {
           public void run() {
             try {
-              //visorMonitorHandler.installEMSClient(userId, processNode);
+              visorMonitorHandler.installEMSClient(userId, processNode);
             } catch (IllegalStateException e) {
               LOGGER.debug("Exception during EMSInstallation: " + e);
               LOGGER.debug("---");
             } catch (Exception re) {
               LOGGER.debug("Exception while EMSInstallation " + re);
             }
-            //visorMonitorHandler.installVisor(userId, processNode);
+            visorMonitorHandler.installVisor(userId, processNode);
             visorMonitorHandler.configureVisor(processNode, domainMonitor);
             /* for testing: ignoring target and configures localhost*/
             //visorMonitorHandler.configureVisortest(processNode, domainMonitor);

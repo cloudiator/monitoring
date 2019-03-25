@@ -62,7 +62,7 @@ public class VisorMonitorHandler {
     this.nodeService = nodeService;
   }
 
-  public boolean installEMSClient(String userId, Node node) {
+  public synchronized boolean installEMSClient(String userId, Node node) {
     LOGGER.debug(
         " Starting EMSClientInstallationProcess on: " + node.name() + " IP: " + node.connectTo()
             .ip().toString());
@@ -96,7 +96,7 @@ public class VisorMonitorHandler {
     return true;
   }
 
-  public boolean installVisor(String userId, Node node) {
+  public synchronized boolean installVisor(String userId, Node node) {
     LOGGER
         .debug(" Starting VisorInstallationProcess on: " + node.name() + " IP: " + node.connectTo()
             .ip().toString());
@@ -142,8 +142,8 @@ public class VisorMonitorHandler {
 
     DefaultApi apiInstance = new DefaultApi();
     ApiClient apiClient = new ApiClient();
-    //String basepath = String.format("http://%s:%s", targetNode.connectTo().ip(), VisorPort);
-    String basepath = String.format("http://localhost:31415");
+    String basepath = String.format("http://%s:%s", targetNode.connectTo().ip(), VisorPort);
+    //String basepath = String.format("http://localhost:31415");
     apiClient.setBasePath(basepath);
     apiInstance.setApiClient(apiClient);
 
@@ -159,8 +159,8 @@ public class VisorMonitorHandler {
         .retryIfResult(Predicates.<Boolean>isNull())
         .retryIfExceptionOfType(ApiException.class)
         .retryIfRuntimeException()
-        .withWaitStrategy(WaitStrategies.fixedWait(500, TimeUnit.MILLISECONDS))
-        .withStopStrategy(StopStrategies.stopAfterDelay(10000, TimeUnit.MILLISECONDS))
+        .withWaitStrategy(WaitStrategies.fixedWait(1000, TimeUnit.MILLISECONDS))
+        .withStopStrategy(StopStrategies.stopAfterDelay(30, TimeUnit.SECONDS))
         .build();
 
     try {
