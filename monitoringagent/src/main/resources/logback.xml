@@ -61,7 +61,7 @@
 
   <logger level="DEBUG" name="io.github.cloudiator.monitoring"/>
   <logger level="DEBUG" name="io.github.cloudiator.persistance"/>
-  <logger level="DEBUG" name="org.hibernate"/>
+<!--  <logger level="DEBUG" name="org.hibernate"/> -->
 
   <root level="WARN">
     <appender-ref ref="STDOUT"/>
