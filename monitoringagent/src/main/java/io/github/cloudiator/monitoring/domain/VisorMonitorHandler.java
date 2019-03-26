@@ -62,7 +62,7 @@ public class VisorMonitorHandler {
     this.nodeService = nodeService;
   }
 
-  public boolean installEMSClient(String userId, Node node) {
+  public synchronized boolean installEMSClient(String userId, Node node) {
     LOGGER.debug(
         " Starting EMSClientInstallationProcess on: " + node.name() + " IP: " + node.connectTo()
             .ip().toString());
@@ -96,7 +96,7 @@ public class VisorMonitorHandler {
     return true;
   }
 
-  public boolean installVisor(String userId, Node node) {
+  public synchronized boolean installVisor(String userId, Node node) {
     LOGGER
         .debug(" Starting VisorInstallationProcess on: " + node.name() + " IP: " + node.connectTo()
             .ip().toString());
@@ -138,9 +138,12 @@ public class VisorMonitorHandler {
     String metric = monitor.getMetric().split("[+++]", 3)[0];
     monitor.setMetric(metric);
 
+    LOGGER.debug("configure Monitor: " + monitor);
+
     DefaultApi apiInstance = new DefaultApi();
     ApiClient apiClient = new ApiClient();
     String basepath = String.format("http://%s:%s", targetNode.connectTo().ip(), VisorPort);
+    //String basepath = String.format("http://localhost:31415");
     apiClient.setBasePath(basepath);
     apiInstance.setApiClient(apiClient);
 
@@ -156,8 +159,8 @@ public class VisorMonitorHandler {
         .retryIfResult(Predicates.<Boolean>isNull())
         .retryIfExceptionOfType(ApiException.class)
         .retryIfRuntimeException()
-        .withWaitStrategy(WaitStrategies.fixedWait(500, TimeUnit.MILLISECONDS))
-        .withStopStrategy(StopStrategies.stopAfterDelay(10000, TimeUnit.MILLISECONDS))
+        .withWaitStrategy(WaitStrategies.fixedWait(1000, TimeUnit.MILLISECONDS))
+        .withStopStrategy(StopStrategies.stopAfterDelay(30, TimeUnit.SECONDS))
         .build();
 
     try {
@@ -186,6 +189,7 @@ public class VisorMonitorHandler {
 
   public boolean configureVisortest(Node targetNode, DomainMonitorModel monitor) {
     LOGGER.debug("Starting VisorConfigurationProcess on: localhost");
+    LOGGER.debug("Monitor: " + monitor);
 
     DefaultApi apiInstance = new DefaultApi();
     ApiClient apiClient = new ApiClient();
@@ -228,6 +232,8 @@ public class VisorMonitorHandler {
 
       io.github.cloudiator.visor.rest.model.Monitor visorResponse = apiInstance
           .postMonitors(visorMonitor);
+
+      System.out.println("Response: " + visorResponse);
 
     } catch (ApiException e) {
       System.err.println("Exception when calling DefaultApi#postMonitors:" + e.getResponseBody());

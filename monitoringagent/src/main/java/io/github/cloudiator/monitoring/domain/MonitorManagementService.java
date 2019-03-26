@@ -95,7 +95,6 @@ public class MonitorManagementService {
   }
 
 
-
   public synchronized DomainMonitorModel handleNewMonitor(String userId, Monitor newMonitor) {
     //Target
     LOGGER.debug("Handling " + newMonitor.getTargets().size() + " Targets");
@@ -170,6 +169,9 @@ public class MonitorManagementService {
           }
           visorMonitorHandler.installVisor(userId, targetNode);
           visorMonitorHandler.configureVisor(targetNode, monitor);
+          /* for testing: ignoring target and configures localhost*/
+          //visorMonitorHandler.configureVisortest(targetNode, monitor);
+          /*   --------------------------------------------------    */
           LOGGER.debug("visor install and config done");
         }
       });
@@ -234,6 +236,9 @@ public class MonitorManagementService {
             }
             visorMonitorHandler.installVisor(userId, processNode);
             visorMonitorHandler.configureVisor(processNode, domainMonitor);
+            /* for testing: ignoring target and configures localhost*/
+            //visorMonitorHandler.configureVisortest(processNode, domainMonitor);
+            /*   --------------------------------------------------    */
             LOGGER.debug("visor install and config done");
           }
         });

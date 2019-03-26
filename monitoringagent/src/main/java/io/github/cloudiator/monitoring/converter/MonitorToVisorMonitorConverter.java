@@ -1,6 +1,6 @@
 package io.github.cloudiator.monitoring.converter;
 
-import de.uniulm.omi.cloudiator.util.OneWayConverter;
+
 import de.uniulm.omi.cloudiator.util.TwoWayConverter;
 import io.github.cloudiator.rest.model.DataSink;
 import io.github.cloudiator.rest.model.Interval;
@@ -66,6 +66,22 @@ public class MonitorToVisorMonitorConverter implements
     result.setSinks(dataSinkConverter.applyBack(visorMonitor.getDataSinks()));
     result.setTags(visorMonitor.getMonitorContext());
     result.setUuid(visorMonitor.getUuid());
+    switch (visorMonitor.getType()) {
+      case PUSHMONITOR:
+        PushSensor pushSensor = new PushSensor()
+            .port(((PushMonitor) visorMonitor).getPort().intValue());
+        pushSensor.setType(pushSensor.getClass().getSimpleName().toString());
+        result.setSensor(pushSensor);
+        break;
+      case SENSORMONITOR:
+        PullSensor pullSensor = new PullSensor()
+            .interval(intervalConverter.applyBack(((SensorMonitor) visorMonitor).getInterval()))
+            ._configuration(((SensorMonitor) visorMonitor).getSensorConfiguration());
+        result.setSensor(pullSensor);
+        break;
+      default:
+        throw new IllegalStateException("unkown Monitortyp: " + visorMonitor.getType());
+    }
 
     return result;
   }

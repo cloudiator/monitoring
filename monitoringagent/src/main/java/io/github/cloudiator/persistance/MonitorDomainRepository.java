@@ -186,13 +186,8 @@ public class MonitorDomainRepository {
     return MONITOR_MODEL_CONVERTER.apply(monitorModel);
   }
 
-  public void updateMonitor(Monitor monitor) {
-    MonitorModel dbMonitor = monitorModelRepository.findMonitorByMetric(monitor.getMetric())
-        .orElse(null);
-    if (dbMonitor == null) {
-      throw new IllegalStateException("Monitor does not exist.");
-    }
-    // NOT Implemented
+  public void updateMonitor(MonitorModel monitor) {
+    monitorModelRepository.save(monitor);
   }
 
 
