@@ -45,27 +45,20 @@ public class MonitorManagementService {
     this.processService = processService;
   }
 
-  @Transactional
-  public MonitorModel persistMonitor(MonitorModel monitorModel) {
-    monitorOrchestrationService.persistMonitor(monitorModel);
-    return monitorModel;
-  }
 
-
-  public synchronized DomainMonitorModel checkAndCreate(DomainMonitorModel monitor) {
-    Optional<DomainMonitorModel> dbMonitor = null;
+  public synchronized MonitorModel checkAndCreate(DomainMonitorModel monitor) {
+    Optional<MonitorModel> dbMonitor = null;
     dbMonitor = monitorOrchestrationService
         .getMonitor(monitor.getMetric());
     if (dbMonitor.isPresent()) {
       return null;
     } else {
-      DomainMonitorModel add = monitorOrchestrationService.createMonitor(monitor);
-      return add;
+      return monitorOrchestrationService.createMonitor(monitor);
+
     }
   }
 
 
-  //@Transactional
   public List<DomainMonitorModel> getAllMonitors() {
     return monitorOrchestrationService.getAllMonitors();
   }
@@ -83,15 +76,15 @@ public class MonitorManagementService {
     monitorOrchestrationService.deleteAll();
   }
 
-  //@Transactional
-  public Monitor getMonitor(String metric, MonitoringTarget target) {
-    DomainMonitorModel result = monitorOrchestrationService
+
+  public DomainMonitorModel getMonitor(String metric, MonitoringTarget target) {
+    MonitorModel result = monitorOrchestrationService
         .getMonitor(metric.concat("+++")
             .concat(target.getType().name().concat("+++").concat(target.getIdentifier()))).get();
     if (result == null) {
       throw new IllegalArgumentException("Monitor not found. ");
     }
-    return result;
+    return monitorModelConverter.apply(result);
   }
 
 
@@ -152,7 +145,7 @@ public class MonitorManagementService {
     tags.put("IP", targetNode.connectTo().ip());
     tags.put(target.getType().toString(), target.getIdentifier());
     monitor.setTags(tags);
-    DomainMonitorModel result = checkAndCreate(monitor);
+    DomainMonitorModel result = monitorModelConverter.apply(checkAndCreate(monitor));
     if (result == null) {
       throw new IllegalArgumentException("Monitor already exists:" + monitor.getMetric());
     } else {
@@ -216,7 +209,7 @@ public class MonitorManagementService {
       tags.put("IP", processNode.connectTo().ip());
       tags.put(target.getType().toString(), target.getIdentifier());
       domainMonitor.setTags(tags);
-      DomainMonitorModel result = checkAndCreate(domainMonitor);
+      MonitorModel result = checkAndCreate(domainMonitor);
       if (result == null) {
         throw new IllegalArgumentException("Monitor already exists.");
       } else {
@@ -235,16 +228,22 @@ public class MonitorManagementService {
               LOGGER.debug("Exception while EMSInstallation " + re);
             }
             visorMonitorHandler.installVisor(userId, processNode);
-            visorMonitorHandler.configureVisor(processNode, domainMonitor);
+            io.github.cloudiator.visor.rest.model.Monitor visorback = visorMonitorHandler
+                .configureVisor(processNode, domainMonitor);
             /* for testing: ignoring target and configures localhost*/
             //visorMonitorHandler.configureVisortest(processNode, domainMonitor);
             /*   --------------------------------------------------    */
             LOGGER.debug("visor install and config done");
+
+            result.setUuid(visorback.getUuid());
+            result.addTag("uuid", visorback.getUuid());
+            monitorOrchestrationService.updateMonitor(result);
+            LOGGER.debug("Result: " + result);
           }
         });
         executorService.shutdown();
       }
-      return result;
+      return monitorModelConverter.apply(result);
     } else if (process instanceof ClusterProcess) {
       //not implemented
       throw new IllegalStateException("ClusterProcess not implemented");
@@ -273,9 +272,9 @@ public class MonitorManagementService {
 
   public DomainMonitorModel updateMonitor(String userId, String metric) {
     //checking Monitor in Database
-    DomainMonitorModel result = monitorOrchestrationService.getMonitor(metric).get();
+    MonitorModel result = monitorOrchestrationService.getMonitor(metric).get();
 
-    return result;
+    return null;
   }
 
   public DomainMonitorModel getAllVisor(String userId, MonitoringTarget target) {

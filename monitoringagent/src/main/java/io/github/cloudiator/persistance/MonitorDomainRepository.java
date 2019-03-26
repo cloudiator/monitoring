@@ -46,14 +46,14 @@ public class MonitorDomainRepository {
     this.dataSinkModelRepository = dataSinkModelRepository;
   }
 
-  public DomainMonitorModel findMonitorByMetric(String metric) {
+  public MonitorModel findMonitorByMetric(String metric) {
     checkNotNull(metric, "Metric is null");
     checkArgument(!metric.isEmpty(), "Metric is empty");
     MonitorModel result = monitorModelRepository.findMonitorByMetric(metric).orElse(null);
     if (result == null) {
       return null;
     }
-    return MONITOR_MODEL_CONVERTER.apply(result);
+    return result;
   }
 
   public boolean exists(String metric) {
@@ -77,7 +77,7 @@ public class MonitorDomainRepository {
     return monitorModel;
   }
 
-  public DomainMonitorModel createDBMonitor(DomainMonitorModel domainMonitorModel) {
+  public MonitorModel createDBMonitor(DomainMonitorModel domainMonitorModel) {
     MonitorModel monitorModel = new MonitorModel()
         .metric(domainMonitorModel.getMetric());
     //Targets
@@ -118,7 +118,7 @@ public class MonitorDomainRepository {
 
     monitorModelRepository.save(monitorModel);
 
-    return MONITOR_MODEL_CONVERTER.apply(monitorModel);
+    return monitorModel;
   }
 
 

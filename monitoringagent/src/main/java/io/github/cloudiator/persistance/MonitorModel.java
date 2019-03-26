@@ -72,6 +72,10 @@ public class MonitorModel extends BaseModel {
     return uuid;
   }
 
+  public void setUuid(String uuid) {
+    this.uuid = uuid;
+  }
+
   public String getMetric() {
     return metric;
   }
@@ -126,6 +130,13 @@ public class MonitorModel extends BaseModel {
       this.monitortags = new HashMap<>();
     }
     this.monitortags.putAll(monitorTag);
+  }
+
+  public void addTag(String value1, String value2) {
+    if (this.monitortags == null) {
+      this.monitortags = new HashMap<>();
+    }
+    this.monitortags.put(value1, value2);
   }
 
 

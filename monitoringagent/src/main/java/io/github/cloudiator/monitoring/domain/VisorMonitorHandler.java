@@ -131,7 +131,7 @@ public class VisorMonitorHandler {
     return true;
   }
 
-  public boolean configureVisor(Node targetNode, DomainMonitorModel monitor) {
+  public io.github.cloudiator.visor.rest.model.Monitor configureVisor(Node targetNode, DomainMonitorModel monitor) {
     LOGGER
         .debug("Starting VisorConfigurationProcess on: " + targetNode.connectTo().ip().toString());
 
@@ -174,17 +174,17 @@ public class VisorMonitorHandler {
     LOGGER.debug("- calling Visor successful - ");
     io.github.cloudiator.visor.rest.model.Monitor visorMonitor = visorMonitorConverter
         .apply(monitor);
+    io.github.cloudiator.visor.rest.model.Monitor visorResponse = null;
 
     try {
 
-      io.github.cloudiator.visor.rest.model.Monitor visorResponse = apiInstance
-          .postMonitors(visorMonitor);
+      visorResponse = apiInstance.postMonitors(visorMonitor);
 
     } catch (ApiException e) {
       System.err.println("Exception when calling DefaultApi#postMonitors:" + e.getResponseBody());
       e.printStackTrace();
     }
-    return true;
+    return visorResponse;
   }
 
   public boolean configureVisortest(Node targetNode, DomainMonitorModel monitor) {
@@ -232,8 +232,6 @@ public class VisorMonitorHandler {
 
       io.github.cloudiator.visor.rest.model.Monitor visorResponse = apiInstance
           .postMonitors(visorMonitor);
-
-      System.out.println("Response: " + visorResponse);
 
     } catch (ApiException e) {
       System.err.println("Exception when calling DefaultApi#postMonitors:" + e.getResponseBody());

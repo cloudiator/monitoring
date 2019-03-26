@@ -1,18 +1,14 @@
 package io.github.cloudiator.monitoring.messaging;
 
 import com.google.inject.Inject;
+import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.rest.converter.MonitorConverter;
 import io.github.cloudiator.monitoring.domain.MonitorManagementService;
-import io.github.cloudiator.monitoring.domain.MonitorOrchestrationService;
 import io.github.cloudiator.rest.converter.MonitorTargetConverter;
-import io.github.cloudiator.rest.model.Monitor;
 import java.util.NoSuchElementException;
 import org.cloudiator.messages.General.Error;
 import org.cloudiator.messages.Monitor.GetMonitorRequest;
 import org.cloudiator.messages.Monitor.GetMonitorResponse;
-import org.cloudiator.messages.Monitor.UpdateMonitorRequest;
-import org.cloudiator.messages.Monitor.UpdateMonitorResponse;
-import org.cloudiator.messages.entities.MonitorEntities;
 import org.cloudiator.messaging.MessageCallback;
 import org.cloudiator.messaging.MessageInterface;
 import org.slf4j.Logger;
@@ -40,7 +36,7 @@ public class GetMonitorListener implements Runnable {
           @Override
           public void accept(String id, GetMonitorRequest content) {
             try {
-              Monitor dbmonitor = null;
+              DomainMonitorModel dbmonitor = null;
 
               dbmonitor = monitorManagementService
                   .getMonitor(content.getMetric(),

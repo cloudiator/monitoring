@@ -10,6 +10,7 @@ import io.github.cloudiator.monitoring.converter.MonitorToVisorMonitorConverter;
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.persistance.MonitorDomainRepository;
 import io.github.cloudiator.persistance.MonitorModel;
+import io.github.cloudiator.persistance.MonitorModelConverter;
 import io.github.cloudiator.rest.model.Monitor;
 import io.github.cloudiator.rest.model.MonitoringTarget;
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ import java.util.Optional;
 public class BasicMonitorOrchestrationService implements MonitorOrchestrationService {
 
   private final MonitorDomainRepository monitorDomainRepository;
+  private final MonitorModelConverter monitorModelConverter = MonitorModelConverter.INSTANCE;
 
 
   @Inject
@@ -29,9 +31,8 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
 
   @Override
   @Transactional
-  public DomainMonitorModel createMonitor(DomainMonitorModel newMonitor) {
-    DomainMonitorModel result = monitorDomainRepository.createDBMonitor(newMonitor);
-    return result;
+  public MonitorModel createMonitor(DomainMonitorModel newMonitor) {
+    return monitorDomainRepository.createDBMonitor(newMonitor);
   }
 
   @Override
@@ -41,9 +42,10 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   }
 
   @Override
-  public void updateMonitor(Monitor monitor) {
+  @Transactional
+  public void updateMonitor(MonitorModel monitor) {
     checkNotNull(monitor, "Monitor is null.");
-    //Not implemented
+    monitorDomainRepository.updateMonitor(monitor);
   }
 
   @Override
@@ -57,9 +59,9 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   }
 
   @Override
-  public Optional<DomainMonitorModel> getMonitor(String monitorMetric) {
+  public Optional<MonitorModel> getMonitor(String monitorMetric) {
     checkNotNull(monitorMetric, "Metric is null");
-    final DomainMonitorModel result = monitorDomainRepository.findMonitorByMetric(monitorMetric);
+    final MonitorModel result = monitorDomainRepository.findMonitorByMetric(monitorMetric);
     if (result == null) {
       return Optional.empty();
     } else {

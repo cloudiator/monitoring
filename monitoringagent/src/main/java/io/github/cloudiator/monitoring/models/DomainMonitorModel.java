@@ -2,7 +2,6 @@ package io.github.cloudiator.monitoring.models;
 
 import io.github.cloudiator.rest.model.DataSink;
 import io.github.cloudiator.rest.model.Monitor;
-import io.github.cloudiator.rest.model.MonitoringTag;
 import io.github.cloudiator.rest.model.MonitoringTarget;
 import io.github.cloudiator.rest.model.Sensor;
 import java.util.List;
