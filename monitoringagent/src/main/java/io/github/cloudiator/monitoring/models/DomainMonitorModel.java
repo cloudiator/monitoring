@@ -4,6 +4,7 @@ import io.github.cloudiator.rest.model.DataSink;
 import io.github.cloudiator.rest.model.Monitor;
 import io.github.cloudiator.rest.model.MonitoringTarget;
 import io.github.cloudiator.rest.model.Sensor;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -90,6 +91,16 @@ public class DomainMonitorModel extends Monitor {
   public void setTags(Map tags) {
     super.setTags(tags);
   }
+
+  public void addTagItem(String value1, String value2) {
+    Map<String, String> tagmap = this.getTags();
+    if (tagmap == null) {
+      tagmap = new HashMap<>();
+    }
+    tagmap.put(value1, value2);
+    this.setTags(tagmap);
+  }
+
 
   public boolean equals(Object o) {
     if (this == o) {

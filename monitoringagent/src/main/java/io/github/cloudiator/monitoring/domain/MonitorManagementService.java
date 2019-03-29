@@ -1,7 +1,6 @@
 package io.github.cloudiator.monitoring.domain;
 
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.google.inject.persist.Transactional;
 import io.github.cloudiator.monitoring.converter.MonitorToVisorMonitorConverter;
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
@@ -19,7 +18,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import org.cloudiator.messages.Process.ProcessQueryRequest;
 import org.cloudiator.messages.Process.ProcessQueryResponse;
 import org.cloudiator.messaging.ResponseException;
@@ -145,7 +143,7 @@ public class MonitorManagementService {
     tags.put("IP", targetNode.connectTo().ip());
     tags.put(target.getType().toString(), target.getIdentifier());
     monitor.setTags(tags);
-    DomainMonitorModel result = monitorModelConverter.apply(checkAndCreate(monitor));
+    MonitorModel result = checkAndCreate(monitor);
     if (result == null) {
       throw new IllegalArgumentException("Monitor already exists:" + monitor.getMetric());
     } else {
@@ -161,16 +159,24 @@ public class MonitorManagementService {
             LOGGER.debug("---");
           }
           visorMonitorHandler.installVisor(userId, targetNode);
-          visorMonitorHandler.configureVisor(targetNode, monitor);
+          io.github.cloudiator.visor.rest.model.Monitor visorback = visorMonitorHandler
+              .configureVisor(targetNode, monitor);
           /* for testing: ignoring target and configures localhost*/
           //visorMonitorHandler.configureVisortest(targetNode, monitor);
           /*   --------------------------------------------------    */
+          LOGGER.debug("back: " + visorback.getUuid());
+          MonitorModel edit = monitorOrchestrationService.getMonitor(result.getMetric()).get();
+          edit.setUuid(visorback.getUuid());
+
+          monitorOrchestrationService.updateMonitor(edit);
+
           LOGGER.debug("visor install and config done");
         }
       });
       executorService.shutdown();
-      return result;
+      return monitorModelConverter.apply(result);
     }
+
   }
 
 
@@ -221,24 +227,28 @@ public class MonitorManagementService {
           public void run() {
             try {
               visorMonitorHandler.installEMSClient(userId, processNode);
-            } catch (IllegalStateException e) {
-              LOGGER.debug("Exception during EMSInstallation: " + e);
-              LOGGER.debug("---");
             } catch (Exception re) {
               LOGGER.debug("Exception while EMSInstallation " + re);
             }
+
             visorMonitorHandler.installVisor(userId, processNode);
+
             io.github.cloudiator.visor.rest.model.Monitor visorback = visorMonitorHandler
                 .configureVisor(processNode, domainMonitor);
+
             /* for testing: ignoring target and configures localhost*/
             //visorMonitorHandler.configureVisortest(processNode, domainMonitor);
             /*   --------------------------------------------------    */
+            LOGGER.debug("back: " + visorback.getUuid());
+            MonitorModel dbmonitor = monitorOrchestrationService.getMonitor(result.getMetric())
+                .get();
+            dbmonitor.setUuid(visorback.getUuid());
+            LOGGER.debug("EDIT-metric: " + dbmonitor.getMetric());
+
+            monitorOrchestrationService.updateMonitor(dbmonitor);
+
             LOGGER.debug("visor install and config done");
 
-            result.setUuid(visorback.getUuid());
-            result.addTag("uuid", visorback.getUuid());
-            monitorOrchestrationService.updateMonitor(result);
-            LOGGER.debug("Result: " + result);
           }
         });
         executorService.shutdown();

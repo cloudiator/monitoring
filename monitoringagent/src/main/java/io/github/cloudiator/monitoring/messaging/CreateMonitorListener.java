@@ -5,7 +5,6 @@ import com.google.inject.Inject;
 import io.github.cloudiator.rest.converter.MonitorConverter;
 import io.github.cloudiator.monitoring.domain.MonitorManagementService;
 import io.github.cloudiator.rest.model.Monitor;
-import io.github.cloudiator.monitoring.domain.MonitorOrchestrationService;
 import org.cloudiator.messages.General.Error;
 import org.cloudiator.messages.Monitor.CreateMonitorRequest;
 import org.cloudiator.messages.Monitor.CreateMonitorResponse;

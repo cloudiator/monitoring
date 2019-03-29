@@ -44,7 +44,6 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   @Override
   @Transactional
   public void updateMonitor(MonitorModel monitor) {
-    checkNotNull(monitor, "Monitor is null.");
     monitorDomainRepository.updateMonitor(monitor);
   }
 

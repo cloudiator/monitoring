@@ -135,7 +135,7 @@ public class VisorMonitorHandler {
     LOGGER
         .debug("Starting VisorConfigurationProcess on: " + targetNode.connectTo().ip().toString());
 
-    String metric = monitor.getMetric().split("[+++]", 3)[0];
+    String metric = monitor.getMetric().split("[+++]", 2)[0];
     monitor.setMetric(metric);
 
     LOGGER.debug("configure Monitor: " + monitor);
