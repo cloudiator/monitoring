@@ -29,7 +29,7 @@ public class MonitorModel extends BaseModel {
   @Column(nullable = false, unique = true, updatable = false)
   private String metric;
 
-  @OneToMany(orphanRemoval = true)
+  @OneToMany(orphanRemoval = true, fetch = FetchType.LAZY)
   @Cascade(org.hibernate.annotations.CascadeType.DELETE)
   private List<TargetModel> targets;
 

@@ -36,6 +36,7 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   }
 
   @Override
+  @Transactional
   public List<DomainMonitorModel> getAllMonitors() {
     return monitorDomainRepository
         .getAllMonitors();
@@ -48,14 +49,16 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   }
 
   @Override
-  public void deleteMonitor(String metric) {
-    monitorDomainRepository.deleteMonitor(metric);
+  @Transactional
+  public MonitorModel deleteMonitor(String metric) {
+    return monitorDomainRepository.deleteMonitor(metric);
   }
 
   @Override
   public void deleteAll() {
     monitorDomainRepository.deleteAll();
   }
+
 
   @Override
   public Optional<MonitorModel> getMonitor(String monitorMetric) {

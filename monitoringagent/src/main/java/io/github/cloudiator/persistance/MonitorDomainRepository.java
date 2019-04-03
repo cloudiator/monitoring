@@ -71,7 +71,7 @@ public class MonitorDomainRepository {
     return result;
   }
 
-  @Transactional
+
   public MonitorModel persistMonitor(MonitorModel monitorModel) {
     monitorModelRepository.save(monitorModel);
     return monitorModel;
@@ -82,8 +82,9 @@ public class MonitorDomainRepository {
         .metric(domainMonitorModel.getMetric());
     //Targets
     for (MonitoringTarget target : domainMonitorModel.getTargets()) {
-      monitorModel.addTarget(targetDomainRepository
-          .createTarget(TargetType.valueOf(target.getType().name()), target.getIdentifier()));
+      TargetModel targetModel = targetDomainRepository
+          .createTarget(TargetType.valueOf(target.getType().name()), target.getIdentifier());
+      monitorModel.addTarget(targetModel);
     }
     //Sensor
     Sensor sensor = domainMonitorModel.getSensor();
@@ -127,14 +128,13 @@ public class MonitorDomainRepository {
   }
 
 
-  public void deleteMonitor(String metric) {
+  public MonitorModel deleteMonitor(String metric) {
     Optional<MonitorModel> dbMonitor = monitorModelRepository.findMonitorByMetric(metric);
-    LOGGER.debug("Check Monitor for deleting.");
     if (!dbMonitor.isPresent()) {
       throw new IllegalStateException("Monitor does not exist.");
     } else {
-      LOGGER.debug("Deleting Monitor now! ");
       monitorModelRepository.delete(dbMonitor.get());
+      return dbMonitor.get();
     }
   }
 
