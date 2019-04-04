@@ -28,11 +28,18 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   }
 
   @Override
-  @Transactional
   public DomainMonitorModel createMonitor(DomainMonitorModel newMonitor) {
-    DomainMonitorModel result = monitorDomainRepository.createDBMonitor(newMonitor);
+    DomainMonitorModel result = TransactionRetryer
+        .retry(100, 2000, 5, () -> repeatedCreation(newMonitor));
     return result;
   }
+
+  @Transactional
+  public DomainMonitorModel repeatedCreation(DomainMonitorModel Monitor) {
+    DomainMonitorModel result = monitorDomainRepository.createDBMonitor(Monitor);
+    return result;
+  }
+
 
   @Override
   public List<DomainMonitorModel> getAllMonitors() {
