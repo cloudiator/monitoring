@@ -4,22 +4,17 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
-import com.google.protobuf.MapEntry;
-import io.github.cloudiator.monitoring.converter.MonitorToVisorMonitorConverter;
-
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.persistance.MonitorDomainRepository;
 import io.github.cloudiator.persistance.MonitorModel;
-import io.github.cloudiator.rest.model.Monitor;
-import io.github.cloudiator.rest.model.MonitoringTarget;
-import java.util.ArrayList;
+import io.github.cloudiator.persistance.MonitorModelConverter;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 public class BasicMonitorOrchestrationService implements MonitorOrchestrationService {
 
   private final MonitorDomainRepository monitorDomainRepository;
+  private final MonitorModelConverter monitorModelConverter = MonitorModelConverter.INSTANCE;
 
 
   @Inject
@@ -29,33 +24,42 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
 
   @Override
   public DomainMonitorModel createMonitor(DomainMonitorModel newMonitor) {
-    DomainMonitorModel result = TransactionRetryer
+    MonitorModel result = TransactionRetryer
         .retry(100, 2000, 5, () -> repeatedCreation(newMonitor));
-    return result;
+    return monitorModelConverter.apply(result);
   }
 
   @Transactional
-  public DomainMonitorModel repeatedCreation(DomainMonitorModel Monitor) {
-    DomainMonitorModel result = monitorDomainRepository.createDBMonitor(Monitor);
+  public MonitorModel repeatedCreation(DomainMonitorModel Monitor) {
+    MonitorModel result = monitorDomainRepository.createDBMonitor(Monitor);
     return result;
   }
 
 
   @Override
+  @Transactional
   public List<DomainMonitorModel> getAllMonitors() {
     return monitorDomainRepository
         .getAllMonitors();
   }
 
   @Override
-  public void updateMonitor(Monitor monitor) {
-    checkNotNull(monitor, "Monitor is null.");
-    //Not implemented
+  public void updateMonitor(MonitorModel monitor) {
+    TransactionRetryer
+        .retry(100, 2000, 5, () -> repeatedUpdate(monitor));
   }
 
+  @Transactional
+  public MonitorModel repeatedUpdate(MonitorModel Monitor) {
+    MonitorModel result = monitorDomainRepository.updateMonitor(Monitor);
+    return result;
+  }
+
+
   @Override
-  public void deleteMonitor(String metric) {
-    monitorDomainRepository.deleteMonitor(metric);
+  @Transactional
+  public MonitorModel deleteMonitor(String metric) {
+    return monitorDomainRepository.deleteMonitor(metric);
   }
 
   @Override
@@ -63,10 +67,11 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
     monitorDomainRepository.deleteAll();
   }
 
+
   @Override
-  public Optional<DomainMonitorModel> getMonitor(String monitorMetric) {
+  public Optional<MonitorModel> getMonitor(String monitorMetric) {
     checkNotNull(monitorMetric, "Metric is null");
-    final DomainMonitorModel result = monitorDomainRepository.findMonitorByMetric(monitorMetric);
+    final MonitorModel result = monitorDomainRepository.findMonitorByMetric(monitorMetric);
     if (result == null) {
       return Optional.empty();
     } else {

@@ -2,10 +2,9 @@ package io.github.cloudiator.monitoring.messaging;
 
 
 import com.google.inject.Inject;
-import io.github.cloudiator.monitoring.converter.MonitorConverter;
+import io.github.cloudiator.rest.converter.MonitorConverter;
 import io.github.cloudiator.monitoring.domain.MonitorManagementService;
 import io.github.cloudiator.rest.model.Monitor;
-import io.github.cloudiator.monitoring.domain.MonitorOrchestrationService;
 import org.cloudiator.messages.General.Error;
 import org.cloudiator.messages.Monitor.CreateMonitorRequest;
 import org.cloudiator.messages.Monitor.CreateMonitorResponse;
@@ -19,7 +18,7 @@ public class CreateMonitorListener implements Runnable {
   private static final Logger LOGGER = LoggerFactory.getLogger(CreateMonitorListener.class);
   private final MessageInterface messageInterface;
   private final MonitorManagementService monitorManagementService;
-  private final MonitorConverter monitorConverter = MonitorConverter.MONITOR_CONVERTER;
+  private final MonitorConverter monitorConverter = new MonitorConverter();
 
   @Inject
   public CreateMonitorListener(MessageInterface messageInterface,

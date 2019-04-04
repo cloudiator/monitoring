@@ -31,14 +31,16 @@
     </encoder>
   </appender>
 
+  <!--
   <appender name="stash" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
     <destination>${LOGSTASH_HOST:-localhost:5000}</destination>
 
-    <!-- encoder is required -->
+
     <encoder class="net.logstash.logback.encoder.LogstashEncoder">
       <customFields>{"service":"monitoring-agent"}</customFields>
     </encoder>
   </appender>
+  -->
 
   <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <file>logs/monitoring-agent.log</file>
@@ -61,7 +63,7 @@
 
   <logger level="DEBUG" name="io.github.cloudiator.monitoring"/>
   <logger level="DEBUG" name="io.github.cloudiator.persistance"/>
-  <logger level="DEBUG" name="org.hibernate"/>
+<!--  <logger level="DEBUG" name="org.hibernate"/> -->
 
   <root level="WARN">
     <appender-ref ref="STDOUT"/>

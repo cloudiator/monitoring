@@ -40,16 +40,18 @@ public class MonitorQueryListener implements Runnable {
               List<DomainMonitorModel> dbmonitors = monitorManagementService.getAllMonitors();
               MonitorQueryResponse.Builder responseBuilder = MonitorQueryResponse.newBuilder();
               for (DomainMonitorModel monitor : dbmonitors) {
+                if (!(monitor.getUuid() == null)) {
+                  monitor.addTagItem("VisorUuid", monitor.getUuid());
+                }
                 responseBuilder.addMonitor(monitorConverter.apply(monitor));
               }
               MonitorQueryResponse result = responseBuilder.build();
 
-              LOGGER.debug("Sending response for MonitorQueryRequest ");
               messageInterface.reply(id, result);
             } catch (Exception e) {
               LOGGER.error("Error while searching for Monitors. ", e);
               messageInterface.reply(MonitorQueryResponse.class, id, Error.newBuilder().setCode(500)
-                  .setMessage("Error while searching for Monitors " + e.getMessage()).build());
+                  .setMessage("Error while searching for Monitors: " + e.getMessage()).build());
             }
 
           }

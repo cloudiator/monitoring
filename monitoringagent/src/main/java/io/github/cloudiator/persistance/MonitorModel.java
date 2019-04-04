@@ -29,7 +29,7 @@ public class MonitorModel extends BaseModel {
   @Column(nullable = false, unique = true, updatable = false)
   private String metric;
 
-  @OneToMany(orphanRemoval = true)
+  @OneToMany(orphanRemoval = true, fetch = FetchType.LAZY)
   @Cascade(org.hibernate.annotations.CascadeType.DELETE)
   private List<TargetModel> targets;
 
@@ -70,6 +70,10 @@ public class MonitorModel extends BaseModel {
 
   public String getUuid() {
     return uuid;
+  }
+
+  public void setUuid(String uuid) {
+    this.uuid = uuid;
   }
 
   public String getMetric() {
@@ -126,6 +130,13 @@ public class MonitorModel extends BaseModel {
       this.monitortags = new HashMap<>();
     }
     this.monitortags.putAll(monitorTag);
+  }
+
+  public void addTag(String value1, String value2) {
+    if (this.monitortags == null) {
+      this.monitortags = new HashMap<>();
+    }
+    this.monitortags.put(value1, value2);
   }
 
 
