@@ -63,7 +63,7 @@ public class VisorMonitorHandler {
     this.nodeService = nodeService;
   }
 
-  public synchronized boolean installEMSClient(String userId, Node node) {
+  public boolean installEMSClient(String userId, Node node) {
     LOGGER.debug(
         " Starting EMSClientInstallationProcess on: " + node.name() + " IP: " + node.connectTo()
             .ip().toString());
@@ -97,7 +97,7 @@ public class VisorMonitorHandler {
     return true;
   }
 
-  public synchronized boolean installVisor(String userId, Node node) {
+  public boolean installVisor(String userId, Node node) {
     LOGGER
         .debug(" Starting VisorInstallationProcess on: " + node.name() + " IP: " + node.connectTo()
             .ip().toString());

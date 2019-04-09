@@ -25,7 +25,7 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   @Override
   public DomainMonitorModel createMonitor(DomainMonitorModel newMonitor) {
     MonitorModel result = TransactionRetryer
-        .retry(100, 2000, 5, () -> repeatedCreation(newMonitor));
+        .retry(500, 5000, 5, () -> repeatedCreation(newMonitor));
     return monitorModelConverter.apply(result);
   }
 
