@@ -70,6 +70,10 @@ public class MonitoringBaseModelRepositoryJpa<T extends BaseModel> implements
     return t;
   }
 
+  private T refreshModel(final T t) {
+    return t;
+  }
+
   @Override
   public void delete(final T t) {
     checkNotNull(t);

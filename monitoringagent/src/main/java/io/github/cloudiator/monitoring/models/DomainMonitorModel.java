@@ -4,6 +4,7 @@ import io.github.cloudiator.rest.model.DataSink;
 import io.github.cloudiator.rest.model.Monitor;
 import io.github.cloudiator.rest.model.MonitoringTarget;
 import io.github.cloudiator.rest.model.Sensor;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,7 +12,7 @@ import java.util.Objects;
 
 public class DomainMonitorModel extends Monitor {
 
-  private String uuid;
+  private String uuid = "0";
 
   public DomainMonitorModel() {
     super();
@@ -42,7 +43,8 @@ public class DomainMonitorModel extends Monitor {
 
 
   public String getMetric() {
-    return super.getMetric();
+    String result = super.getMetric();
+    return result;
   }
 
   public void setMetric(String metric) {
@@ -51,7 +53,12 @@ public class DomainMonitorModel extends Monitor {
 
 
   public DomainMonitorModel addTargetsItem(MonitoringTarget targetsItem) {
-    super.addTargetsItem(targetsItem);
+    List<MonitoringTarget> monitoringTargetList = this.getTargets();
+    if (monitoringTargetList == null) {
+      monitoringTargetList = new ArrayList<>();
+    }
+    monitoringTargetList.add(targetsItem);
+    super.setTargets(monitoringTargetList);
     return this;
   }
 

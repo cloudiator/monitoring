@@ -35,6 +35,8 @@ public class MonitorManagementService {
   private final MonitorToVisorMonitorConverter visorMonitorConverter = MonitorToVisorMonitorConverter.INSTANCE;
   private final MonitorModelConverter monitorModelConverter = MonitorModelConverter.INSTANCE;
 
+
+
   @Inject
   public MonitorManagementService(VisorMonitorHandler visorMonitorHandler,
       BasicMonitorOrchestrationService monitorOrchestrationService, ProcessService processService) {
@@ -123,7 +125,7 @@ public class MonitorManagementService {
     return requestedMonitor;
   }
 
-  private DomainMonitorModel handleNode(String userId, MonitoringTarget target,
+  public DomainMonitorModel handleNode(String userId, MonitoringTarget target,
       DomainMonitorModel monitor) {
 
     Node targetNode = visorMonitorHandler.getNodeById(userId, target.getIdentifier());
@@ -144,24 +146,34 @@ public class MonitorManagementService {
       executorService.execute(new Runnable() {
         public void run() {
           try {
-            visorMonitorHandler.installEMSClient(userId, targetNode);
-          } catch (IllegalStateException e) {
-            LOGGER.debug("Exception during EMSInstallation: " + e);
-            LOGGER.debug("---");
-          }
-          visorMonitorHandler.installVisor(userId, targetNode);
-          io.github.cloudiator.visor.rest.model.Monitor visorback = visorMonitorHandler
-              .configureVisor(targetNode, monitor);
-          /* for testing: ignoring target and configures localhost*/
-          //visorMonitorHandler.configureVisortest(targetNode, monitor);
-          /*   --------------------------------------------------    */
-          MonitorModel dbmonitor = monitorOrchestrationService.getMonitor(result.getMetric())
-              .get();
-          dbmonitor.setUuid(visorback.getUuid());
-          //LOGGER.debug("EDIT-metric: " + dbmonitor.getMetric());
-          monitorOrchestrationService.updateMonitor(dbmonitor);
+            String user = userId;
+            Node targetnode = targetNode;
+            DomainMonitorModel monitorex = monitor;
+            MonitoringTarget monitoringTarget = target;
+            try {
+              // visorMonitorHandler.installEMSClient(user, targetnode);
+            } catch (IllegalStateException e) {
+              LOGGER.debug("Exception during EMSInstallation: " + e);
+              LOGGER.debug("---");
+            }
+            visorMonitorHandler.installVisor(user, targetnode);
+            io.github.cloudiator.visor.rest.model.Monitor visorback = visorMonitorHandler
+                .configureVisor(targetnode, monitorex);
 
-          LOGGER.debug("visor install and config done");
+            String dbMetric = new String(
+                monitorex.getMetric() + "+++" + monitoringTarget.getType().name() + "+++"
+                    + monitoringTarget
+                    .getIdentifier());
+            MonitorModel dbmonitor = monitorOrchestrationService.getMonitor(dbMetric)
+                .get();
+            dbmonitor.setUuid(visorback.getUuid());
+            LOGGER.debug("EDIT-Metric: " + dbmonitor.getMetric() + ", uuid: " + visorback.getUuid());
+            monitorOrchestrationService.updateMonitor(dbmonitor);
+            LOGGER.debug("EDITED-Metric: " + dbmonitor.getMetric() + ", uuid: " + visorback.getUuid());
+            LOGGER.debug("visor install and config done");
+          } catch (Throwable t) {
+            LOGGER.error("Unexpected Exception",t);
+          }
         }
       });
       executorService.shutdown();
@@ -169,7 +181,7 @@ public class MonitorManagementService {
     }
   }
 
-  private CloudiatorProcess getProcessFromTarget(String userId, MonitoringTarget target) {
+  public CloudiatorProcess getProcessFromTarget(String userId, MonitoringTarget target) {
     final ProcessConverter PROCESS_CONVERTER = ProcessConverter.INSTANCE;
     ProcessQueryRequest processQueryRequest = ProcessQueryRequest.newBuilder()
         .setUserId(userId).setProcessId(target.getIdentifier()).build();
@@ -193,7 +205,7 @@ public class MonitorManagementService {
   }
 
 
-  private DomainMonitorModel handleProcess(String userId, MonitoringTarget target,
+  public DomainMonitorModel handleProcess(String userId, MonitoringTarget target,
       DomainMonitorModel domainMonitor) {
     CloudiatorProcess process = getProcessFromTarget(userId, target);
     //  handling Process on Node
