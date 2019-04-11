@@ -48,7 +48,7 @@ public class MonitorManagementService {
   public DomainMonitorModel checkAndCreate(DomainMonitorModel monitor, String userid) {
     Optional<MonitorModel> dbMonitor = null;
     dbMonitor = monitorOrchestrationService
-        .getMonitor(monitor.getMetric());
+        .getMonitor(monitor.getMetric(), userid);
     if (dbMonitor.isPresent()) {
       return null;
     } else {
@@ -61,6 +61,10 @@ public class MonitorManagementService {
     return monitorOrchestrationService.getAllMonitors();
   }
 
+  public List<DomainMonitorModel> getAllYourMonitors(String userid) {
+    return monitorOrchestrationService.getAllYourMonitors(userid);
+  }
+
 
   public MonitorModel checkAndDeleteMonitor(String metric, MonitoringTarget target) {
     return monitorOrchestrationService.deleteMonitor(
@@ -69,10 +73,10 @@ public class MonitorManagementService {
   }
 
 
-  public DomainMonitorModel getMonitor(String metric, MonitoringTarget target) {
+  public DomainMonitorModel getMonitor(String metric, MonitoringTarget target, String userid) {
     MonitorModel result = monitorOrchestrationService
         .getMonitor(metric.concat("+++")
-            .concat(target.getType().name().concat("+++").concat(target.getIdentifier()))).get();
+            .concat(target.getType().name().concat("+++").concat(target.getIdentifier())),userid).get();
     if (result == null) {
       throw new IllegalArgumentException("Monitor not found. ");
     }
@@ -162,7 +166,7 @@ public class MonitorManagementService {
                 monitorex.getMetric() + "+++" + monitoringTarget.getType().name() + "+++"
                     + monitoringTarget
                     .getIdentifier());
-            MonitorModel dbmonitor = monitorOrchestrationService.getMonitor(dbMetric)
+            MonitorModel dbmonitor = monitorOrchestrationService.getMonitor(dbMetric, user)
                 .get();
             dbmonitor.setUuid(visorback.getUuid());
             LOGGER
@@ -240,7 +244,7 @@ public class MonitorManagementService {
             //visorMonitorHandler.configureVisortest(processNode, domainMonitor);
             /*   --------------------------------------------------    */
             //LOGGER.debug("back: " + visorback.getUuid());
-            MonitorModel dbmonitor = monitorOrchestrationService.getMonitor(result.getMetric())
+            MonitorModel dbmonitor = monitorOrchestrationService.getMonitor(result.getMetric(),userId)
                 .get();
             dbmonitor.setUuid(visorback.getUuid());
             //LOGGER.debug("EDIT-metric: " + dbmonitor.getMetric());
@@ -280,7 +284,7 @@ public class MonitorManagementService {
 
   public DomainMonitorModel updateMonitor(String userId, String metric) {
     //checking Monitor in Database
-    MonitorModel result = monitorOrchestrationService.getMonitor(metric).get();
+    MonitorModel result = monitorOrchestrationService.getMonitor(metric,userId).get();
 
     return null;
   }

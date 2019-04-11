@@ -44,8 +44,8 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   }
 
   @Override
-  @Transactional
-  public List<DomainMonitorModel> getAllMonitors(String userid) {
+
+  public List<DomainMonitorModel> getAllYourMonitors(String userid) {
     return monitorDomainRepository
         .getAllYourMonitors(userid);
   }
@@ -70,9 +70,9 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   }
 
   @Override
-  public Optional<MonitorModel> getMonitor(String monitorMetric) {
+  public Optional<MonitorModel> getMonitor(String monitorMetric, String userid) {
     checkNotNull(monitorMetric, "Metric is null");
-    final MonitorModel result = monitorDomainRepository.findMonitorByMetric(monitorMetric);
+    final MonitorModel result = monitorDomainRepository.findMonitorByMetric(monitorMetric, userid);
     if (result == null) {
       return Optional.empty();
     } else {

@@ -45,10 +45,10 @@ public class MonitorDomainRepository {
     this.dataSinkModelRepository = dataSinkModelRepository;
   }
 
-  public MonitorModel findMonitorByMetric(String metric) {
+  public MonitorModel findMonitorByMetric(String metric, String owner) {
     checkNotNull(metric, "Metric is null");
     checkArgument(!metric.isEmpty(), "Metric is empty");
-    MonitorModel result = monitorModelRepository.findMonitorByMetric(metric).orElse(null);
+    MonitorModel result = monitorModelRepository.findMonitorByMetric(metric, owner).orElse(null);
     if (result == null) {
       return null;
     }

@@ -40,9 +40,9 @@ public class GetMonitorListener implements Runnable {
 
               dbmonitor = monitorManagementService
                   .getMonitor(content.getMetric(),
-                      targetConverter.applyBack(content.getTarget()));
+                      targetConverter.applyBack(content.getTarget()),content.getUserId());
 
-              if (!((dbmonitor.getUuid() == null) || (dbmonitor.getUuid() == "0"))) {
+              if (dbmonitor.getUuid() != null ) {
                 dbmonitor.addTagItem("VisorUuid", dbmonitor.getUuid());
               }
 

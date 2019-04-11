@@ -37,7 +37,8 @@ public class MonitorQueryListener implements Runnable {
           public void accept(String id, MonitorQueryRequest content) {
             try {
 
-              List<DomainMonitorModel> dbmonitors = monitorManagementService.getAllMonitors();
+              List<DomainMonitorModel> dbmonitors = monitorManagementService
+                  .getAllYourMonitors(content.getUserId());
               MonitorQueryResponse.Builder responseBuilder = MonitorQueryResponse.newBuilder();
               for (DomainMonitorModel monitor : dbmonitors) {
                 if (monitor.getUuid() != null) {

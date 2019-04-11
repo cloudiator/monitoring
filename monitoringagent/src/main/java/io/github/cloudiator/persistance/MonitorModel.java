@@ -31,7 +31,7 @@ import org.hibernate.annotations.GenericGenerator;
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class MonitorModel extends BaseModel {
 
-  @Column(nullable = false, unique = true, updatable = false)
+  @Column(nullable = false, updatable = false)
   private String metric;
 
   @OneToMany(orphanRemoval = true, fetch = FetchType.LAZY)

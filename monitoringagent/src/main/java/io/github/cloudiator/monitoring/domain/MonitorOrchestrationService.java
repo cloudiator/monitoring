@@ -12,13 +12,13 @@ public interface MonitorOrchestrationService {
 
   List<DomainMonitorModel> getAllMonitors();
 
-  List<DomainMonitorModel> getAllMonitors(String userid);
+  List<DomainMonitorModel> getAllYourMonitors(String userid);
 
   void updateMonitor(MonitorModel monitor);
 
   MonitorModel deleteMonitor(String monitormetric);
 
-  Optional<MonitorModel> getMonitor(String monitorMetric);
+  Optional<MonitorModel> getMonitor(String monitorMetric, String userid);
 
   MonitorModel persistMonitor(MonitorModel monitorModel);
 
