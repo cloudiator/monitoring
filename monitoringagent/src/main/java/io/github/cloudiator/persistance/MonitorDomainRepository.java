@@ -66,7 +66,14 @@ public class MonitorDomainRepository {
     result = monitorModelRepository.findAll().stream()
         .map(MONITOR_MODEL_CONVERTER)
         .collect(Collectors.toList());
+    return result;
+  }
 
+  public List<DomainMonitorModel> getAllYourMonitors(String userid) {
+    List<DomainMonitorModel> result = new ArrayList<>();
+    result = monitorModelRepository.getAllYourMonitors(userid).stream()
+        .map(MONITOR_MODEL_CONVERTER)
+        .collect(Collectors.toList());
     return result;
   }
 
@@ -76,7 +83,7 @@ public class MonitorDomainRepository {
     return monitorModel;
   }
 
-  public MonitorModel createDBMonitor(DomainMonitorModel domainMonitorModel) {
+  public MonitorModel createDBMonitor(DomainMonitorModel domainMonitorModel, String userid) {
     MonitorModel monitorModel = new MonitorModel()
         .metric(domainMonitorModel.getMetric());
     //Targets
@@ -114,6 +121,8 @@ public class MonitorDomainRepository {
       tags.putAll(domainMonitorModel.getTags());
     }
     monitorModel.setMonitoringTags(tags);
+
+    monitorModel.setOwner(userid);
     // monitorModel is fully initialized
 
     monitorModelRepository.save(monitorModel);
@@ -136,10 +145,6 @@ public class MonitorDomainRepository {
       monitorModelRepository.delete(dbMonitor.get());
       return dbMonitor.get();
     }
-  }
-
-  public void deleteAll() {
-    monitorModelRepository.deleteAll();
   }
 
 

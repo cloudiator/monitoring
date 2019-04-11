@@ -7,7 +7,7 @@ public interface MonitorModelRepository extends BaseModelRepository<MonitorModel
 
   Optional<MonitorModel> findMonitorByMetric(String metric);
 
-  void deleteAll();
+  List<MonitorModel> getAllYourMonitors(String userid);
 
 
 }

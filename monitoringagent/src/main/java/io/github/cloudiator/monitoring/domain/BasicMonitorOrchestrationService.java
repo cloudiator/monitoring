@@ -23,24 +23,31 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   }
 
   @Override
-  public DomainMonitorModel createMonitor(DomainMonitorModel newMonitor) {
+  public DomainMonitorModel createMonitor(DomainMonitorModel newMonitor, String userid) {
     MonitorModel result = TransactionRetryer
-        .retry(500, 5000, 5, () -> repeatedCreation(newMonitor));
+        .retry(500, 5000, 5, () -> repeatedCreation(newMonitor, userid));
     return monitorModelConverter.apply(result);
   }
 
   @Transactional
-  public MonitorModel repeatedCreation(DomainMonitorModel Monitor) {
-    MonitorModel result = monitorDomainRepository.createDBMonitor(Monitor);
+  public MonitorModel repeatedCreation(DomainMonitorModel Monitor, String userid) {
+    MonitorModel result = monitorDomainRepository.createDBMonitor(Monitor, userid);
     return result;
   }
 
 
   @Override
-  @Transactional
+
   public List<DomainMonitorModel> getAllMonitors() {
     return monitorDomainRepository
         .getAllMonitors();
+  }
+
+  @Override
+  @Transactional
+  public List<DomainMonitorModel> getAllMonitors(String userid) {
+    return monitorDomainRepository
+        .getAllYourMonitors(userid);
   }
 
   @Override
@@ -61,12 +68,6 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   public MonitorModel deleteMonitor(String metric) {
     return monitorDomainRepository.deleteMonitor(metric);
   }
-
-  @Override
-  public void deleteAll() {
-    monitorDomainRepository.deleteAll();
-  }
-
 
   @Override
   public Optional<MonitorModel> getMonitor(String monitorMetric) {

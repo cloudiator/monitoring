@@ -8,15 +8,15 @@ import java.util.Optional;
 
 public interface MonitorOrchestrationService {
 
-  DomainMonitorModel createMonitor(DomainMonitorModel newMonitor);
+  DomainMonitorModel createMonitor(DomainMonitorModel newMonitor, String userid);
 
   List<DomainMonitorModel> getAllMonitors();
+
+  List<DomainMonitorModel> getAllMonitors(String userid);
 
   void updateMonitor(MonitorModel monitor);
 
   MonitorModel deleteMonitor(String monitormetric);
-
-  void deleteAll();
 
   Optional<MonitorModel> getMonitor(String monitorMetric);
 

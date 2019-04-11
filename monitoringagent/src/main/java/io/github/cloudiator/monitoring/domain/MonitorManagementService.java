@@ -36,7 +36,6 @@ public class MonitorManagementService {
   private final MonitorModelConverter monitorModelConverter = MonitorModelConverter.INSTANCE;
 
 
-
   @Inject
   public MonitorManagementService(VisorMonitorHandler visorMonitorHandler,
       BasicMonitorOrchestrationService monitorOrchestrationService, ProcessService processService) {
@@ -46,15 +45,14 @@ public class MonitorManagementService {
   }
 
 
-  public DomainMonitorModel checkAndCreate(DomainMonitorModel monitor) {
+  public DomainMonitorModel checkAndCreate(DomainMonitorModel monitor, String userid) {
     Optional<MonitorModel> dbMonitor = null;
     dbMonitor = monitorOrchestrationService
         .getMonitor(monitor.getMetric());
     if (dbMonitor.isPresent()) {
       return null;
     } else {
-      return monitorOrchestrationService.createMonitor(monitor);
-
+      return monitorOrchestrationService.createMonitor(monitor, userid);
     }
   }
 
@@ -136,7 +134,7 @@ public class MonitorManagementService {
     tags.put("IP", targetNode.connectTo().ip());
     tags.put(target.getType().toString(), target.getIdentifier());
     monitor.setTags(tags);
-    DomainMonitorModel result = checkAndCreate(monitor);
+    DomainMonitorModel result = checkAndCreate(monitor, userId);
     if (result == null) {
       throw new IllegalArgumentException("Monitor already exists:" + monitor.getMetric());
     } else {
@@ -151,7 +149,7 @@ public class MonitorManagementService {
             DomainMonitorModel monitorex = monitor;
             MonitoringTarget monitoringTarget = target;
             try {
-              // visorMonitorHandler.installEMSClient(user, targetnode);
+              visorMonitorHandler.installEMSClient(user, targetnode);
             } catch (IllegalStateException e) {
               LOGGER.debug("Exception during EMSInstallation: " + e);
               LOGGER.debug("---");
@@ -167,12 +165,14 @@ public class MonitorManagementService {
             MonitorModel dbmonitor = monitorOrchestrationService.getMonitor(dbMetric)
                 .get();
             dbmonitor.setUuid(visorback.getUuid());
-            LOGGER.debug("EDIT-Metric: " + dbmonitor.getMetric() + ", uuid: " + visorback.getUuid());
+            LOGGER
+                .debug("EDIT-Metric: " + dbmonitor.getMetric() + ", uuid: " + visorback.getUuid());
             monitorOrchestrationService.updateMonitor(dbmonitor);
-            LOGGER.debug("EDITED-Metric: " + dbmonitor.getMetric() + ", uuid: " + visorback.getUuid());
+            LOGGER.debug(
+                "EDITED-Metric: " + dbmonitor.getMetric() + ", uuid: " + visorback.getUuid());
             LOGGER.debug("visor install and config done");
           } catch (Throwable t) {
-            LOGGER.error("Unexpected Exception",t);
+            LOGGER.error("Unexpected Exception", t);
           }
         }
       });
@@ -219,7 +219,7 @@ public class MonitorManagementService {
       tags.put("IP", processNode.connectTo().ip());
       tags.put(target.getType().toString(), target.getIdentifier());
       domainMonitor.setTags(tags);
-      DomainMonitorModel result = checkAndCreate(domainMonitor);
+      DomainMonitorModel result = checkAndCreate(domainMonitor, userId);
       if (result == null) {
         throw new IllegalArgumentException("Monitor already exists.");
       } else {

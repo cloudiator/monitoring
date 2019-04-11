@@ -38,6 +38,8 @@ public class NodeEventListener implements Runnable {
             try {
 
 
+
+
               messageInterface.reply(id, null);
             } catch (Exception e) {
               LOGGER.error("Error while searching for Monitors. ", e);

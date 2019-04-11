@@ -29,10 +29,12 @@ public class MonitorModelRepositoryJpa extends MonitoringBaseModelRepositoryJpa<
   }
 
   @Override
-  public void deleteAll() {
-    String query = String.format("DELETE FROM MonitorModel ");
-    Query deletequery = em().createQuery(query);
-    deletequery.executeUpdate();
+  public List<MonitorModel> getAllYourMonitors(String owner) {
+    String queryString = String.format("from %s where owner=:owner", type.getName());
+    Query query = em().createQuery(queryString);
+    //noinspection unchecked
+    return query.getResultList();
   }
+
 
 }
