@@ -12,5 +12,9 @@ public class MonitorContext {
     config.checkValid(ConfigFactory.defaultReference(), "db");
   }
 
+  public boolean installMelodicTools() {
+    return config.getBoolean(melodicTools);
+  }
+
 
 }
