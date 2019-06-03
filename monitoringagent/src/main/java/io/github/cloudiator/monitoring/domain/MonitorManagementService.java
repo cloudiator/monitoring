@@ -2,6 +2,7 @@ package io.github.cloudiator.monitoring.domain;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.google.inject.persist.Transactional;
 import io.github.cloudiator.monitoring.converter.MonitorToVisorMonitorConverter;
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
@@ -36,13 +37,16 @@ public class MonitorManagementService {
   private final ProcessService processService;
   private final MonitorToVisorMonitorConverter visorMonitorConverter = MonitorToVisorMonitorConverter.INSTANCE;
   private final MonitorModelConverter monitorModelConverter = MonitorModelConverter.INSTANCE;
+  private final boolean installMelodicTools;
 
   @Inject
   public MonitorManagementService(VisorMonitorHandler visorMonitorHandler,
-      BasicMonitorOrchestrationService monitorOrchestrationService, ProcessService processService) {
+      BasicMonitorOrchestrationService monitorOrchestrationService, ProcessService processService,
+      @Named("melodicTools") boolean installMelodicTools) {
     this.visorMonitorHandler = visorMonitorHandler;
     this.monitorOrchestrationService = monitorOrchestrationService;
     this.processService = processService;
+    this.installMelodicTools = installMelodicTools;
   }
 
   @Transactional
@@ -161,11 +165,13 @@ public class MonitorManagementService {
       ExecutorService executorService = Executors.newSingleThreadExecutor();
       executorService.execute(new Runnable() {
         public void run() {
-          try {
-            visorMonitorHandler.installEMSClient(userId, targetNode);
-          } catch (IllegalStateException e) {
-            LOGGER.debug("Exception during EMSInstallation: " + e);
-            LOGGER.debug("---");
+          if (installMelodicTools) {
+            try {
+              visorMonitorHandler.installEMSClient(userId, targetNode);
+            } catch (IllegalStateException e) {
+              LOGGER.debug("Exception during EMSInstallation: " + e);
+              LOGGER.debug("---");
+            }
           }
           visorMonitorHandler.installVisor(userId, targetNode);
           visorMonitorHandler.configureVisor(targetNode, monitor);
@@ -226,13 +232,15 @@ public class MonitorManagementService {
 
         executorService.execute(new Runnable() {
           public void run() {
-            try {
-              visorMonitorHandler.installEMSClient(userId, processNode);
-            } catch (IllegalStateException e) {
-              LOGGER.debug("Exception during EMSInstallation: " + e);
-              LOGGER.debug("---");
-            } catch (Exception re) {
-              LOGGER.debug("Exception while EMSInstallation " + re);
+            if (installMelodicTools) {
+              try {
+                visorMonitorHandler.installEMSClient(userId, processNode);
+              } catch (IllegalStateException e) {
+                LOGGER.debug("Exception during EMSInstallation: " + e);
+                LOGGER.debug("---");
+              } catch (Exception re) {
+                LOGGER.debug("Exception while EMSInstallation " + re);
+              }
             }
             visorMonitorHandler.installVisor(userId, processNode);
             visorMonitorHandler.configureVisor(processNode, domainMonitor);
