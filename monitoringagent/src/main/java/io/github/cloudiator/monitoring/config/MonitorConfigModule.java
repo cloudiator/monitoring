@@ -1,6 +1,7 @@
 package io.github.cloudiator.monitoring.config;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.name.Names;
 import io.github.cloudiator.monitoring.Init;
 import io.github.cloudiator.monitoring.domain.BasicMonitorOrchestrationService;
 import io.github.cloudiator.monitoring.domain.MonitorManagementService;
@@ -20,6 +21,8 @@ public class MonitorConfigModule extends AbstractModule {
   protected void configure() {
     bind(Init.class).asEagerSingleton();
     bind(MonitorOrchestrationService.class).to(BasicMonitorOrchestrationService.class);
+    bindConstant().annotatedWith(Names.named("melodicTools"))
+        .to(monitorContext.installMelodicTools());
   }
 
 }
