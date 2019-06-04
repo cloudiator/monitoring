@@ -1,6 +1,8 @@
 package io.github.cloudiator.monitoring.domain;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.google.inject.persist.Transactional;
 import io.github.cloudiator.monitoring.converter.MonitorToVisorMonitorConverter;
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
@@ -34,14 +36,17 @@ public class MonitorManagementService {
   private final ProcessService processService;
   private final MonitorToVisorMonitorConverter visorMonitorConverter = MonitorToVisorMonitorConverter.INSTANCE;
   private final MonitorModelConverter monitorModelConverter = MonitorModelConverter.INSTANCE;
+  private final boolean installMelodicTools;
 
 
   @Inject
   public MonitorManagementService(VisorMonitorHandler visorMonitorHandler,
-      BasicMonitorOrchestrationService monitorOrchestrationService, ProcessService processService) {
+      BasicMonitorOrchestrationService monitorOrchestrationService, ProcessService processService,
+      @Named("melodicTools") boolean installMelodicTools) {
     this.visorMonitorHandler = visorMonitorHandler;
     this.monitorOrchestrationService = monitorOrchestrationService;
     this.processService = processService;
+    this.installMelodicTools = installMelodicTools;
   }
 
 
@@ -76,7 +81,8 @@ public class MonitorManagementService {
   public DomainMonitorModel getMonitor(String metric, MonitoringTarget target, String userid) {
     MonitorModel result = monitorOrchestrationService
         .getMonitor(metric.concat("+++")
-            .concat(target.getType().name().concat("+++").concat(target.getIdentifier())),userid).get();
+            .concat(target.getType().name().concat("+++").concat(target.getIdentifier())), userid)
+        .get();
     if (result == null) {
       throw new IllegalArgumentException("Monitor not found. ");
     }
@@ -152,11 +158,15 @@ public class MonitorManagementService {
             Node targetnode = targetNode;
             DomainMonitorModel monitorex = monitor;
             MonitoringTarget monitoringTarget = target;
-            try {
-              visorMonitorHandler.installEMSClient(user, targetnode);
-            } catch (IllegalStateException e) {
-              LOGGER.debug("Exception during EMSInstallation: " + e);
-              LOGGER.debug("---");
+
+            if (installMelodicTools) {
+              try {
+                visorMonitorHandler.installEMSClient(userId, targetNode);
+
+              } catch (IllegalStateException e) {
+                LOGGER.debug("Exception during EMSInstallation: " + e);
+                LOGGER.debug("---");
+              }
             }
             visorMonitorHandler.installVisor(user, targetnode);
             io.github.cloudiator.visor.rest.model.Monitor visorback = visorMonitorHandler
@@ -170,7 +180,8 @@ public class MonitorManagementService {
                 .get();
             dbmonitor.setUuid(visorback.getUuid());
             LOGGER
-                .debug("EDIT-Metric: " + dbmonitor.getMetric() + ", uuid: " + visorback.getUuid());
+                .debug(
+                    "EDIT-Metric: " + dbmonitor.getMetric() + ", uuid: " + visorback.getUuid());
             monitorOrchestrationService.updateMonitor(dbmonitor);
             LOGGER.debug(
                 "EDITED-Metric: " + dbmonitor.getMetric() + ", uuid: " + visorback.getUuid());
@@ -208,7 +219,6 @@ public class MonitorManagementService {
     return process;
   }
 
-
   public DomainMonitorModel handleProcess(String userId, MonitoringTarget target,
       DomainMonitorModel domainMonitor) {
     CloudiatorProcess process = getProcessFromTarget(userId, target);
@@ -232,10 +242,15 @@ public class MonitorManagementService {
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         executorService.execute(new Runnable() {
           public void run() {
-            try {
-              visorMonitorHandler.installEMSClient(userId, processNode);
-            } catch (Exception re) {
-              LOGGER.debug("Exception while EMSInstallation " + re);
+            if (installMelodicTools) {
+              try {
+                visorMonitorHandler.installEMSClient(userId, processNode);
+              } catch (IllegalStateException e) {
+                LOGGER.debug("Exception during EMSInstallation: " + e);
+                LOGGER.debug("---");
+              } catch (Exception re) {
+                LOGGER.debug("Exception while EMSInstallation " + re);
+              }
             }
             visorMonitorHandler.installVisor(userId, processNode);
             io.github.cloudiator.visor.rest.model.Monitor visorback = visorMonitorHandler
@@ -244,7 +259,8 @@ public class MonitorManagementService {
             //visorMonitorHandler.configureVisortest(processNode, domainMonitor);
             /*   --------------------------------------------------    */
             //LOGGER.debug("back: " + visorback.getUuid());
-            MonitorModel dbmonitor = monitorOrchestrationService.getMonitor(result.getMetric(),userId)
+            MonitorModel dbmonitor = monitorOrchestrationService
+                .getMonitor(result.getMetric(), userId)
                 .get();
             dbmonitor.setUuid(visorback.getUuid());
             //LOGGER.debug("EDIT-metric: " + dbmonitor.getMetric());
@@ -284,7 +300,7 @@ public class MonitorManagementService {
 
   public DomainMonitorModel updateMonitor(String userId, String metric) {
     //checking Monitor in Database
-    MonitorModel result = monitorOrchestrationService.getMonitor(metric,userId).get();
+    MonitorModel result = monitorOrchestrationService.getMonitor(metric, userId).get();
 
     return null;
   }
