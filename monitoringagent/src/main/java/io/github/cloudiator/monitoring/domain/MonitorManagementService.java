@@ -8,11 +8,13 @@ import io.github.cloudiator.monitoring.converter.MonitorToVisorMonitorConverter;
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.persistance.MonitorModel;
 import io.github.cloudiator.persistance.MonitorModelConverter;
+import io.github.cloudiator.persistance.TargetType;
 import io.github.cloudiator.rest.converter.ProcessConverter;
 import io.github.cloudiator.rest.model.CloudiatorProcess;
 import io.github.cloudiator.rest.model.ClusterProcess;
 import io.github.cloudiator.rest.model.Monitor;
 import io.github.cloudiator.rest.model.MonitoringTarget;
+import io.github.cloudiator.rest.model.MonitoringTarget.TypeEnum;
 import io.github.cloudiator.rest.model.SingleProcess;
 import io.github.cloudiator.domain.Node;
 import java.util.List;
@@ -49,6 +51,11 @@ public class MonitorManagementService {
     this.installMelodicTools = installMelodicTools;
   }
 
+  private String generateDBMetric(String monitormetric, String targetId, TypeEnum targetType) {
+    return monitormetric.concat("+++").concat(targetType.name()).concat("+++")
+        .concat(targetId);
+  }
+
 
   public DomainMonitorModel checkAndCreate(DomainMonitorModel monitor, String userid) {
     Optional<MonitorModel> dbMonitor = null;
@@ -72,16 +79,14 @@ public class MonitorManagementService {
 
 
   public MonitorModel checkAndDeleteMonitor(String metric, MonitoringTarget target) {
-    return monitorOrchestrationService.deleteMonitor(
-        metric.concat("+++").concat(target.getType().name()).concat("+++")
-            .concat(target.getIdentifier()));
+    return monitorOrchestrationService
+        .deleteMonitor(generateDBMetric(metric, target.getIdentifier(), target.getType()));
   }
 
 
   public DomainMonitorModel getMonitor(String metric, MonitoringTarget target, String userid) {
     MonitorModel result = monitorOrchestrationService
-        .getMonitor(metric.concat("+++")
-            .concat(target.getType().name().concat("+++").concat(target.getIdentifier())), userid)
+        .getMonitor(generateDBMetric(metric, target.getIdentifier(), target.getType()), userid)
         .get();
     if (result == null) {
       throw new IllegalArgumentException("Monitor not found. ");
@@ -325,4 +330,10 @@ public class MonitorManagementService {
     visorMonitorHandler.deleteVisorMonitor(targetNode, candidate);
   }
 
+  /**********************
+   * Node-Event Handling
+   *********************/
+  public void handelEvent() {
+
+  }
 }

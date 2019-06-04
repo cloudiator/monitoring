@@ -9,6 +9,8 @@ public interface MonitorModelRepository extends BaseModelRepository<MonitorModel
 
   Optional<MonitorModel> findMonitorByMetric(String metric, String owner);
 
+  List<MonitorModel> findMonitorsOnTarget(String targetId,String owner);
+
   List<MonitorModel> getAllYourMonitors(String userid);
 
 

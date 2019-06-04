@@ -36,15 +36,27 @@ public class NodeEventListener implements Runnable {
           @Override
           public void accept(String id, NodeEvent nodeEvent) {
             try {
+              switch(nodeEvent.getTo()){
+                case NODE_STATE_PENDING:
 
+                  break;
+                case NODE_STATE_RUNNING:
 
+                  break;
+                case NODE_STATE_DELETED:
 
+                  break;
+                case NODE_STATE_ERROR:
 
-              messageInterface.reply(id, null);
+                  break;
+                case UNRECOGNIZED:
+                default:
+                  break;
+              }
+
             } catch (Exception e) {
               LOGGER.error("Error while searching for Monitors. ", e);
-              messageInterface.reply(MonitorQueryResponse.class, id, Error.newBuilder().setCode(500)
-                  .setMessage("Error while searching for Monitors " + e.getMessage()).build());
+
             }
           }
         });

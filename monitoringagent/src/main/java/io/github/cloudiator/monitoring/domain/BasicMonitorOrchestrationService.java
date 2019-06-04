@@ -37,14 +37,14 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
 
 
   @Override
-
+  @Transactional
   public List<DomainMonitorModel> getAllMonitors() {
     return monitorDomainRepository
         .getAllMonitors();
   }
 
   @Override
-
+  @Transactional
   public List<DomainMonitorModel> getAllYourMonitors(String userid) {
     return monitorDomainRepository
         .getAllYourMonitors(userid);
