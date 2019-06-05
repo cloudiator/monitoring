@@ -1,7 +1,8 @@
-<persistence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  version="2.0"
-  xmlns="http://java.sun.com/xml/ns/persistence"
-  xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
+<persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence
+             http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd"
+  version="2.1">
 
   <persistence-unit name="defaultPersistenceUnit" transaction-type="RESOURCE_LOCAL">
     <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
@@ -18,13 +19,14 @@
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
 
     <properties>
-      <!--
-      <property name="hibernate.show_sql" value="true" />
+
+      <property name="hibernate.show_sql" value="false"/>
+
       <property name="hibernate.format_sql" value="true"/>
       <property name="hibernate.use_sql_comments" value="true"/>
-       -->
-      <property name="hibernate.generate_statistics" value="true"/>
 
+
+      <property name="hibernate.generate_statistics" value="true"/>
       <property name="hibernate.dialect.storage_engine" value="innodb"/>
 
       <property name="hibernate.order_updates" value="true"/>
@@ -34,6 +36,11 @@
       <property name="hibernate.c3p0.min_size" value="5"/>
       <property name="hibernate.c3p0.max_size" value="20"/>
       <property name="hibernate.c3p0.timeout" value="300"/>
+
+      <property name="hibernate.cache.use_second_level_cache" value="false"/>
+      <property name="hibernate.cache.region.factory_class"
+        value="org.hibernate.cache.ehcache.EhCacheRegionFactory"/>
+
     </properties>
   </persistence-unit>
 

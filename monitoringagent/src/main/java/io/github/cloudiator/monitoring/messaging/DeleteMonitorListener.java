@@ -34,11 +34,8 @@ public class DeleteMonitorListener implements Runnable {
           public void accept(String id, DeleteMonitorRequest content) {
             try {
 
-              monitorManagementService
-                  .checkAndDeleteMonitor(content.getMetric(),
-                      targetConverter.applyBack(content.getTarget()));
-
-              LOGGER.debug("Done deleting Monitor ");
+              monitorManagementService.deleteMonitor(content.getUserId(), content.getMetric(),
+                  targetConverter.applyBack(content.getTarget()));
 
               DeleteMonitorResponse.Builder responseBuilder = DeleteMonitorResponse.newBuilder();
 

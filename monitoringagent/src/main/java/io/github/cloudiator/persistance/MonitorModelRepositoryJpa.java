@@ -9,7 +9,8 @@ import java.util.Optional;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
-public class MonitorModelRepositoryJpa extends MonitoringBaseModelRepositoryJpa<MonitorModel> implements
+public class MonitorModelRepositoryJpa extends
+    MonitoringBaseModelRepositoryJpa<MonitorModel> implements
     MonitorModelRepository {
 
   @Inject
@@ -29,10 +30,22 @@ public class MonitorModelRepositoryJpa extends MonitoringBaseModelRepositoryJpa<
   }
 
   @Override
-  public void deleteAll() {
-    String query = String.format("DELETE FROM MonitorModel ");
-    Query deletequery = em().createQuery(query);
-    deletequery.executeUpdate();
+  public Optional<MonitorModel> findMonitorByMetric(String metric, String owner) {
+
+    String query = String.format("from %s where metric=:metric and owner=:owner", type.getName());
+    final MonitorModel monitorModel = (MonitorModel) JpaResultHelper
+        .getSingleResultOrNull(
+            em().createQuery(query).setParameter("metric", metric).setParameter("owner", owner));
+    return Optional.ofNullable(monitorModel);
   }
+
+  @Override
+  public List<MonitorModel> getAllYourMonitors(String owner) {
+    String queryString = String.format("from %s where owner=:owner", type.getName());
+    Query query = em().createQuery(queryString).setParameter("owner", owner);
+    //noinspection unchecked
+    return query.getResultList();
+  }
+
 
 }

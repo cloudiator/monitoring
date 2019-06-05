@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import javax.persistence.Cacheable;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
@@ -19,17 +20,21 @@ import javax.persistence.Id;
 import javax.persistence.MapsId;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 
 
 @Entity
+@Cacheable
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class MonitorModel extends BaseModel {
 
-  @Column(nullable = false, unique = true, updatable = false)
+  @Column(nullable = false, updatable = false)
   private String metric;
 
-  @OneToMany(orphanRemoval = true)
+  @OneToMany(orphanRemoval = true, fetch = FetchType.LAZY)
   @Cascade(org.hibernate.annotations.CascadeType.DELETE)
   private List<TargetModel> targets;
 
@@ -47,12 +52,15 @@ public class MonitorModel extends BaseModel {
   @Column(unique = false)
   private String uuid;
 
+  @Column(nullable = false, updatable = false)
+  private String owner;
+
 
   protected MonitorModel() {
   }
 
   public MonitorModel(String metric, List<TargetModel> targets, SensorModel sensor,
-      List<DataSinkModel> datasinks, Map monitorTags, String uuid) {
+      List<DataSinkModel> datasinks, Map monitorTags, String uuid, String userid) {
     checkNotNull(metric);
     checkNotNull(sensor);
     this.metric = metric;
@@ -61,6 +69,7 @@ public class MonitorModel extends BaseModel {
     this.datasinks = datasinks;
     this.monitortags = monitorTags;
     this.uuid = uuid;
+    this.owner = userid;
   }
 
   public MonitorModel metric(String metric) {
@@ -70,6 +79,18 @@ public class MonitorModel extends BaseModel {
 
   public String getUuid() {
     return uuid;
+  }
+
+  public String getOwner() {
+    return owner;
+  }
+
+  public void setOwner(String owner) {
+    this.owner = owner;
+  }
+
+  public void setUuid(String uuid) {
+    this.uuid = uuid;
   }
 
   public String getMetric() {
@@ -126,6 +147,13 @@ public class MonitorModel extends BaseModel {
       this.monitortags = new HashMap<>();
     }
     this.monitortags.putAll(monitorTag);
+  }
+
+  public void addTag(String value1, String value2) {
+    if (this.monitortags == null) {
+      this.monitortags = new HashMap<>();
+    }
+    this.monitortags.put(value1, value2);
   }
 
 

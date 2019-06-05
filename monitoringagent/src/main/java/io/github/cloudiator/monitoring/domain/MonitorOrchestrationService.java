@@ -8,17 +8,17 @@ import java.util.Optional;
 
 public interface MonitorOrchestrationService {
 
-  DomainMonitorModel createMonitor(DomainMonitorModel newMonitor);
+  DomainMonitorModel createMonitor(DomainMonitorModel newMonitor, String userid);
 
   List<DomainMonitorModel> getAllMonitors();
 
-  void updateMonitor(Monitor monitor);
+  List<DomainMonitorModel> getAllYourMonitors(String userid);
 
-  void deleteMonitor(String monitormetric);
+  void updateMonitor(MonitorModel monitor);
 
-  void deleteAll();
+  MonitorModel deleteMonitor(String monitormetric);
 
-  Optional<DomainMonitorModel> getMonitor(String monitorMetric);
+  Optional<MonitorModel> getMonitor(String monitorMetric, String userid);
 
   MonitorModel persistMonitor(MonitorModel monitorModel);
 
