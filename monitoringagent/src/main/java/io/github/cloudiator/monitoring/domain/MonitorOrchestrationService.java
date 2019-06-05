@@ -14,6 +14,8 @@ public interface MonitorOrchestrationService {
 
   List<DomainMonitorModel> getAllYourMonitors(String userid);
 
+  List<DomainMonitorModel> getMonitorsOnTarget(String targetId, String userId);
+
   void updateMonitor(MonitorModel monitor);
 
   MonitorModel deleteMonitor(String monitormetric);

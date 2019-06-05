@@ -17,6 +17,7 @@ import io.github.cloudiator.rest.model.MonitoringTarget;
 import io.github.cloudiator.rest.model.MonitoringTarget.TypeEnum;
 import io.github.cloudiator.rest.model.SingleProcess;
 import io.github.cloudiator.domain.Node;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -333,7 +334,14 @@ public class MonitorManagementService {
   /**********************
    * Node-Event Handling
    *********************/
-  public void handelEvent() {
+
+  public List<DomainMonitorModel> getMonitorsOnNode(String nodeId){
+    List<DomainMonitorModel> result = new ArrayList<>();
+
+    return result;
+  }
+
+  public void handeldeletedNode(Node node) {
 
   }
 }

@@ -77,7 +77,7 @@ public class MonitorDomainRepository {
     return result;
   }
 
-  public List<DomainMonitorModel> getMonitorsOnTarget(String targetId, String owner) {
+  public List<DomainMonitorModel> findMonitorsOnTarget(String targetId, String owner) {
     List<DomainMonitorModel> result = new ArrayList<>();
     result = monitorModelRepository.findMonitorsOnTarget(targetId, owner).stream()
         .map(MONITOR_MODEL_CONVERTER).collect(
