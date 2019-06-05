@@ -304,9 +304,11 @@ public class MonitorManagementService {
     return null;
   }
 
-  public DomainMonitorModel updateMonitor(String userId, String metric) {
+  public DomainMonitorModel updateMonitor(DomainMonitorModel domainMonitorModel, String targetId,
+      TypeEnum targetType, String userId) {
     //checking Monitor in Database
-    MonitorModel result = monitorOrchestrationService.getMonitor(metric, userId).get();
+    MonitorModel result = monitorOrchestrationService
+        .getMonitor(generateDBMetric(domainMonitorModel.getMetric(),targetId,targetType), userId).get();
 
     return null;
   }
@@ -332,15 +334,21 @@ public class MonitorManagementService {
   }
 
   /**********************
-   * Node-Event Handling
+   * Event Handling
    *********************/
 
 
   public void handeldeletedNode(Node node, String userId) {
-    List<DomainMonitorModel> affectedMonitors = monitorOrchestrationService.getMonitorsOnTarget(node.id(), userId);
-    System.out.println("affected: "+affectedMonitors.toString());
+    List<DomainMonitorModel> affectedMonitors = monitorOrchestrationService
+        .getMonitorsOnTarget(node.id(), userId);
+    System.out.println("affected: " + affectedMonitors.toString());
     for (DomainMonitorModel dMonitor : affectedMonitors) {
-      monitorOrchestrationService.deleteMonitor(generateDBMetric(dMonitor.getMetric(),node.id(),TypeEnum.NODE));
+      monitorOrchestrationService
+          .deleteMonitor(generateDBMetric(dMonitor.getMetric(), node.id(), TypeEnum.NODE));
     }
+
+
   }
+
+
 }

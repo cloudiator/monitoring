@@ -11,6 +11,8 @@ public interface MonitorModelRepository extends BaseModelRepository<MonitorModel
 
   List<MonitorModel> findMonitorsOnTarget(String targetId,String owner);
 
+  List<MonitorModel> findMonitorsWithTarget(String targetId, String owner);
+
   List<MonitorModel> getAllYourMonitors(String userid);
 
 
