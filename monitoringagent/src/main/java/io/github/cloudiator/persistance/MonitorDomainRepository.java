@@ -132,7 +132,6 @@ public class MonitorDomainRepository {
 
     monitorModel.setOwner(userid);
     // monitorModel is fully initialized
-
     monitorModelRepository.save(monitorModel);
 
     return monitorModel;

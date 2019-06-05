@@ -1,6 +1,8 @@
 package io.github.cloudiator.monitoring.messaging;
 
 import com.google.inject.Inject;
+import io.github.cloudiator.domain.Node;
+import io.github.cloudiator.messaging.NodeToNodeMessageConverter;
 import io.github.cloudiator.monitoring.domain.MonitorManagementService;
 import io.github.cloudiator.rest.converter.MonitorConverter;
 import org.cloudiator.messages.General.Error;
@@ -20,6 +22,7 @@ public class NodeEventListener implements Runnable {
       .getLogger(NodeEventListener.class);
   private final MessageInterface messageInterface;
   private final MonitorManagementService monitorManagementService;
+  private final NodeToNodeMessageConverter nodeMessageConverter = NodeToNodeMessageConverter.INSTANCE;
 
 
   @Inject
@@ -36,6 +39,7 @@ public class NodeEventListener implements Runnable {
           @Override
           public void accept(String id, NodeEvent nodeEvent) {
             try {
+              System.out.println("Got Event: "+nodeEvent.toString());
               switch(nodeEvent.getTo()){
                 case NODE_STATE_PENDING:
 
@@ -44,6 +48,9 @@ public class NodeEventListener implements Runnable {
 
                   break;
                 case NODE_STATE_DELETED:
+                  System.out.println("Got deleted Event ");
+                  Node node = nodeMessageConverter.applyBack(nodeEvent.getNode());
+                  monitorManagementService.handeldeletedNode(node, nodeEvent.getNode().getUserId());
 
                   break;
                 case NODE_STATE_ERROR:
@@ -55,7 +62,7 @@ public class NodeEventListener implements Runnable {
               }
 
             } catch (Exception e) {
-              LOGGER.error("Error while searching for Monitors. ", e);
+              LOGGER.error("Error while receiving NodeEvent. ", e);
 
             }
           }

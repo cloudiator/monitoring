@@ -11,6 +11,7 @@ import io.github.cloudiator.monitoring.messaging.CreateMonitorListener;
 import io.github.cloudiator.monitoring.messaging.DeleteMonitorListener;
 import io.github.cloudiator.monitoring.messaging.GetMonitorListener;
 import io.github.cloudiator.monitoring.messaging.MonitorQueryListener;
+import io.github.cloudiator.monitoring.messaging.NodeEventListener;
 import io.github.cloudiator.monitoring.messaging.UpdateMonitorListener;
 import io.github.cloudiator.util.JpaContext;
 import org.cloudiator.messaging.kafka.KafkaContext;
@@ -41,5 +42,7 @@ public class MonitoringAgent {
     updateMonitorListener.run();
     final GetMonitorListener getMonitorListener = injector.getInstance(GetMonitorListener.class);
     getMonitorListener.run();
+    final NodeEventListener nodeEventListener = injector.getInstance(NodeEventListener.class);
+    nodeEventListener.run();
   }
 }

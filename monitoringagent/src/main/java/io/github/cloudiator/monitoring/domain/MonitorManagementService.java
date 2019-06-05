@@ -335,13 +335,12 @@ public class MonitorManagementService {
    * Node-Event Handling
    *********************/
 
-  public List<DomainMonitorModel> getMonitorsOnNode(String nodeId){
-    List<DomainMonitorModel> result = new ArrayList<>();
 
-    return result;
-  }
-
-  public void handeldeletedNode(Node node) {
-
+  public void handeldeletedNode(Node node, String userId) {
+    List<DomainMonitorModel> affectedMonitors = monitorOrchestrationService.getMonitorsOnTarget(node.id(), userId);
+    System.out.println("affected: "+affectedMonitors.toString());
+    for (DomainMonitorModel dMonitor : affectedMonitors) {
+      monitorOrchestrationService.deleteMonitor(generateDBMetric(dMonitor.getMetric(),node.id(),TypeEnum.NODE));
+    }
   }
 }
