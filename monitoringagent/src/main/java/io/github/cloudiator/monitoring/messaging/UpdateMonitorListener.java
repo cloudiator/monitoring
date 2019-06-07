@@ -6,6 +6,7 @@ import io.github.cloudiator.monitoring.domain.MonitorManagementService;
 import io.github.cloudiator.monitoring.domain.MonitorOrchestrationService;
 import io.github.cloudiator.rest.model.Monitor;
 import java.util.NoSuchElementException;
+import org.apache.commons.lang3.ObjectUtils.Null;
 import org.cloudiator.messages.General.Error;
 import org.cloudiator.messages.Monitor.UpdateMonitorRequest;
 import org.cloudiator.messages.Monitor.UpdateMonitorResponse;
@@ -36,6 +37,7 @@ public class UpdateMonitorListener implements Runnable {
           @Override
           public void accept(String id, UpdateMonitorRequest content) {
             try {
+              /*
               Monitor dbmonitor = monitorManagementService
                   .updateMonitor(content.getUserId(), content.getMonitor().getMetric());
               MonitorEntities.Monitor monitorResult = null;
@@ -49,7 +51,8 @@ public class UpdateMonitorListener implements Runnable {
                   .setMonitor(monitorResult);
 
               UpdateMonitorResponse result = responseBuilder.build();
-              messageInterface.reply(id, result);
+              */
+              //messageInterface.reply(id,);
             } catch (IllegalArgumentException e) {
               LOGGER.error("Requested Monitor not present. ", e);
               messageInterface.reply(UpdateMonitorResponse.class, id,

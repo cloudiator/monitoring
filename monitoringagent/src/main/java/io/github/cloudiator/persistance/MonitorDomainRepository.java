@@ -77,6 +77,14 @@ public class MonitorDomainRepository {
     return result;
   }
 
+  public List<DomainMonitorModel> findMonitorsOnTarget(String targetId, String owner) {
+    List<DomainMonitorModel> result = new ArrayList<>();
+    result = monitorModelRepository.findMonitorsOnTarget(targetId, owner).stream()
+        .map(MONITOR_MODEL_CONVERTER).collect(
+            Collectors.toList());
+    return result;
+  }
+
 
   public MonitorModel persistMonitor(MonitorModel monitorModel) {
     monitorModelRepository.save(monitorModel);
@@ -124,7 +132,6 @@ public class MonitorDomainRepository {
 
     monitorModel.setOwner(userid);
     // monitorModel is fully initialized
-
     monitorModelRepository.save(monitorModel);
 
     return monitorModel;

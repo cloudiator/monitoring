@@ -8,6 +8,7 @@ import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.persistance.MonitorDomainRepository;
 import io.github.cloudiator.persistance.MonitorModel;
 import io.github.cloudiator.persistance.MonitorModelConverter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,16 +36,29 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
     return result;
   }
 
+  @Override
+  public List<DomainMonitorModel> getMonitorsOnTarget(String nodeId, String userid) {
+    List<DomainMonitorModel> result = TransactionRetryer
+        .retry(500, 5000, 5, () -> repeatedGetMonitorsOnTarget(nodeId, userid));
+    return result;
+  }
+
+  @Transactional
+  public List<DomainMonitorModel> repeatedGetMonitorsOnTarget(String targetId, String userid) {
+    List<DomainMonitorModel> result = monitorDomainRepository.findMonitorsOnTarget(targetId, userid);
+    return result;
+  }
+
 
   @Override
-
+  @Transactional
   public List<DomainMonitorModel> getAllMonitors() {
     return monitorDomainRepository
         .getAllMonitors();
   }
 
   @Override
-
+  @Transactional
   public List<DomainMonitorModel> getAllYourMonitors(String userid) {
     return monitorDomainRepository
         .getAllYourMonitors(userid);

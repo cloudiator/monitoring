@@ -8,13 +8,16 @@ import io.github.cloudiator.monitoring.converter.MonitorToVisorMonitorConverter;
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.persistance.MonitorModel;
 import io.github.cloudiator.persistance.MonitorModelConverter;
+import io.github.cloudiator.persistance.TargetType;
 import io.github.cloudiator.rest.converter.ProcessConverter;
 import io.github.cloudiator.rest.model.CloudiatorProcess;
 import io.github.cloudiator.rest.model.ClusterProcess;
 import io.github.cloudiator.rest.model.Monitor;
 import io.github.cloudiator.rest.model.MonitoringTarget;
+import io.github.cloudiator.rest.model.MonitoringTarget.TypeEnum;
 import io.github.cloudiator.rest.model.SingleProcess;
 import io.github.cloudiator.domain.Node;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -49,6 +52,11 @@ public class MonitorManagementService {
     this.installMelodicTools = installMelodicTools;
   }
 
+  private String generateDBMetric(String monitormetric, String targetId, TypeEnum targetType) {
+    return monitormetric.concat("+++").concat(targetType.name()).concat("+++")
+        .concat(targetId);
+  }
+
 
   public DomainMonitorModel checkAndCreate(DomainMonitorModel monitor, String userid) {
     Optional<MonitorModel> dbMonitor = null;
@@ -72,16 +80,14 @@ public class MonitorManagementService {
 
 
   public MonitorModel checkAndDeleteMonitor(String metric, MonitoringTarget target) {
-    return monitorOrchestrationService.deleteMonitor(
-        metric.concat("+++").concat(target.getType().name()).concat("+++")
-            .concat(target.getIdentifier()));
+    return monitorOrchestrationService
+        .deleteMonitor(generateDBMetric(metric, target.getIdentifier(), target.getType()));
   }
 
 
   public DomainMonitorModel getMonitor(String metric, MonitoringTarget target, String userid) {
     MonitorModel result = monitorOrchestrationService
-        .getMonitor(metric.concat("+++")
-            .concat(target.getType().name().concat("+++").concat(target.getIdentifier())), userid)
+        .getMonitor(generateDBMetric(metric, target.getIdentifier(), target.getType()), userid)
         .get();
     if (result == null) {
       throw new IllegalArgumentException("Monitor not found. ");
@@ -298,9 +304,11 @@ public class MonitorManagementService {
     return null;
   }
 
-  public DomainMonitorModel updateMonitor(String userId, String metric) {
+  public DomainMonitorModel updateMonitor(DomainMonitorModel domainMonitorModel, String targetId,
+      TypeEnum targetType, String userId) {
     //checking Monitor in Database
-    MonitorModel result = monitorOrchestrationService.getMonitor(metric, userId).get();
+    MonitorModel result = monitorOrchestrationService
+        .getMonitor(generateDBMetric(domainMonitorModel.getMetric(),targetId,targetType), userId).get();
 
     return null;
   }
@@ -324,5 +332,23 @@ public class MonitorManagementService {
     //Stopping VisorInstance
     visorMonitorHandler.deleteVisorMonitor(targetNode, candidate);
   }
+
+  /**********************
+   * Event Handling
+   *********************/
+
+
+  public void handeldeletedNode(Node node, String userId) {
+    List<DomainMonitorModel> affectedMonitors = monitorOrchestrationService
+        .getMonitorsOnTarget(node.id(), userId);
+    System.out.println("affected: " + affectedMonitors.toString());
+    for (DomainMonitorModel dMonitor : affectedMonitors) {
+      monitorOrchestrationService
+          .deleteMonitor(generateDBMetric(dMonitor.getMetric(), node.id(), TypeEnum.NODE));
+    }
+
+
+  }
+
 
 }
