@@ -37,6 +37,7 @@ public class UpdateMonitorListener implements Runnable {
           @Override
           public void accept(String id, UpdateMonitorRequest content) {
             try {
+               Monitor restMonitor = monitorConverter.applyBack(content.getMonitor());
               /*
               Monitor dbmonitor = monitorManagementService
                   .updateMonitor(content.getUserId(), content.getMonitor().getMetric());

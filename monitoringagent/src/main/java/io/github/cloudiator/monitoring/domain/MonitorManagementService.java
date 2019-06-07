@@ -1,9 +1,8 @@
 package io.github.cloudiator.monitoring.domain;
 
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.google.inject.persist.Transactional;
+
 import io.github.cloudiator.monitoring.converter.MonitorToVisorMonitorConverter;
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.persistance.MonitorModel;
