@@ -346,6 +346,10 @@ public class MonitorManagementService {
           .deleteMonitor(generateDBMetric(dMonitor.getMetric(), node.id(), TypeEnum.NODE));
     }
 
+  }
+
+  public void handledeletedProcess(CloudiatorProcess cloudiatorProcess, String userId){
+
 
   }
 
