@@ -15,5 +15,7 @@ public interface MonitorModelRepository extends BaseModelRepository<MonitorModel
 
   List<MonitorModel> getAllYourMonitors(String userid);
 
+  List<MonitorModel> findAllMonitorsWithSameMetric(String metric, String owner);
+
 
 }

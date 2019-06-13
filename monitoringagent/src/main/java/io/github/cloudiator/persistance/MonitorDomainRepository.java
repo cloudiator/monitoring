@@ -139,6 +139,17 @@ public class MonitorDomainRepository {
 
   public MonitorModel updateMonitor(MonitorModel monitor) {
     checkNotNull(monitor, "Monitor is null. ");
+    //Sensor
+    sensorDomainRepository.saveSensor(monitor.getSensor());
+    //DataSink
+    for (DataSinkModel sink : monitor.getDatasinks()) {
+      dataSinkModelRepository.save(sink);
+    }
+    //Targets
+    for (TargetModel tModel : monitor.getTargets()) {
+      targetDomainRepository.saveTarget(tModel);
+    }
+    //Monitor itself
     monitorModelRepository.save(monitor);
     return monitor;
   }
@@ -154,6 +165,11 @@ public class MonitorDomainRepository {
     }
   }
 
+  public List<MonitorModel> findAllMonitorsWithSameMetric(String metric, String userId) {
+    List<MonitorModel> result = new ArrayList<>();
+    result = monitorModelRepository.findAllMonitorsWithSameMetric(metric, userId);
+    return result;
+  }
 
 }
 

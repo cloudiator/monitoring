@@ -160,21 +160,6 @@ public class MonitorModel extends BaseModel {
     this.monitortags.put(value1, value2);
   }
 
-  public Map<String, Boolean> partialEqual(MonitorModel o){
-    Map<String, Boolean> result = new HashMap<>();
-    //Metric
-    if (Objects.equals(this.metric, o.metric)){
-      result.put("metric",true);
-    }else{
-      result.put("metric",false);
-    }
-    //Sensor
-    //Targets
-    //Datasinks
-    //Tags
-    return result;
-  }
-
 
   @Override
   public boolean equals(Object o) {
@@ -190,6 +175,21 @@ public class MonitorModel extends BaseModel {
         Objects.equals(this.targets, monitorModel.targets) &&
         Objects.equals(this.datasinks, monitorModel.datasinks) &&
         Objects.equals(this.monitortags, monitorModel.monitortags);
+  }
+
+  public void updateTargets(List<TargetModel> targetsToUpdate){
+    //remove old targets
+    for (TargetModel actualTarget:this.targets) {
+      if (!targetsToUpdate.contains(actualTarget)){
+        this.targets.remove(actualTarget);
+      }
+    }
+    //add new targets
+    for (TargetModel updateTarget:targetsToUpdate) {
+      if (!this.targets.contains(updateTarget)){
+        this.targets.add(updateTarget);
+      }
+    }
   }
 
 }

@@ -16,11 +16,15 @@ public interface MonitorOrchestrationService {
 
   List<DomainMonitorModel> getMonitorsOnTarget(String targetId, String userId);
 
+
+
   void updateMonitor(MonitorModel monitor);
 
   MonitorModel deleteMonitor(String monitormetric);
 
   Optional<MonitorModel> getMonitor(String monitorMetric, String userid);
+
+  List<MonitorModel> getMonitorsWithSameMetric(String metric, String userId);
 
   MonitorModel persistMonitor(MonitorModel monitorModel);
 

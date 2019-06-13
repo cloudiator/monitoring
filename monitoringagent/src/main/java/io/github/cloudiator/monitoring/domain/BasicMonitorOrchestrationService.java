@@ -45,7 +45,8 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
 
   @Transactional
   public List<DomainMonitorModel> repeatedGetMonitorsOnTarget(String targetId, String userid) {
-    List<DomainMonitorModel> result = monitorDomainRepository.findMonitorsOnTarget(targetId, userid);
+    List<DomainMonitorModel> result = monitorDomainRepository
+        .findMonitorsOnTarget(targetId, userid);
     return result;
   }
 
@@ -98,6 +99,19 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   public MonitorModel persistMonitor(MonitorModel monitorModel) {
     monitorDomainRepository.persistMonitor(monitorModel);
     return monitorModel;
+  }
+
+  @Override
+  public List<MonitorModel> getMonitorsWithSameMetric(String metric, String userId) {
+    List<MonitorModel> result =
+        TransactionRetryer
+            .retry(100, 2000, 5, () -> repeatedGetMonitorsWithSameMetric(metric, userId));
+    return result;
+  }
+
+  @Transactional
+  public List<MonitorModel> repeatedGetMonitorsWithSameMetric(String metric, String userId) {
+    return monitorDomainRepository.findAllMonitorsWithSameMetric(metric, userId);
   }
 
 
