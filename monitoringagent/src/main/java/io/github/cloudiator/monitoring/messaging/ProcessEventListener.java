@@ -4,7 +4,11 @@ import com.google.inject.Inject;
 import io.github.cloudiator.domain.Node;
 import io.github.cloudiator.messaging.NodeToNodeMessageConverter;
 import io.github.cloudiator.monitoring.domain.MonitorManagementService;
+import io.github.cloudiator.rest.converter.ProcessConverter;
+import io.github.cloudiator.rest.model.CloudiatorProcess;
+import io.github.cloudiator.rest.model.SingleProcess;
 import org.cloudiator.messages.Node.NodeEvent;
+import org.cloudiator.messages.Process;
 import org.cloudiator.messages.Process.ProcessEvent;
 import org.cloudiator.messaging.MessageCallback;
 import org.cloudiator.messaging.MessageInterface;
@@ -19,8 +23,7 @@ public class ProcessEventListener implements Runnable {
       .getLogger(ProcessEventListener.class);
   private final MessageInterface messageInterface;
   private final MonitorManagementService monitorManagementService;
-  private final NodeToNodeMessageConverter nodeMessageConverter = NodeToNodeMessageConverter.INSTANCE;
-
+  private final ProcessConverter PROCESS_CONVERTER = ProcessConverter.INSTANCE;
 
   @Inject
   public ProcessEventListener(MessageInterface messageInterface,
@@ -46,6 +49,11 @@ public class ProcessEventListener implements Runnable {
                   break;
                 case PROCESS_STATE_DELETED:
                   System.out.println("Got deleted Event ");
+                  SingleProcess deletedProcess = (SingleProcess) PROCESS_CONVERTER.applyBack(processEvent.getProcess());
+                  monitorManagementService.handledeletedProcess(deletedProcess, processEvent.getUserId());
+                  System.out.println("NODE:" +deletedProcess.getNode().toString());
+
+
                   //Node node = nodeMessageConverter.applyBack(nodeEvent.getNode());
                   //monitorManagementService.handeldeletedNode(node, nodeEvent.getNode().getUserId());
 

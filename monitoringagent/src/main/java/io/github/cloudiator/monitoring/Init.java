@@ -10,7 +10,6 @@ public class Init implements Runnable {
   @Inject
   public Init(PersistService persistService) {
     this.persistService = persistService;
-    System.out.println("Hibernate-Version " + org.hibernate.Version.getVersionString());
     run();
   }
 

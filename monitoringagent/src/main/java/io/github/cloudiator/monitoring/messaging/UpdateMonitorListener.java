@@ -37,21 +37,10 @@ public class UpdateMonitorListener implements Runnable {
           @Override
           public void accept(String id, UpdateMonitorRequest content) {
             try {
-              /*
-              Monitor dbmonitor = monitorManagementService
-                  .updateMonitor(content.getUserId(), content.getMonitor().getMetric());
-              MonitorEntities.Monitor monitorResult = null;
-              if (dbmonitor == null) {
+               Monitor restMonitor = monitorConverter.applyBack(content.getMonitor());
 
-              } else {
-                monitorResult = monitorConverter.apply(dbmonitor);
-              }
+               monitorManagementService.updateMonitorFromRest(restMonitor,content.getUserId());
 
-              UpdateMonitorResponse.Builder responseBuilder = UpdateMonitorResponse.newBuilder()
-                  .setMonitor(monitorResult);
-
-              UpdateMonitorResponse result = responseBuilder.build();
-              */
               //messageInterface.reply(id,);
             } catch (IllegalArgumentException e) {
               LOGGER.error("Requested Monitor not present. ", e);

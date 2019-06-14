@@ -1,9 +1,8 @@
 package io.github.cloudiator.monitoring.domain;
 
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.google.inject.persist.Transactional;
+
 import io.github.cloudiator.monitoring.converter.MonitorToVisorMonitorConverter;
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.persistance.MonitorModel;
@@ -96,7 +95,7 @@ public class MonitorManagementService {
   }
 
 
-  public synchronized DomainMonitorModel handleNewMonitor(String userId, Monitor newMonitor) {
+  public DomainMonitorModel handleNewMonitor(String userId, Monitor newMonitor) {
     //Target
     LOGGER.debug("Handling " + newMonitor.getTargets().size() + " Targets");
 
@@ -304,13 +303,39 @@ public class MonitorManagementService {
     return null;
   }
 
-  public DomainMonitorModel updateMonitor(DomainMonitorModel domainMonitorModel, String targetId,
-      TypeEnum targetType, String userId) {
-    //checking Monitor in Database
-    MonitorModel result = monitorOrchestrationService
-        .getMonitor(generateDBMetric(domainMonitorModel.getMetric(),targetId,targetType), userId).get();
+  public DomainMonitorModel updateMonitorFromRest(Monitor monitor, String userId) {
+    //checking for related Monitors in Database
+    boolean updateSensor = false;
+    boolean updateTags = false;
+    boolean updateTarget = false;
+    boolean updateDatasinks = false;
+    List<MonitorModel> dbList = monitorOrchestrationService
+        .getMonitorsWithSameMetric(monitor.getMetric(), userId);
+    if (dbList.isEmpty()) {
+      //ERROR: check your input
+      return null;
+    }
+    DomainMonitorModel restMonitor = (DomainMonitorModel) monitor;
+    DomainMonitorModel dbMonitor = monitorModelConverter.apply(dbList.get(0));
+    if (!restMonitor.getSensor().equals(dbMonitor.getSensor())) {
+      updateSensor = true;
+    }
+    if (!restMonitor.getTags().equals(dbMonitor.getTags())) {
+      updateTags = true;
+    }
+    if (!restMonitor.getTargets().equals(dbMonitor.getTargets())) {
+      updateTarget = true;
+    }
+    if (!restMonitor.getSinks().equals(dbMonitor.getSinks())) {
+      updateDatasinks = true;
+    }
+    for (MonitorModel mModel : dbList) {
+      monitorOrchestrationService
+          .updateMonitorFromRest(mModel, restMonitor, updateSensor, updateTags, updateTarget,
+              updateDatasinks);
+    }
 
-    return null;
+    return restMonitor;
   }
 
   public void deleteMonitor(String userId, String metric, MonitoringTarget target) {
@@ -347,6 +372,17 @@ public class MonitorManagementService {
           .deleteMonitor(generateDBMetric(dMonitor.getMetric(), node.id(), TypeEnum.NODE));
     }
 
+  }
+
+  public void handledeletedProcess(CloudiatorProcess cloudiatorProcess, String userId) {
+    SingleProcess singleProcess = (SingleProcess) cloudiatorProcess;
+    List<DomainMonitorModel> affectedMonitos = monitorOrchestrationService
+        .getMonitorsOnTarget(singleProcess.getId(), userId);
+    System.out.println(affectedMonitos.size() + "Monitors affected!");
+    for (DomainMonitorModel dmonitor : affectedMonitos) {
+      monitorOrchestrationService.deleteMonitor(
+          generateDBMetric(dmonitor.getMetric(), singleProcess.getId(), TypeEnum.PROCESS));
+    }
 
   }
 
