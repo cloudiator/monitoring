@@ -7,8 +7,8 @@ import io.github.cloudiator.monitoring.converter.MonitorToVisorMonitorConverter;
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.persistance.MonitorModel;
 import io.github.cloudiator.persistance.MonitorModelConverter;
-import io.github.cloudiator.persistance.TargetType;
 import io.github.cloudiator.rest.converter.ProcessConverter;
+import io.github.cloudiator.rest.converter.TaskConverter;
 import io.github.cloudiator.rest.model.CloudiatorProcess;
 import io.github.cloudiator.rest.model.ClusterProcess;
 import io.github.cloudiator.rest.model.Monitor;
@@ -16,7 +16,6 @@ import io.github.cloudiator.rest.model.MonitoringTarget;
 import io.github.cloudiator.rest.model.MonitoringTarget.TypeEnum;
 import io.github.cloudiator.rest.model.SingleProcess;
 import io.github.cloudiator.domain.Node;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,8 +23,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.cloudiator.messages.Process.ProcessQueryRequest;
 import org.cloudiator.messages.Process.ProcessQueryResponse;
+import org.cloudiator.messages.Task.TaskQueryRequest;
+import org.cloudiator.messages.Task.TaskQueryResponse;
 import org.cloudiator.messaging.ResponseException;
 import org.cloudiator.messaging.services.ProcessService;
+import org.cloudiator.messaging.services.TaskService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,19 +38,22 @@ public class MonitorManagementService {
   private final VisorMonitorHandler visorMonitorHandler;
   private final MonitorOrchestrationService monitorOrchestrationService;
   private final ProcessService processService;
-  private final MonitorToVisorMonitorConverter visorMonitorConverter = MonitorToVisorMonitorConverter.INSTANCE;
-  private final MonitorModelConverter monitorModelConverter = MonitorModelConverter.INSTANCE;
+  private final TaskService taskService;
+  private final TaskConverter TASK_CONVERTER = new TaskConverter();
+  private final MonitorToVisorMonitorConverter VISOR_MONITOR_CONVERTER = MonitorToVisorMonitorConverter.INSTANCE;
+  private final MonitorModelConverter MONITOR_MODEL_CONVERTER = MonitorModelConverter.INSTANCE;
   private final boolean installMelodicTools;
 
 
   @Inject
   public MonitorManagementService(VisorMonitorHandler visorMonitorHandler,
-      BasicMonitorOrchestrationService monitorOrchestrationService, ProcessService processService,
+      BasicMonitorOrchestrationService monitorOrchestrationService, ProcessService processService,TaskService taskService,
       @Named("melodicTools") boolean installMelodicTools) {
     this.visorMonitorHandler = visorMonitorHandler;
     this.monitorOrchestrationService = monitorOrchestrationService;
     this.processService = processService;
     this.installMelodicTools = installMelodicTools;
+    this.taskService = taskService;
   }
 
   private String generateDBMetric(String monitormetric, String targetId, TypeEnum targetType) {
@@ -91,7 +96,7 @@ public class MonitorManagementService {
     if (result == null) {
       throw new IllegalArgumentException("Monitor not found. ");
     }
-    return monitorModelConverter.apply(result);
+    return MONITOR_MODEL_CONVERTER.apply(result);
   }
 
 
@@ -108,9 +113,7 @@ public class MonitorManagementService {
           newMonitor.getTags());
       LOGGER.debug("Handling Target " + count + " of " + newMonitor.getMetric());
       //handling
-      String dbMetric = new String(
-          domainMonitor.getMetric() + "+++" + mTarget.getType().name() + "+++" + mTarget
-              .getIdentifier());
+      String dbMetric = generateDBMetric(domainMonitor.getMetric(),mTarget.getIdentifier(),mTarget.getType());
       domainMonitor.setMetric(dbMetric);
 
       switch (mTarget.getType()) {
@@ -177,10 +180,8 @@ public class MonitorManagementService {
             io.github.cloudiator.visor.rest.model.Monitor visorback = visorMonitorHandler
                 .configureVisor(targetnode, monitorex);
 
-            String dbMetric = new String(
-                monitorex.getMetric() + "+++" + monitoringTarget.getType().name() + "+++"
-                    + monitoringTarget
-                    .getIdentifier());
+            String dbMetric = generateDBMetric(monitorex.getMetric(),monitoringTarget.getIdentifier(),monitoringTarget.getType());
+
             MonitorModel dbmonitor = monitorOrchestrationService.getMonitor(dbMetric, user)
                 .get();
             dbmonitor.setUuid(visorback.getUuid());
@@ -262,16 +263,12 @@ public class MonitorManagementService {
             visorMonitorHandler.installVisor(userId, processNode);
             io.github.cloudiator.visor.rest.model.Monitor visorback = visorMonitorHandler
                 .configureVisor(processNode, domainMonitor);
-            String dbMetric = new String(
-                monitorex.getMetric() + "+++" + monitoringTarget.getType().name() + "+++"
-                    + monitoringTarget
-                    .getIdentifier());
+            String dbMetric = generateDBMetric(monitorex.getMetric(),monitoringTarget.getIdentifier(),monitoringTarget.getType());
+
             MonitorModel dbmonitor = monitorOrchestrationService.getMonitor(dbMetric, userId)
                 .get();
             dbmonitor.setUuid(visorback.getUuid());
-            //LOGGER.debug("EDIT-metric: " + dbmonitor.getMetric());
             monitorOrchestrationService.updateMonitor(dbmonitor);
-
             LOGGER.debug("visor install and config done");
           }
         });
@@ -292,9 +289,16 @@ public class MonitorManagementService {
     return null;
   }
 
-  private DomainMonitorModel handleTask(String userId, MonitoringTarget target, Monitor
+  private DomainMonitorModel handleTask(String userId, MonitoringTarget target, DomainMonitorModel
       monitor) {
-    //
+    try {
+      TaskQueryRequest request = TaskQueryRequest.newBuilder().setUserId(userId).build();
+      TaskQueryResponse response = taskService.getTasks(request);
+
+    }catch (ResponseException reEx){
+      LOGGER.debug("handling Task throws Exception: "+reEx);
+      throw new IllegalStateException("Exception in handlingTask: "+reEx);
+    }
     return null;
   }
 
@@ -317,7 +321,7 @@ public class MonitorManagementService {
       return null;
     }
     DomainMonitorModel restMonitor = (DomainMonitorModel) monitor;
-    DomainMonitorModel dbMonitor = monitorModelConverter.apply(dbList.get(0));
+    DomainMonitorModel dbMonitor = MONITOR_MODEL_CONVERTER.apply(dbList.get(0));
     if (!restMonitor.getSensor().equals(dbMonitor.getSensor())) {
       updateSensor = true;
     }
