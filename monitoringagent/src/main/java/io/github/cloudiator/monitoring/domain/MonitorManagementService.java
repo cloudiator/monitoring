@@ -188,8 +188,6 @@ public class MonitorManagementService {
                 .debug(
                     "EDIT-Metric: " + dbmonitor.getMetric() + ", uuid: " + visorback.getUuid());
             monitorOrchestrationService.updateMonitor(dbmonitor);
-            LOGGER.debug(
-                "EDITED-Metric: " + dbmonitor.getMetric() + ", uuid: " + visorback.getUuid());
             LOGGER.debug("visor install and config done");
           } catch (Throwable t) {
             LOGGER.error("Unexpected Exception", t);
@@ -247,6 +245,10 @@ public class MonitorManagementService {
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         executorService.execute(new Runnable() {
           public void run() {
+            String user = userId;
+            Node targetnode = processNode;
+            DomainMonitorModel monitorex = domainMonitor;
+            MonitoringTarget monitoringTarget = target;
             if (installMelodicTools) {
               try {
                 visorMonitorHandler.installEMSClient(userId, processNode);
@@ -260,12 +262,11 @@ public class MonitorManagementService {
             visorMonitorHandler.installVisor(userId, processNode);
             io.github.cloudiator.visor.rest.model.Monitor visorback = visorMonitorHandler
                 .configureVisor(processNode, domainMonitor);
-            /* for testing: ignoring target and configures localhost*/
-            //visorMonitorHandler.configureVisortest(processNode, domainMonitor);
-            /*   --------------------------------------------------    */
-            //LOGGER.debug("back: " + visorback.getUuid());
-            MonitorModel dbmonitor = monitorOrchestrationService
-                .getMonitor(result.getMetric(), userId)
+            String dbMetric = new String(
+                monitorex.getMetric() + "+++" + monitoringTarget.getType().name() + "+++"
+                    + monitoringTarget
+                    .getIdentifier());
+            MonitorModel dbmonitor = monitorOrchestrationService.getMonitor(dbMetric, userId)
                 .get();
             dbmonitor.setUuid(visorback.getUuid());
             //LOGGER.debug("EDIT-metric: " + dbmonitor.getMetric());
