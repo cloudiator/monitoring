@@ -23,6 +23,11 @@ public class MonitorConfigModule extends AbstractModule {
     bind(MonitorOrchestrationService.class).to(BasicMonitorOrchestrationService.class);
     bindConstant().annotatedWith(Names.named("melodicTools"))
         .to(monitorContext.installMelodicTools());
+    bindConstant().annotatedWith(Names.named("retryAttempts")).to(monitorContext.retryAttempts());
+    bindConstant().annotatedWith(Names.named("minWaitingTime"))
+        .to(monitorContext.retryMinimalWaitingTime());
+    bindConstant().annotatedWith(Names.named("maxWaitingTime"))
+        .to(monitorContext.retryMaximalWaitingTime());
   }
 
 }
