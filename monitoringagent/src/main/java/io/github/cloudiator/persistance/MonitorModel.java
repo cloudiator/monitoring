@@ -125,6 +125,13 @@ public class MonitorModel extends BaseModel {
     this.sensor = sensor;
   }
 
+  public void setTargets(List<TargetModel> targets) {
+    this.targets = targets;
+  }
+
+  public void setMonitortags(Map<String, String> monitortags) {
+    this.monitortags = monitortags;
+  }
 
   public void addTarget(TargetModel targetModel) {
     if (targets == null) {
@@ -135,6 +142,9 @@ public class MonitorModel extends BaseModel {
     }
   }
 
+  public void setDatasinks(List<DataSinkModel> datasinks) {
+    this.datasinks = datasinks;
+  }
 
   public void addDataSink(DataSinkModel dataSinkModel) {
     if (datasinks == null) {

@@ -66,14 +66,35 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   }
 
   @Override
-  public void updateMonitor(MonitorModel monitor) {
+  public void updateMonitorFromRest(MonitorModel dbmonitor, DomainMonitorModel restMonitor,
+      boolean updateSensor,
+      boolean updateTag, boolean updateTarget, boolean updateSink) {
     TransactionRetryer
-        .retry(100, 2000, 5, () -> repeatedUpdate(monitor));
+        .retry(100, 2000, 5,
+            () -> repeatedRestUpdate(dbmonitor, restMonitor, updateSensor, updateTag, updateTarget,
+                updateSink));
   }
 
   @Transactional
-  public MonitorModel repeatedUpdate(MonitorModel Monitor) {
-    MonitorModel result = monitorDomainRepository.updateMonitor(Monitor);
+  public MonitorModel repeatedRestUpdate(MonitorModel dbmonitor, DomainMonitorModel restMonitor,
+      boolean updateSensor,
+      boolean updateTag, boolean updateTarget, boolean updateSink) {
+    MonitorModel result = monitorDomainRepository
+        .updateMonitorFromRest(dbmonitor, restMonitor, updateSensor, updateTag, updateTarget, updateSink);
+    return result;
+  }
+
+  @Override
+  public void updateMonitor(MonitorModel dbmonitor) {
+    TransactionRetryer
+        .retry(100, 2000, 5,
+            () -> repeatedUpdate(dbmonitor));
+  }
+
+  @Transactional
+  public MonitorModel repeatedUpdate(MonitorModel dbmonitor) {
+    MonitorModel result = monitorDomainRepository
+        .updateMonitor(dbmonitor);
     return result;
   }
 
@@ -95,11 +116,6 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
     }
   }
 
-  @Override
-  public MonitorModel persistMonitor(MonitorModel monitorModel) {
-    monitorDomainRepository.persistMonitor(monitorModel);
-    return monitorModel;
-  }
 
   @Override
   public List<MonitorModel> getMonitorsWithSameMetric(String metric, String userId) {

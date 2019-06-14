@@ -39,7 +39,7 @@ public class UpdateMonitorListener implements Runnable {
             try {
                Monitor restMonitor = monitorConverter.applyBack(content.getMonitor());
 
-               monitorManagementService.updateMonitor(restMonitor,content.getUserId());
+               monitorManagementService.updateMonitorFromRest(restMonitor,content.getUserId());
 
               //messageInterface.reply(id,);
             } catch (IllegalArgumentException e) {

@@ -303,7 +303,7 @@ public class MonitorManagementService {
     return null;
   }
 
-  public DomainMonitorModel updateMonitor(Monitor monitor, String userId) {
+  public DomainMonitorModel updateMonitorFromRest(Monitor monitor, String userId) {
     //checking for related Monitors in Database
     boolean updateSensor = false;
     boolean updateTags = false;
@@ -322,7 +322,6 @@ public class MonitorManagementService {
     }
     if (!restMonitor.getTags().equals(dbMonitor.getTags())) {
       updateTags = true;
-
     }
     if (!restMonitor.getTargets().equals(dbMonitor.getTargets())) {
       updateTarget = true;
@@ -331,16 +330,12 @@ public class MonitorManagementService {
       updateDatasinks = true;
     }
     for (MonitorModel mModel : dbList) {
-      if (updateSensor) {
-        //setnew Sensor
-      }
-      if (updateDatasinks) {
-
-      }
-
+      monitorOrchestrationService
+          .updateMonitorFromRest(mModel, restMonitor, updateSensor, updateTags, updateTarget,
+              updateDatasinks);
     }
 
-    return null;
+    return restMonitor;
   }
 
   public void deleteMonitor(String userId, String metric, MonitoringTarget target) {
