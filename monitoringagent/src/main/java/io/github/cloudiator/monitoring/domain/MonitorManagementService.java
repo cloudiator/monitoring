@@ -7,25 +7,37 @@ import io.github.cloudiator.monitoring.converter.MonitorToVisorMonitorConverter;
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.persistance.MonitorModel;
 import io.github.cloudiator.persistance.MonitorModelConverter;
+import io.github.cloudiator.rest.converter.JobConverter;
 import io.github.cloudiator.rest.converter.ProcessConverter;
+import io.github.cloudiator.rest.converter.ScheduleConverter;
 import io.github.cloudiator.rest.converter.TaskConverter;
 import io.github.cloudiator.rest.model.CloudiatorProcess;
 import io.github.cloudiator.rest.model.ClusterProcess;
+import io.github.cloudiator.rest.model.Job;
 import io.github.cloudiator.rest.model.Monitor;
 import io.github.cloudiator.rest.model.MonitoringTarget;
 import io.github.cloudiator.rest.model.MonitoringTarget.TypeEnum;
+import io.github.cloudiator.rest.model.Schedule;
 import io.github.cloudiator.rest.model.SingleProcess;
 import io.github.cloudiator.domain.Node;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
+import org.cloudiator.messages.Job.JobQueryRequest;
+import org.cloudiator.messages.Job.JobQueryResponse;
 import org.cloudiator.messages.Process.ProcessQueryRequest;
 import org.cloudiator.messages.Process.ProcessQueryResponse;
+import org.cloudiator.messages.Process.ScheduleQueryRequest;
+import org.cloudiator.messages.Process.ScheduleQueryResponse;
 import org.cloudiator.messages.Task.TaskQueryRequest;
 import org.cloudiator.messages.Task.TaskQueryResponse;
+import org.cloudiator.messages.entities.JobEntities;
 import org.cloudiator.messaging.ResponseException;
+import org.cloudiator.messaging.services.JobService;
 import org.cloudiator.messaging.services.ProcessService;
 import org.cloudiator.messaging.services.TaskService;
 import org.slf4j.Logger;
@@ -38,22 +50,26 @@ public class MonitorManagementService {
   private final VisorMonitorHandler visorMonitorHandler;
   private final MonitorOrchestrationService monitorOrchestrationService;
   private final ProcessService processService;
-  private final TaskService taskService;
+  private final JobService jobService;
   private final TaskConverter TASK_CONVERTER = new TaskConverter();
   private final MonitorToVisorMonitorConverter VISOR_MONITOR_CONVERTER = MonitorToVisorMonitorConverter.INSTANCE;
   private final MonitorModelConverter MONITOR_MODEL_CONVERTER = MonitorModelConverter.INSTANCE;
+  private final JobConverter JOB_CONVERTER = new JobConverter();
+  private final ProcessConverter PROCESS_CONVERTER = ProcessConverter.INSTANCE;
+  private final ScheduleConverter SCHEDULE_CONVERTER = new ScheduleConverter();
   private final boolean installMelodicTools;
 
 
   @Inject
   public MonitorManagementService(VisorMonitorHandler visorMonitorHandler,
-      BasicMonitorOrchestrationService monitorOrchestrationService, ProcessService processService,TaskService taskService,
+      BasicMonitorOrchestrationService monitorOrchestrationService, ProcessService processService,
+      JobService jobService,
       @Named("melodicTools") boolean installMelodicTools) {
     this.visorMonitorHandler = visorMonitorHandler;
     this.monitorOrchestrationService = monitorOrchestrationService;
     this.processService = processService;
     this.installMelodicTools = installMelodicTools;
-    this.taskService = taskService;
+    this.jobService = jobService;
   }
 
   private String generateDBMetric(String monitormetric, String targetId, TypeEnum targetType) {
@@ -113,7 +129,8 @@ public class MonitorManagementService {
           newMonitor.getTags());
       LOGGER.debug("Handling Target " + count + " of " + newMonitor.getMetric());
       //handling
-      String dbMetric = generateDBMetric(domainMonitor.getMetric(),mTarget.getIdentifier(),mTarget.getType());
+      String dbMetric = generateDBMetric(domainMonitor.getMetric(), mTarget.getIdentifier(),
+          mTarget.getType());
       domainMonitor.setMetric(dbMetric);
 
       switch (mTarget.getType()) {
@@ -180,7 +197,8 @@ public class MonitorManagementService {
             io.github.cloudiator.visor.rest.model.Monitor visorback = visorMonitorHandler
                 .configureVisor(targetnode, monitorex);
 
-            String dbMetric = generateDBMetric(monitorex.getMetric(),monitoringTarget.getIdentifier(),monitoringTarget.getType());
+            String dbMetric = generateDBMetric(monitorex.getMetric(),
+                monitoringTarget.getIdentifier(), monitoringTarget.getType());
 
             MonitorModel dbmonitor = monitorOrchestrationService.getMonitor(dbMetric, user)
                 .get();
@@ -201,7 +219,7 @@ public class MonitorManagementService {
   }
 
   public CloudiatorProcess getProcessFromTarget(String userId, MonitoringTarget target) {
-    final ProcessConverter PROCESS_CONVERTER = ProcessConverter.INSTANCE;
+
     ProcessQueryRequest processQueryRequest = ProcessQueryRequest.newBuilder()
         .setUserId(userId).setProcessId(target.getIdentifier()).build();
     CloudiatorProcess process = null;
@@ -263,7 +281,8 @@ public class MonitorManagementService {
             visorMonitorHandler.installVisor(userId, processNode);
             io.github.cloudiator.visor.rest.model.Monitor visorback = visorMonitorHandler
                 .configureVisor(processNode, domainMonitor);
-            String dbMetric = generateDBMetric(monitorex.getMetric(),monitoringTarget.getIdentifier(),monitoringTarget.getType());
+            String dbMetric = generateDBMetric(monitorex.getMetric(),
+                monitoringTarget.getIdentifier(), monitoringTarget.getType());
 
             MonitorModel dbmonitor = monitorOrchestrationService.getMonitor(dbMetric, userId)
                 .get();
@@ -283,21 +302,99 @@ public class MonitorManagementService {
     return null;
   }
 
-  private DomainMonitorModel handleJob(String userId, MonitoringTarget target, Monitor
+
+  /*
+  - get all schedules
+  - search for jobId in schedules
+  - monitor all processes
+   */
+  private DomainMonitorModel handleJob(String userId, MonitoringTarget target, DomainMonitorModel
       monitor) {
-    //
-    return null;
+    List<Schedule> allSchedules = new ArrayList<>();
+    Schedule scheduleToHandle = null;
+    List<CloudiatorProcess> processesToHandle;
+    DomainMonitorModel result = null;
+
+    try {
+      final ScheduleQueryResponse scheduleQueryResponse = processService.querySchedules(
+          ScheduleQueryRequest.newBuilder().setUserId(userId).build());
+      allSchedules = scheduleQueryResponse.getSchedulesList().stream()
+          .map(schedule -> SCHEDULE_CONVERTER.apply(schedule)).collect(
+              Collectors.toList());
+      scheduleToHandle = allSchedules.stream()
+          .filter(schedule -> schedule.getJob().equals(target.getIdentifier())).findAny()
+          .orElse(null);
+      if (scheduleToHandle == null) {
+        LOGGER.debug("No schedule of requested job found. JobId: " + target.getIdentifier());
+        //throw Exception
+      }
+      // writing DBMonitor
+      result = checkAndCreate(monitor, userId);
+      if (result == null) {
+        throw new IllegalArgumentException("Monitor already exists.");
+      } else {
+        LOGGER.debug("Monitor in DB created");
+      }
+
+      processesToHandle = scheduleToHandle.getProcesses();
+      for (CloudiatorProcess cProcess : processesToHandle) {
+        MonitoringTarget ctarget = new MonitoringTarget().identifier(cProcess.getId())
+            .type(TypeEnum.PROCESS);
+        handleProcess(userId, ctarget, monitor);
+      }
+
+
+    } catch (ResponseException re) {
+      LOGGER.debug("Exception while getting jobs.");
+    }
+    return result;
   }
+
+  /*
+  - target identifier build as {jobID}/{taskname} to be unique
+  -search for job and task in schedule
+  - monitor all related processes
+   */
 
   private DomainMonitorModel handleTask(String userId, MonitoringTarget target, DomainMonitorModel
       monitor) {
-    try {
-      TaskQueryRequest request = TaskQueryRequest.newBuilder().setUserId(userId).build();
-      TaskQueryResponse response = taskService.getTasks(request);
+    List<Schedule> allSchedules = new ArrayList<>();
+    Schedule scheduleToHandle = null;
+    List<CloudiatorProcess> processesToHandle;
 
-    }catch (ResponseException reEx){
-      LOGGER.debug("handling Task throws Exception: "+reEx);
-      throw new IllegalStateException("Exception in handlingTask: "+reEx);
+    try {
+      final ScheduleQueryResponse scheduleQueryResponse = processService.querySchedules(
+          ScheduleQueryRequest.newBuilder().setUserId(userId).build());
+      allSchedules = scheduleQueryResponse.getSchedulesList().stream()
+          .map(schedule -> SCHEDULE_CONVERTER.apply(schedule)).collect(
+              Collectors.toList());
+      scheduleToHandle = allSchedules.stream()
+          .filter(schedule -> schedule.getJob().equals(target.getIdentifier())).findAny()
+          .orElse(null);
+      if (scheduleToHandle == null) {
+        LOGGER.debug("No schedule of requested job found. JobId: " + target.getIdentifier());
+        //throw Exception
+      }
+      // writing DBMonitor
+      DomainMonitorModel result = checkAndCreate(monitor, userId);
+      if (result == null) {
+        throw new IllegalArgumentException("Monitor already exists.");
+      } else {
+        LOGGER.debug("Monitor in DB created");
+      }
+
+      processesToHandle = scheduleToHandle.getProcesses();
+      for (CloudiatorProcess cProcess : processesToHandle) {
+        MonitoringTarget ctarget = new MonitoringTarget().identifier(cProcess.getId())
+            .type(TypeEnum.PROCESS);
+        handleProcess(userId, ctarget, monitor);
+
+
+      }
+
+
+    } catch (ResponseException re) {
+      LOGGER.debug("Exception while getting jobs.");
     }
     return null;
   }
