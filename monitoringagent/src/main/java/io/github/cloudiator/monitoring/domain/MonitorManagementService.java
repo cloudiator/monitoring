@@ -100,8 +100,9 @@ public class MonitorManagementService {
 
 
   public MonitorModel checkAndDeleteMonitor(String metric, MonitoringTarget target) {
-    return monitorOrchestrationService
+    MonitorModel result = monitorOrchestrationService
         .deleteMonitor(generateDBMetric(metric, target.getIdentifier(), target.getType()));
+    return result;
   }
 
 
@@ -111,6 +112,9 @@ public class MonitorManagementService {
         .get();
     if (result == null) {
       throw new IllegalArgumentException("Monitor not found. ");
+    }
+    if (result.getUuid() == null || result.getUuid().isEmpty()) {
+      throw new IllegalArgumentException("Uuid is null or empty");
     }
     return MONITOR_MODEL_CONVERTER.apply(result);
   }
@@ -458,6 +462,7 @@ public class MonitorManagementService {
     MonitorModel candidate = checkAndDeleteMonitor(metric, target);
     //Stopping VisorInstance
     visorMonitorHandler.deleteVisorMonitor(targetNode, candidate);
+    LOGGER.debug("Monitor deleted.");
   }
 
   /**********************
@@ -472,6 +477,7 @@ public class MonitorManagementService {
     for (DomainMonitorModel dMonitor : affectedMonitors) {
       monitorOrchestrationService
           .deleteMonitor(generateDBMetric(dMonitor.getMetric(), node.id(), TypeEnum.NODE));
+      System.out.println("delete Monitor");
     }
 
   }
