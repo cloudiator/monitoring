@@ -41,6 +41,7 @@ public class MonitorQueryListener implements Runnable {
                   .getAllYourMonitors(content.getUserId());
               MonitorQueryResponse.Builder responseBuilder = MonitorQueryResponse.newBuilder();
               for (DomainMonitorModel monitor : dbmonitors) {
+
                 if (monitor.getUuid() != null) {
                   monitor.addTagItem("VisorUuid", monitor.getUuid());
                 }

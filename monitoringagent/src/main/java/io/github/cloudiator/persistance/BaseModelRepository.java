@@ -7,6 +7,7 @@ import javax.annotation.Nullable;
 /**
  * basic Repository for Monitoring BaseModel same as in common only separated
  */
+@Deprecated
 interface BaseModelRepository<T extends BaseModel> {
 
   @Nullable

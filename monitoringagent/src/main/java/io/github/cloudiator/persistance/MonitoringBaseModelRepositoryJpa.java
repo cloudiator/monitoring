@@ -83,7 +83,7 @@ public class MonitoringBaseModelRepositoryJpa<T extends BaseModel> implements
 
   @Override
   public List<T> findAll() {
-    String queryString = String.format("from %s", type.getName());
+    String queryString = String.format("select a from %s a", type.getName());
     Query query = em().createQuery(queryString);
     //noinspection unchecked
     return query.getResultList();

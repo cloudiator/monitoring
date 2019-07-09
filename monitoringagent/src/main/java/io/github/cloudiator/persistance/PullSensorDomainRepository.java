@@ -18,12 +18,11 @@ public class PullSensorDomainRepository {
   }
 
   public PullSensorModel createPullSensor(String classname, Interval interval, Map configuration) {
-    PullSensorModel result = new PullSensorModel()
-        .className(classname)
-        .configuration(configuration);
+
     IntervalModel intervalModel = new IntervalModel(Unit.valueOf(interval.getUnit().name()),
         interval.getPeriod());
-    result.setInterval(intervalModel);
+
+    PullSensorModel result = new PullSensorModel(classname, configuration, intervalModel);
 
     intervalModelRepository.save(intervalModel);
     pullSensorModelRepository.save(result);
@@ -36,6 +35,7 @@ public class PullSensorDomainRepository {
   }
 
   public void save(PullSensorModel pullSensorModel) {
+    intervalModelRepository.save(pullSensorModel.getInterval());
     pullSensorModelRepository.save(pullSensorModel);
   }
 

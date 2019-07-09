@@ -3,7 +3,10 @@ package io.github.cloudiator.persistance;
 import de.uniulm.omi.cloudiator.util.OneWayConverter;
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.rest.model.MonitoringTag;
+import io.github.cloudiator.rest.model.MonitoringTarget;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -20,11 +23,15 @@ public class MonitorModelConverter implements OneWayConverter<MonitorModel, Doma
   public DomainMonitorModel apply(@Nullable MonitorModel monitorModel) {
     //Metric
     DomainMonitorModel result = new DomainMonitorModel()
-        .metric(monitorModel.getMetric().split("[+++]", 2)[0]);
+        .metric(monitorModel.getMetric().split("[+++]", 3)[0]);
     //Target
-    for (TargetModel targetModel : monitorModel.getTargets()) {
-      result.addTargetsItem(targetModelConverter.apply(targetModel));
+    List<TargetModel> targetModels = monitorModel.getTargets();
+    List<MonitoringTarget> monitoringTargetList = new ArrayList<>();
+    for (TargetModel targetModel : targetModels) {
+      // result.addTargetsItem(targetModelConverter.apply(targetModel));
+      monitoringTargetList.add(targetModelConverter.apply(targetModel));
     }
+    result.setTargets(monitoringTargetList);
     //Sensor
     result.setSensor(sensorModelConverter.apply(monitorModel.getSensor()));
     //DataSink

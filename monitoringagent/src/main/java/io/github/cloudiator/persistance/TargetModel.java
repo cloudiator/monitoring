@@ -16,6 +16,9 @@ public class TargetModel extends BaseModel {
   @Column
   private String identifier;
 
+  @ManyToOne
+  private MonitorModel monitorModel;
+
 
   protected TargetModel() {
   }
@@ -33,6 +36,10 @@ public class TargetModel extends BaseModel {
   public TargetModel identifier(String identifier) {
     this.identifier = identifier;
     return this;
+  }
+
+  private TargetModel createTargetModel(TargetType targetType, String identifier) {
+    return new TargetModel(targetType, identifier);
   }
 
   public String getIdentifier() {

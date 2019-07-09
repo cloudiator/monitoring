@@ -118,14 +118,27 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   }
 
   @Override
-  public Optional<MonitorModel> getMonitor(String monitorMetric, String userid) {
-    checkNotNull(monitorMetric, "Metric is null");
-    final MonitorModel result = monitorDomainRepository.findMonitorByMetric(monitorMetric, userid);
+  public Optional<MonitorModel> getMonitor(String DbMetric, String userid) {
+    checkNotNull(DbMetric, "Metric is null");
+    MonitorModel result = monitorDomainRepository
+        .findMonitorByMetric(DbMetric, userid);
+    /*
+    final MonitorModel result = TransactionRetryer
+        .retry(minWaitingTime, maxWaitingTime, retryAttmepts,
+            () -> repeatedGetMonitor(DbMetric, userid));
+    */
     if (result == null) {
       return Optional.empty();
     } else {
       return Optional.of(result);
     }
+  }
+
+  @Transactional
+  public MonitorModel repeatedGetMonitor(String DbMetric, String userId) {
+    MonitorModel result = monitorDomainRepository
+        .findMonitorByMetric(DbMetric, userId);
+    return result;
   }
 
 

@@ -13,8 +13,9 @@ import javax.persistence.MappedSuperclass;
  * Superclass for all model classes. Defines the auto generated id for each model class in
  * Monitoring. same as is common only separated
  */
+@Deprecated
 @MappedSuperclass
-abstract class BaseModel implements Serializable {
+abstract class BaseModel extends Model {
 
   @Id
   @GeneratedValue(strategy = GenerationType.SEQUENCE)

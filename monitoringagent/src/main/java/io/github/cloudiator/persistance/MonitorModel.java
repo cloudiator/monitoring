@@ -8,44 +8,35 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import javax.persistence.Cacheable;
-import javax.persistence.CascadeType;
+
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.MapsId;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.CascadeType;
 
 
 @Entity
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class MonitorModel extends BaseModel {
 
   @Column(nullable = false, updatable = false)
   private String metric;
 
-  @OneToMany(orphanRemoval = true, fetch = FetchType.LAZY)
-  @Cascade(org.hibernate.annotations.CascadeType.DELETE)
+  @OneToMany(mappedBy = "monitorModel", orphanRemoval = true, fetch = FetchType.LAZY)
+  @Cascade(CascadeType.DELETE)
   private List<TargetModel> targets;
 
   @OneToOne(orphanRemoval = true)
-  @Cascade(org.hibernate.annotations.CascadeType.DELETE)
+  @Cascade(CascadeType.DELETE)
   private SensorModel sensor;
 
-  @OneToMany(orphanRemoval = true)
-  @Cascade(org.hibernate.annotations.CascadeType.DELETE)
+  @OneToMany(orphanRemoval = true, fetch = FetchType.LAZY)
+  @Cascade(CascadeType.DELETE)
   private List<DataSinkModel> datasinks;
 
   @ElementCollection
@@ -58,13 +49,11 @@ public class MonitorModel extends BaseModel {
   private String owner;
 
 
-
-
   protected MonitorModel() {
   }
 
   public MonitorModel(String metric, List<TargetModel> targets, SensorModel sensor,
-      List<DataSinkModel> datasinks, Map monitorTags, String uuid, String userid) {
+      List<DataSinkModel> datasinks, Map monitorTags, String userid) {
     checkNotNull(metric);
     checkNotNull(sensor);
     this.metric = metric;
@@ -72,7 +61,7 @@ public class MonitorModel extends BaseModel {
     this.sensor = sensor;
     this.datasinks = datasinks;
     this.monitortags = monitorTags;
-    this.uuid = uuid;
+    this.uuid = new String("");
     this.owner = userid;
   }
 
@@ -137,9 +126,7 @@ public class MonitorModel extends BaseModel {
     if (targets == null) {
       targets = new ArrayList<TargetModel>();
     }
-    if (!targets.contains(targetModel)) {
-      targets.add(targetModel);
-    }
+    targets.add(targetModel);
   }
 
   public void setDatasinks(List<DataSinkModel> datasinks) {
@@ -187,16 +174,16 @@ public class MonitorModel extends BaseModel {
         Objects.equals(this.monitortags, monitorModel.monitortags);
   }
 
-  public void updateTargets(List<TargetModel> targetsToUpdate){
+  public void updateTargets(List<TargetModel> targetsToUpdate) {
     //remove old targets
-    for (TargetModel actualTarget:this.targets) {
-      if (!targetsToUpdate.contains(actualTarget)){
+    for (TargetModel actualTarget : this.targets) {
+      if (!targetsToUpdate.contains(actualTarget)) {
         this.targets.remove(actualTarget);
       }
     }
     //add new targets
-    for (TargetModel updateTarget:targetsToUpdate) {
-      if (!this.targets.contains(updateTarget)){
+    for (TargetModel updateTarget : targetsToUpdate) {
+      if (!this.targets.contains(updateTarget)) {
         this.targets.add(updateTarget);
       }
     }

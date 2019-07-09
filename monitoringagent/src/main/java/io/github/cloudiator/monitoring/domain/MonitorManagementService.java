@@ -113,9 +113,11 @@ public class MonitorManagementService {
     if (result == null) {
       throw new IllegalArgumentException("Monitor not found. ");
     }
+    /*
     if (result.getUuid() == null || result.getUuid().isEmpty()) {
       throw new IllegalArgumentException("Uuid is null or empty");
     }
+    */
     return MONITOR_MODEL_CONVERTER.apply(result);
   }
 
@@ -445,7 +447,7 @@ public class MonitorManagementService {
   }
 
   public void deleteMonitor(String userId, String metric, MonitoringTarget target) {
-    Node targetNode = null;
+    Node targetNode;
     switch (target.getType()) {
       case NODE:
         targetNode = visorMonitorHandler.getNodeById(userId, target.getIdentifier());
@@ -458,10 +460,26 @@ public class MonitorManagementService {
       default:
         throw new IllegalStateException("unkown TargetType: " + target.getType());
     }
-    //Deleting DBMonitor
-    MonitorModel candidate = checkAndDeleteMonitor(metric, target);
-    //Stopping VisorInstance
-    visorMonitorHandler.deleteVisorMonitor(targetNode, candidate);
+    MonitorModel candidate;
+    Optional<MonitorModel> dbresult = monitorOrchestrationService
+        .getMonitor(generateDBMetric(metric, target.getIdentifier(), target.getType()), userId);
+    if (!dbresult.isPresent()) {
+      LOGGER.debug("no Result in Database!");
+      throw new IllegalArgumentException("Got no Monitor from DB to delete");
+    }
+    candidate = dbresult.get();
+    System.out.println("Monitor: "+candidate.getMetric());
+    System.out.println("UUid: "+candidate.getUuid());
+    if (candidate.getUuid().isEmpty()) {
+      LOGGER.debug("No VisorUuid found in Monitor: " + metric);
+      LOGGER.debug("Can't delete Visor.");
+    } else {
+      LOGGER.debug("stopping Visor and remove from DB");
+      //Stopping VisorInstance
+      visorMonitorHandler.deleteVisorMonitor(targetNode, candidate);
+      //Deleting DBMonitor
+      candidate = checkAndDeleteMonitor(metric, target);
+    }
     LOGGER.debug("Monitor deleted.");
   }
 

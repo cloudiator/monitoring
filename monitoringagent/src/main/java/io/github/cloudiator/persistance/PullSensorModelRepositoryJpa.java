@@ -19,7 +19,7 @@ public class PullSensorModelRepositoryJpa extends MonitoringBaseModelRepositoryJ
 
   @Override
   public Optional<PullSensorModel> findPullSensorByClassName(String className) {
-    String query = String.format("from %s where className=:className", type.getName());
+    String query = String.format("select p from %s p where p.className=:className", type.getName());
     final PullSensorModel pullSensorModel = (PullSensorModel) JpaResultHelper
         .getSingleResultOrNull(em().createQuery(query).setParameter("className", className));
     return Optional.ofNullable(pullSensorModel);

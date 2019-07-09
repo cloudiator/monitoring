@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import javax.persistence.CascadeType;
+
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -15,6 +15,7 @@ import javax.persistence.Lob;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
 
 @Entity
 class PullSensorModel extends SensorModel {
@@ -25,8 +26,8 @@ class PullSensorModel extends SensorModel {
   @ElementCollection
   private Map<String, String> configuration;
 
-  @OneToOne(orphanRemoval = true)
-  @Cascade(org.hibernate.annotations.CascadeType.DELETE)
+  @OneToOne(mappedBy = "pullSensorModel", orphanRemoval = true)
+  @Cascade(CascadeType.DELETE)
   private IntervalModel interval;
 
   protected PullSensorModel() {
@@ -37,24 +38,6 @@ class PullSensorModel extends SensorModel {
     this.interval = interval;
     this.configuration.putAll(configuration);
   }
-
-  public PullSensorModel className(String className) {
-    this.className = className;
-    return this;
-  }
-
-  public PullSensorModel interval(IntervalModel interval) {
-    this.interval = interval;
-    return this;
-  }
-
-  public PullSensorModel configuration(Map configuration) {
-    Map config = new HashMap<>();
-    config.putAll(configuration);
-    this.configuration = config;
-    return this;
-  }
-
 
   public String getClassName() {
     return className;

@@ -4,6 +4,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.OneToOne;
 
 @Entity
 public class IntervalModel extends BaseModel {
@@ -14,6 +15,9 @@ public class IntervalModel extends BaseModel {
   @Enumerated(EnumType.STRING)
   @Column
   private Unit unit;
+
+  @OneToOne
+  private PullSensorModel pullSensorModel;
 
   protected IntervalModel() {
 

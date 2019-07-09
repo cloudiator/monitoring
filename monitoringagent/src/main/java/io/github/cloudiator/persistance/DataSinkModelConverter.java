@@ -9,6 +9,8 @@ import javax.annotation.Nullable;
 
 public class DataSinkModelConverter implements OneWayConverter<DataSinkModel, DataSink> {
 
+  public static final DataSinkModelConverter INSTANCE = new DataSinkModelConverter();
+
   @Nullable
   @Override
   public DataSink apply(@Nullable DataSinkModel dataSinkModel) {

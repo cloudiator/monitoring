@@ -12,7 +12,7 @@ import javax.persistence.Enumerated;
 
 
 @Entity
-public class DataSinkModel extends BaseModel {
+public class DataSinkModel extends Model {
 
   @Enumerated(EnumType.STRING)
   @Column
@@ -23,6 +23,11 @@ public class DataSinkModel extends BaseModel {
   private Map<String, String> configuration;
 
   protected DataSinkModel() {
+  }
+
+  public DataSinkModel(String sinkType, Map configuration){
+    this.sinkType = DataSink.TypeEnum.valueOf(sinkType);
+    setConfiguration(configuration);
   }
 
   public DataSinkModel sinkType(String sinktype) {
