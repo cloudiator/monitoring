@@ -26,7 +26,7 @@ class PullSensorModel extends SensorModel {
   @ElementCollection
   private Map<String, String> configuration;
 
-  @OneToOne(mappedBy = "pullSensorModel", orphanRemoval = true)
+  @OneToOne(orphanRemoval = true)
   @Cascade(CascadeType.DELETE)
   private IntervalModel interval;
 
@@ -36,7 +36,8 @@ class PullSensorModel extends SensorModel {
   public PullSensorModel(String className, java.util.Map configuration, IntervalModel interval) {
     this.className = className;
     this.interval = interval;
-    this.configuration.putAll(configuration);
+    //this.configuration = new HashMap();
+    this.configuration = configuration;
   }
 
   public String getClassName() {

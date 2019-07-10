@@ -40,7 +40,7 @@ public class DataSinkDomainRepository {
     List<DataSinkModel> resultList = new ArrayList<>();
     for (DataSink datasink : dataSinks) {
       resultList.add(
-          createModel(datasink)
+          saveAndGet(datasink)
       );
     }
     return resultList;

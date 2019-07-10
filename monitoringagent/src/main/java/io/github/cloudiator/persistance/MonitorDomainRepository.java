@@ -46,10 +46,9 @@ public class MonitorDomainRepository {
     this.dataSinkDomainRepository = dataSinkDomainRepository;
   }
 
-  public MonitorModel findMonitorByMetric(String metric, String owner) {
+  public MonitorModel findYourMonitorByMetric(String metric, String owner) {
     checkNotNull(metric, "Metric is null");
-    checkArgument(!metric.isEmpty(), "Metric is empty");
-    MonitorModel result = monitorModelRepository.findMonitorByMetric(metric, owner).orElse(null);
+    MonitorModel result = monitorModelRepository.findYourMonitorByMetric(metric, owner).get();
     if (result == null) {
       return null;
     }
@@ -87,21 +86,11 @@ public class MonitorDomainRepository {
   }
 
   public MonitorModel createDBMonitor(DomainMonitorModel domainMonitorModel, String userid) {
-    /* OLD
-    MonitorModel monitorModel = new MonitorModel()
-        .metric(domainMonitorModel.getMetric());
-    */
-    //Targets
-    List<TargetModel> targetModelList = targetDomainRepository
-        .createTargetModelList(domainMonitorModel.getTargets());
 
-    /* OLD
-    for (MonitoringTarget target : domainMonitorModel.getTargets()) {
-      TargetModel targetModel = targetDomainRepository
-          .createTarget(TargetType.valueOf(target.getType().name()), target.getIdentifier(), monitorModel);
-      monitorModel.addTarget(targetModel);
-    }
-    */
+    //Targets
+    final List<TargetModel> targetModelList = targetDomainRepository
+        .createTargetModelList(domainMonitorModel.getTargets()).stream()
+        .collect(Collectors.toList());
 
     //Sensor
     Sensor sensor = domainMonitorModel.getSensor();
@@ -117,28 +106,21 @@ public class MonitorDomainRepository {
         throw new IllegalArgumentException(
             "MonitorceationError: No valid Sensor: " + domainMonitorModel.getSensor().getType());
     }
+    final SensorModel monitorSensor = sensorModel;
+
     //Sinks
-
-    List<DataSinkModel> dataSinkModelList = dataSinkDomainRepository
+    final List<DataSinkModel> dataSinkModelList = dataSinkDomainRepository
         .createDataSinkModelList(domainMonitorModel.getSinks());
-    /* OLD
-    for (DataSink dataSink : domainMonitorModel.getSinks()) {
-      DataSinkModel createdsink = new DataSinkModel()
-          .sinkType(dataSink.getType().name())
-          .configuration(dataSink.getConfiguration());
 
-      dataSinkModelRepository.save(createdsink);
-      monitorModel.addDataSink(createdsink);
-    }
-    */
     //Tags
     Map<String, String> tags = new HashMap<>();
     if (!domainMonitorModel.getTags().isEmpty()) {
       tags.putAll(domainMonitorModel.getTags());
     }
 
+    //Monitor
     MonitorModel createdModel = new MonitorModel(domainMonitorModel.getMetric(), targetModelList,
-        sensorModel, dataSinkModelList, tags, userid);
+        monitorSensor, dataSinkModelList, tags, userid);
 
     // monitorModel is fully initialized
     monitorModelRepository.save(createdModel);
@@ -172,32 +154,14 @@ public class MonitorDomainRepository {
       List<DataSinkModel> dataSinkModelList = dataSinkDomainRepository
           .createDataSinkModelList(restMonitor.getSinks());
       dbmonitor.setDatasinks(dataSinkModelList);
-      /* OLD
-      dbmonitor.setDatasinks(new ArrayList<>());
-      for (DataSink dataSink : restMonitor.getSinks()) {
-        DataSinkModel createdsink = new DataSinkModel()
-            .sinkType(dataSink.getType().name())
-            .configuration(dataSink.getConfiguration());
 
-        dataSinkModelRepository.save(createdsink);
-        dbmonitor.addDataSink(createdsink);
-      }
-      */
     }
     //Targets
     if (updateTarget) {
       List<TargetModel> targetModelList = targetDomainRepository
           .createTargetModelList(restMonitor.getTargets());
       dbmonitor.setTargets(targetModelList);
-      /* OLD
-      dbmonitor.setTargets(new ArrayList<>());
-      for (MonitoringTarget target : restMonitor.getTargets()) {
-        TargetModel targetModel = targetDomainRepository
-            .createTarget(TargetType.valueOf(target.getType().name()), target.getIdentifier(),
-                dbmonitor);
-        dbmonitor.addTarget(targetModel);
-      }
-      */
+
     }
     //Tags
     if (updateTag) {
@@ -212,7 +176,17 @@ public class MonitorDomainRepository {
     return dbmonitor;
   }
 
-  public MonitorModel updateMonitor(MonitorModel dbMonitor) {
+  public MonitorModel updateMonitor(String monitorMetric, DomainMonitorModel domainMonitor,
+      String userId) {
+    Optional<MonitorModel> dbResult = monitorModelRepository
+        .findYourMonitorByMetric(monitorMetric, userId);
+    MonitorModel dbMonitor;
+    if (!dbResult.isPresent()) {
+      throw new IllegalStateException("Monitor does not exist.");
+    } else {
+      dbMonitor = dbResult.get();
+    }
+
     monitorModelRepository.save(dbMonitor);
     return dbMonitor;
   }

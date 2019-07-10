@@ -137,7 +137,7 @@ public class VisorMonitorHandler {
     LOGGER
         .debug("Starting VisorConfigurationProcess on: " + targetNode.connectTo().ip().toString());
 
-    String metric = monitor.getMetric().split("[+++]", 2)[0];
+    String metric = monitor.getMetric().split("[+++]", 3)[0];
     monitor.setMetric(metric);
 
     DefaultApi apiInstance = new DefaultApi();
@@ -239,7 +239,7 @@ public class VisorMonitorHandler {
     return true;
   }
 
-  public void deleteVisorMonitor(Node targetNode, MonitorModel monitor) {
+  public void deleteVisorMonitor(Node targetNode, DomainMonitorModel domainMonitor) {
 
     DefaultApi apiInstance = new DefaultApi();
     ApiClient apiClient = new ApiClient();
@@ -248,7 +248,7 @@ public class VisorMonitorHandler {
     apiInstance.setApiClient(apiClient);
 
     try {
-      apiInstance.deleteMonitor(monitor.getUuid());
+      apiInstance.deleteMonitor(domainMonitor.getUuid());
     } catch (ApiException ae) {
       LOGGER.debug("ApiException occured: " + ae);
       throw new IllegalStateException("Error at deleting VisorMonitor: " + ae);

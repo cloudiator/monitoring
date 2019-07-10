@@ -8,7 +8,7 @@ import javax.persistence.OneToOne;
 
 @Entity
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-abstract class SensorModel extends BaseModel {
+abstract class SensorModel extends Model {
 
   protected SensorModel() {
   }

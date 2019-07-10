@@ -10,7 +10,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
 public class MonitorModelRepositoryJpa extends
-    MonitoringBaseModelRepositoryJpa<MonitorModel> implements
+    BaseModelRepositoryJpa<MonitorModel> implements
     MonitorModelRepository {
 
   @Inject
@@ -32,10 +32,10 @@ public class MonitorModelRepositoryJpa extends
   }
 
   @Override
-  public Optional<MonitorModel> findMonitorByMetric(String metric, String owner) {
+  public Optional<MonitorModel> findYourMonitorByMetric(String metric, String owner) {
 
     String query = String.format(
-        "select m from %s m join fetch m.targets where m.metric=:metric and m.owner=:owner",
+        "select m from %s m where m.metric=:metric and m.owner=:owner",
         type.getName());
     final MonitorModel monitorModel = (MonitorModel) JpaResultHelper
         .getSingleResultOrNull(

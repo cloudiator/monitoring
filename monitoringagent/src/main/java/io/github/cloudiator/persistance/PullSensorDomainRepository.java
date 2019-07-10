@@ -21,10 +21,11 @@ public class PullSensorDomainRepository {
 
     IntervalModel intervalModel = new IntervalModel(Unit.valueOf(interval.getUnit().name()),
         interval.getPeriod());
+    intervalModelRepository.save(intervalModel);
 
     PullSensorModel result = new PullSensorModel(classname, configuration, intervalModel);
 
-    intervalModelRepository.save(intervalModel);
+
     pullSensorModelRepository.save(result);
 
     return result;

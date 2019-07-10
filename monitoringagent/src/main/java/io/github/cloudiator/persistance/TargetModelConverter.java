@@ -11,7 +11,7 @@ public class TargetModelConverter implements OneWayConverter<TargetModel, Monito
   @Nullable
   @Override
   public MonitoringTarget apply(@Nullable TargetModel targetModel) {
-    MonitoringTarget result = new MonitoringTarget()
+    final MonitoringTarget result = new MonitoringTarget()
         .type(TypeEnum.valueOf(targetModel.getTargetType().name()))
         .identifier(targetModel.getIdentifier());
     return result;

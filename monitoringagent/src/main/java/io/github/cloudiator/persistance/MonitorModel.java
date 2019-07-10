@@ -22,7 +22,7 @@ import org.hibernate.annotations.CascadeType;
 
 
 @Entity
-public class MonitorModel extends BaseModel {
+public class MonitorModel extends Model {
 
   @Column(nullable = false, updatable = false)
   private String metric;

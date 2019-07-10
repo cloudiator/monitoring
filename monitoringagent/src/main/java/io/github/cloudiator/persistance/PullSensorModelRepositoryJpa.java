@@ -7,7 +7,7 @@ import io.github.cloudiator.util.JpaResultHelper;
 import java.util.Optional;
 import javax.persistence.EntityManager;
 
-public class PullSensorModelRepositoryJpa extends MonitoringBaseModelRepositoryJpa<PullSensorModel> implements
+public class PullSensorModelRepositoryJpa extends BaseModelRepositoryJpa<PullSensorModel> implements
     PullSensorModelRepository {
 
   @Inject

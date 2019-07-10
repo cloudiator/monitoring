@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 public class MonitorModelConverter implements OneWayConverter<MonitorModel, DomainMonitorModel> {
@@ -25,13 +26,12 @@ public class MonitorModelConverter implements OneWayConverter<MonitorModel, Doma
     DomainMonitorModel result = new DomainMonitorModel()
         .metric(monitorModel.getMetric().split("[+++]", 3)[0]);
     //Target
-    List<TargetModel> targetModels = monitorModel.getTargets();
-    List<MonitoringTarget> monitoringTargetList = new ArrayList<>();
-    for (TargetModel targetModel : targetModels) {
-      // result.addTargetsItem(targetModelConverter.apply(targetModel));
-      monitoringTargetList.add(targetModelConverter.apply(targetModel));
-    }
+    final List<MonitoringTarget> monitoringTargetList = monitorModel.getTargets().stream()
+        .map(targetModel -> targetModelConverter.apply(targetModel)).collect(
+            Collectors.toList());
+
     result.setTargets(monitoringTargetList);
+
     //Sensor
     result.setSensor(sensorModelConverter.apply(monitorModel.getSensor()));
     //DataSink

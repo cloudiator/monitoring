@@ -7,7 +7,7 @@ import io.github.cloudiator.util.JpaResultHelper;
 import java.util.Optional;
 import javax.persistence.EntityManager;
 
-public class TargetModelRepositoryJpa extends MonitoringBaseModelRepositoryJpa<TargetModel> implements
+public class TargetModelRepositoryJpa extends BaseModelRepositoryJpa<TargetModel> implements
     TargetModelRepository {
 
   @Inject

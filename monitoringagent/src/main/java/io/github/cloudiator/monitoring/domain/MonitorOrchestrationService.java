@@ -16,15 +16,15 @@ public interface MonitorOrchestrationService {
 
   List<DomainMonitorModel> getMonitorsOnTarget(String targetId, String userId);
 
-  void updateMonitor(MonitorModel dbMonitor);
+  void updateMonitor(String dbMetric, DomainMonitorModel domainMonitor, String userId);
 
   void updateMonitorFromRest(MonitorModel dbmonitor, DomainMonitorModel restMonitor, boolean updateSensor,
       boolean updateTag, boolean updateTarget, boolean updateSink);
 
-  MonitorModel deleteMonitor(String monitormetric);
+  DomainMonitorModel deleteMonitor(String monitormetric);
 
-  Optional<MonitorModel> getMonitor(String monitorMetric, String userid);
+  Optional<DomainMonitorModel> getMonitor(String monitorMetric, String userid);
 
-  List<MonitorModel> getMonitorsWithSameMetric(String metric, String userId);
+  List<DomainMonitorModel> getMonitorsWithSameMetric(String metric, String userId);
 
 }

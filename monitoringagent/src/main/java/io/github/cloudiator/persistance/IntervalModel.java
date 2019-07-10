@@ -7,7 +7,7 @@ import javax.persistence.Enumerated;
 import javax.persistence.OneToOne;
 
 @Entity
-public class IntervalModel extends BaseModel {
+public class IntervalModel extends Model {
 
   @Column
   private Long period;
@@ -16,8 +16,6 @@ public class IntervalModel extends BaseModel {
   @Column
   private Unit unit;
 
-  @OneToOne
-  private PullSensorModel pullSensorModel;
 
   protected IntervalModel() {
 
@@ -27,6 +25,7 @@ public class IntervalModel extends BaseModel {
     this.unit = unit;
     this.period = period;
   }
+
 
   public Long getPeriod() {
     return period;
