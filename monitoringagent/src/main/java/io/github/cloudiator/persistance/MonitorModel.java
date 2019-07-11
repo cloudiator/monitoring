@@ -27,7 +27,7 @@ public class MonitorModel extends Model {
   @Column(nullable = false, updatable = false)
   private String metric;
 
-  @OneToMany(mappedBy = "monitorModel", orphanRemoval = true, fetch = FetchType.LAZY)
+  @OneToMany(orphanRemoval = true, fetch = FetchType.LAZY)
   @Cascade(CascadeType.DELETE)
   private List<TargetModel> targets;
 
@@ -61,7 +61,7 @@ public class MonitorModel extends Model {
     this.sensor = sensor;
     this.datasinks = datasinks;
     this.monitortags = monitorTags;
-    this.uuid = new String("");
+    this.uuid = "0";
     this.owner = userid;
   }
 

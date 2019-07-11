@@ -25,19 +25,20 @@ public class MonitorModelConverter implements OneWayConverter<MonitorModel, Doma
     //Metric
     DomainMonitorModel result = new DomainMonitorModel()
         .metric(monitorModel.getMetric().split("[+++]", 3)[0]);
-    //Target
-    final List<MonitoringTarget> monitoringTargetList = monitorModel.getTargets().stream()
-        .map(targetModel -> targetModelConverter.apply(targetModel)).collect(
-            Collectors.toList());
 
-    result.setTargets(monitoringTargetList);
+    //Target
+    for (TargetModel targetModel: monitorModel.getTargets()) {
+      result.addTargetsItem(targetModelConverter.apply(targetModel));
+    }
 
     //Sensor
     result.setSensor(sensorModelConverter.apply(monitorModel.getSensor()));
+
     //DataSink
     for (DataSinkModel dataSinkModel : monitorModel.getDatasinks()) {
       result.addSinksItem(dataSinkModelConverter.apply(dataSinkModel));
     }
+
     //MonitoringTags
     Map tags = new HashMap();
     if (!monitorModel.getMonitortags().isEmpty()) {

@@ -80,13 +80,12 @@ public class MonitorManagementService {
 
   public DomainMonitorModel checkAndCreate(String dbMetric, DomainMonitorModel monitor,
       String userid) {
-    Optional<DomainMonitorModel> dbMonitor = null;
-    dbMonitor = monitorOrchestrationService
+    Optional<DomainMonitorModel> dbMonitor = monitorOrchestrationService
         .getMonitor(dbMetric, userid);
     if (dbMonitor.isPresent()) {
       return null;
     } else {
-      return monitorOrchestrationService.createMonitor(monitor, userid);
+      return monitorOrchestrationService.createMonitor(dbMetric, monitor, userid);
     }
   }
 
@@ -120,8 +119,6 @@ public class MonitorManagementService {
 
   public DomainMonitorModel handleNewMonitor(String userId, Monitor newMonitor) {
     //Target
-    LOGGER.debug("Handling " + newMonitor.getTargets().size() + " Targets");
-
     DomainMonitorModel requestedMonitor = null;
     Integer count = 1;
     for (MonitoringTarget mTarget : newMonitor.getTargets()) {
@@ -129,7 +126,9 @@ public class MonitorManagementService {
       DomainMonitorModel domainMonitor = new DomainMonitorModel(newMonitor.getMetric(),
           newMonitor.getTargets(), newMonitor.getSensor(), newMonitor.getSinks(),
           newMonitor.getTags());
-      LOGGER.debug("Handling Target " + count + " of " + newMonitor.getMetric());
+      LOGGER.debug(
+          newMonitor.getMetric() + ": handling Target " + count + " of " + newMonitor.getTargets()
+              .size());
 
       //handling Type
       switch (mTarget.getType()) {
@@ -470,16 +469,16 @@ public class MonitorManagementService {
       throw new IllegalArgumentException("Got no Monitor from DB to delete");
     }
     candidate = dbresult.get();
-    if (candidate.getUuid().isEmpty()) {
+    if (candidate.getUuid().isEmpty() || candidate.getUuid().equals("0")) {
       LOGGER.debug("No VisorUuid found in Monitor: " + metric);
       LOGGER.debug("Can't delete Visor.");
     } else {
       LOGGER.debug("stopping Visor and remove from DB");
       //Stopping VisorInstance
       visorMonitorHandler.deleteVisorMonitor(targetNode, candidate);
-      //Deleting DBMonitor
-      candidate = checkAndDeleteMonitor(metric, target);
     }
+    //Deleting DBMonitor
+    candidate = checkAndDeleteMonitor(metric, target);
     LOGGER.debug("Monitor deleted.");
   }
 

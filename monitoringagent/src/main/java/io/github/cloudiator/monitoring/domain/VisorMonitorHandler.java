@@ -172,10 +172,10 @@ public class VisorMonitorHandler {
     }
 
     LOGGER.debug("- calling Visor successful - ");
+
     io.github.cloudiator.visor.rest.model.Monitor visorMonitor = visorMonitorConverter
         .apply(monitor);
     io.github.cloudiator.visor.rest.model.Monitor visorResponse = null;
-
     try {
 
       visorResponse = apiInstance.postMonitors(visorMonitor);

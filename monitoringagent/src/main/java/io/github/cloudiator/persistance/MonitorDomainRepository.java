@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import java.util.stream.Collectors;
+import javax.swing.text.html.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,17 +49,13 @@ public class MonitorDomainRepository {
 
   public MonitorModel findYourMonitorByMetric(String metric, String owner) {
     checkNotNull(metric, "Metric is null");
-    MonitorModel result = monitorModelRepository.findYourMonitorByMetric(metric, owner).get();
-    if (result == null) {
-      return null;
-    }
-    return result;
-  }
-
-  public boolean exists(String metric) {
-    checkNotNull(metric, "Metric is null");
     checkArgument(!metric.isEmpty(), "Metric is empty");
-    return monitorModelRepository.findMonitorByMetric(metric).isPresent();
+    Optional<MonitorModel> result = monitorModelRepository.findYourMonitorByMetric(metric, owner);
+    if (!result.isPresent()){
+      return null;
+    }else {
+      return result.get();
+    }
   }
 
   public List<DomainMonitorModel> getAllMonitors() {
@@ -85,12 +82,11 @@ public class MonitorDomainRepository {
     return result;
   }
 
-  public MonitorModel createDBMonitor(DomainMonitorModel domainMonitorModel, String userid) {
+  public MonitorModel createDBMonitor(String dbMetric, DomainMonitorModel domainMonitorModel, String userid) {
 
     //Targets
     final List<TargetModel> targetModelList = targetDomainRepository
-        .createTargetModelList(domainMonitorModel.getTargets()).stream()
-        .collect(Collectors.toList());
+        .createTargetModelList(domainMonitorModel.getTargets()).stream().collect(Collectors.toList());
 
     //Sensor
     Sensor sensor = domainMonitorModel.getSensor();
@@ -119,7 +115,7 @@ public class MonitorDomainRepository {
     }
 
     //Monitor
-    MonitorModel createdModel = new MonitorModel(domainMonitorModel.getMetric(), targetModelList,
+    MonitorModel createdModel = new MonitorModel(dbMetric, targetModelList,
         monitorSensor, dataSinkModelList, tags, userid);
 
     // monitorModel is fully initialized
@@ -176,17 +172,16 @@ public class MonitorDomainRepository {
     return dbmonitor;
   }
 
-  public MonitorModel updateMonitor(String monitorMetric, DomainMonitorModel domainMonitor,
-      String userId) {
-    Optional<MonitorModel> dbResult = monitorModelRepository
-        .findYourMonitorByMetric(monitorMetric, userId);
-    MonitorModel dbMonitor;
-    if (!dbResult.isPresent()) {
+  public MonitorModel updateMonitorUuid(String monitorMetric, DomainMonitorModel domainMonitor, String userId) {
+    Optional<MonitorModel> dbResult = monitorModelRepository.findYourMonitorByMetric(monitorMetric,userId);
+    if (!dbResult.isPresent()){
       throw new IllegalStateException("Monitor does not exist.");
-    } else {
-      dbMonitor = dbResult.get();
     }
+    MonitorModel dbMonitor = dbResult.get();
 
+    dbMonitor.setUuid(domainMonitor.getUuid());
+
+    //save Monitor
     monitorModelRepository.save(dbMonitor);
     return dbMonitor;
   }

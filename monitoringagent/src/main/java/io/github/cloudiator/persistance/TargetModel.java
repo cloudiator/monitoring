@@ -16,10 +16,6 @@ public class TargetModel extends Model {
   @Column
   private String identifier;
 
-  @ManyToOne
-  private MonitorModel monitorModel;
-
-
   protected TargetModel() {
   }
 

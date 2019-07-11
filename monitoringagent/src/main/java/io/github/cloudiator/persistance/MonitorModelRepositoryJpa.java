@@ -33,7 +33,6 @@ public class MonitorModelRepositoryJpa extends
 
   @Override
   public Optional<MonitorModel> findYourMonitorByMetric(String metric, String owner) {
-
     String query = String.format(
         "select m from %s m where m.metric=:metric and m.owner=:owner",
         type.getName());
@@ -58,7 +57,7 @@ public class MonitorModelRepositoryJpa extends
   public List<MonitorModel> findMonitorsWithTarget(String targetId, String owner) {
     String queryString = String
         .format(
-            "select * from %s monitorModel inner join monitorModel.targets target where target.identifier = :targetId and monitorModel.owner = :owner",
+            "select m from %s m inner join m.targets target where target.identifier =:targetId and m.owner =:owner",
             type.getName());
     Query query = em().createQuery(queryString).setParameter("owner", owner)
         .setParameter("targetId", targetId);
@@ -69,7 +68,7 @@ public class MonitorModelRepositoryJpa extends
   @Override
   public List<MonitorModel> getAllYourMonitors(String owner) {
     String queryString = String
-        .format("select MonitorModel from %s MonitorModel where owner=:owner", type.getName());
+        .format("select m from %s m where m.owner=:owner", type.getName());
     Query query = em().createQuery(queryString).setParameter("owner", owner);
     //noinspection unchecked
     return query.getResultList();
