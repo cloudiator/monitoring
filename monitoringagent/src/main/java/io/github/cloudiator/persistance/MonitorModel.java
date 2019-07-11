@@ -61,7 +61,7 @@ public class MonitorModel extends Model {
     this.sensor = sensor;
     this.datasinks = datasinks;
     this.monitortags = monitorTags;
-    this.uuid = "0";
+    this.uuid = "";
     this.owner = userid;
   }
 
