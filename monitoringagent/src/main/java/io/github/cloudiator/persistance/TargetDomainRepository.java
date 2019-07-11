@@ -6,6 +6,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.inject.Inject;
 import io.github.cloudiator.rest.model.MonitoringTarget;
 import io.github.cloudiator.rest.model.MonitoringTarget.TypeEnum;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class TargetDomainRepository {
@@ -46,10 +48,21 @@ public class TargetDomainRepository {
     targetModelRepository.save(targetModel);
   }
 
-  public TargetModel createTarget(TargetType targetType, String identifier){
-      TargetModel result = new TargetModel(targetType,identifier);
-      targetModelRepository.save(result);
-      return result;
+  public List<TargetModel> createTargetModelList(List<MonitoringTarget> targets) {
+    List<TargetModel> result = new ArrayList<>();
+    for (MonitoringTarget monitoringTarget : targets) {
+      result.add(
+          createTargetModel(TargetType.valueOf(monitoringTarget.getType().name()),
+              monitoringTarget.getIdentifier())
+      );
+    }
+    return result;
+  }
+
+  public TargetModel createTargetModel(TargetType targetType, String identifier) {
+    TargetModel result = new TargetModel(targetType, identifier);
+    targetModelRepository.save(result);
+    return result;
   }
 
 }

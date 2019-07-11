@@ -11,7 +11,7 @@ import java.util.Optional;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
-public class DataSinkModelRepositoryJpa extends MonitoringBaseModelRepositoryJpa<DataSinkModel> implements
+public class DataSinkModelRepositoryJpa extends BaseModelRepositoryJpa<DataSinkModel> implements
     DataSinkModelRepository {
 
   @Inject
@@ -24,7 +24,8 @@ public class DataSinkModelRepositoryJpa extends MonitoringBaseModelRepositoryJpa
   @Override
   public List<DataSinkModel> getAllOfType(DataSinkType dataSinkType) {
     checkNotNull(dataSinkType, "DataSinkType is null.");
-    String queryString = String.format("from %s where dataSinkType=:dataSinkType", type.getName());
+    String queryString = String
+        .format("select d from %s d where d.dataSinkType=:dataSinkType", type.getName());
     Query query = em().createQuery(queryString).setParameter("dataSinkType", dataSinkType);
     return (List<DataSinkModel>) query.getResultList();
   }

@@ -9,7 +9,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
-public class IntervalModelRepositoryJpa extends MonitoringBaseModelRepositoryJpa<IntervalModel> implements
+public class IntervalModelRepositoryJpa extends BaseModelRepositoryJpa<IntervalModel> implements
     IntervalModelRepository {
 
   @Inject

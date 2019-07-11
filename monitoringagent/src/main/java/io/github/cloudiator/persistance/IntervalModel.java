@@ -4,9 +4,10 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.OneToOne;
 
 @Entity
-public class IntervalModel extends BaseModel {
+public class IntervalModel extends Model {
 
   @Column
   private Long period;
@@ -14,6 +15,7 @@ public class IntervalModel extends BaseModel {
   @Enumerated(EnumType.STRING)
   @Column
   private Unit unit;
+
 
   protected IntervalModel() {
 
@@ -23,6 +25,7 @@ public class IntervalModel extends BaseModel {
     this.unit = unit;
     this.period = period;
   }
+
 
   public Long getPeriod() {
     return period;
