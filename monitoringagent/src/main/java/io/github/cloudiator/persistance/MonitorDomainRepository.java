@@ -58,11 +58,9 @@ public class MonitorDomainRepository {
     }
   }
 
-  public List<DomainMonitorModel> getAllMonitors() {
-    List<DomainMonitorModel> result = new ArrayList<>();
-    result = monitorModelRepository.findAll().stream()
-        .map(MONITOR_MODEL_CONVERTER)
-        .collect(Collectors.toList());
+  public List<MonitorModel> getAllMonitors() {
+    List<MonitorModel> result = new ArrayList<>();
+    result = monitorModelRepository.findAll();
     return result;
   }
 
@@ -74,11 +72,9 @@ public class MonitorDomainRepository {
     return result;
   }
 
-  public List<DomainMonitorModel> findMonitorsOnTarget(String targetId, String owner) {
-    List<DomainMonitorModel> result = new ArrayList<>();
-    result = monitorModelRepository.findMonitorsOnTarget(targetId, owner).stream()
-        .map(MONITOR_MODEL_CONVERTER).collect(
-            Collectors.toList());
+  public List<MonitorModel> findMonitorsOnTarget(String targetId, String owner) {
+    List<MonitorModel> result = new ArrayList<>();
+    result = monitorModelRepository.findMonitorsOnTarget(targetId, owner);
     return result;
   }
 

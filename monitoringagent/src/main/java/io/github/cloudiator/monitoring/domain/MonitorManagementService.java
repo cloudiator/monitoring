@@ -5,15 +5,12 @@ import com.google.inject.name.Named;
 
 import io.github.cloudiator.monitoring.converter.MonitorToVisorMonitorConverter;
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
-import io.github.cloudiator.persistance.MonitorModel;
-import io.github.cloudiator.persistance.MonitorModelConverter;
 import io.github.cloudiator.rest.converter.JobConverter;
 import io.github.cloudiator.rest.converter.ProcessConverter;
 import io.github.cloudiator.rest.converter.ScheduleConverter;
 import io.github.cloudiator.rest.converter.TaskConverter;
 import io.github.cloudiator.rest.model.CloudiatorProcess;
 import io.github.cloudiator.rest.model.ClusterProcess;
-import io.github.cloudiator.rest.model.Job;
 import io.github.cloudiator.rest.model.Monitor;
 import io.github.cloudiator.rest.model.MonitoringTarget;
 import io.github.cloudiator.rest.model.MonitoringTarget.TypeEnum;
@@ -53,7 +50,6 @@ public class MonitorManagementService {
   private final JobService jobService;
   private final TaskConverter TASK_CONVERTER = new TaskConverter();
   private final MonitorToVisorMonitorConverter VISOR_MONITOR_CONVERTER = MonitorToVisorMonitorConverter.INSTANCE;
-  private final MonitorModelConverter MONITOR_MODEL_CONVERTER = MonitorModelConverter.INSTANCE;
   private final JobConverter JOB_CONVERTER = new JobConverter();
   private final ProcessConverter PROCESS_CONVERTER = ProcessConverter.INSTANCE;
   private final ScheduleConverter SCHEDULE_CONVERTER = new ScheduleConverter();
@@ -473,7 +469,7 @@ public class MonitorManagementService {
       LOGGER.debug("No VisorUuid found in Monitor: " + metric);
       LOGGER.debug("Can't delete Visor.");
     } else {
-      LOGGER.debug("stopping Visor and remove from DB");
+      LOGGER.debug("stopping Visor");
       //Stopping VisorInstance
       visorMonitorHandler.deleteVisorMonitor(targetNode, candidate);
     }

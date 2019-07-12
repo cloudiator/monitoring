@@ -9,7 +9,6 @@ import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.persistance.MonitorDomainRepository;
 import io.github.cloudiator.persistance.MonitorModel;
 import io.github.cloudiator.persistance.MonitorModelConverter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -57,9 +56,10 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
 
   @Transactional
   List<DomainMonitorModel> repeatedGetMonitorsOnTarget(String targetId, String userid) {
-    List<DomainMonitorModel> result = monitorDomainRepository
+    List<MonitorModel> result = monitorDomainRepository
         .findMonitorsOnTarget(targetId, userid);
-    return result;
+    return result.stream().map(monitorModel -> monitorModelConverter.apply(monitorModel)).collect(
+        Collectors.toList());
   }
 
 
@@ -67,7 +67,8 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   @Transactional
   public List<DomainMonitorModel> getAllMonitors() {
     return monitorDomainRepository
-        .getAllMonitors();
+        .getAllMonitors().stream().map(monitorModel -> monitorModelConverter.apply(monitorModel)).collect(
+            Collectors.toList());
   }
 
   @Override
@@ -88,13 +89,13 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   }
 
   @Transactional
-  public MonitorModel repeatedRestUpdate(MonitorModel dbmonitor, DomainMonitorModel restMonitor,
+  public DomainMonitorModel repeatedRestUpdate(MonitorModel dbmonitor, DomainMonitorModel restMonitor,
       boolean updateSensor,
       boolean updateTag, boolean updateTarget, boolean updateSink) {
     MonitorModel result = monitorDomainRepository
         .updateMonitorFromRest(dbmonitor, restMonitor, updateSensor, updateTag, updateTarget,
             updateSink);
-    return result;
+    return monitorModelConverter.apply(result);
   }
 
   @Override
@@ -105,11 +106,11 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   }
 
   @Transactional
-  public MonitorModel repeatedUpdate(String monitorMetric, DomainMonitorModel domainMonitor,
+  public DomainMonitorModel repeatedUpdate(String monitorMetric, DomainMonitorModel domainMonitor,
       String userId) {
     MonitorModel result = monitorDomainRepository
         .updateMonitorUuid(monitorMetric, domainMonitor, userId);
-    return result;
+    return monitorModelConverter.apply(result);
   }
 
   @Override
