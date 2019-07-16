@@ -12,8 +12,6 @@ import java.util.Objects;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
@@ -26,6 +24,15 @@ public class MonitorModel extends Model {
 
   @Column(nullable = false, updatable = false)
   private String metric;
+
+  @Column(nullable = false, updatable = false)
+  private TargetType ownTargetType;
+
+  @Column(nullable = false, updatable = false)
+  private String ownTargetId;
+
+  @Column(nullable = false)
+  private StateType ownTargetState;
 
   @OneToMany(orphanRemoval = true, fetch = FetchType.LAZY)
   @Cascade(CascadeType.DELETE)
@@ -43,7 +50,7 @@ public class MonitorModel extends Model {
   private Map<String, String> monitortags;
 
   @Column(unique = false)
-  private String uuid;
+  private String visorUuid;
 
   @Column(nullable = false, updatable = false)
   private String owner;
@@ -52,7 +59,7 @@ public class MonitorModel extends Model {
   protected MonitorModel() {
   }
 
-  public MonitorModel(String metric, List<TargetModel> targets, SensorModel sensor,
+  public MonitorModel(String metric, TargetType ownTargetType, String ownTargetId, List<TargetModel> targets, SensorModel sensor,
       List<DataSinkModel> datasinks, Map monitorTags, String userid) {
     checkNotNull(metric);
     checkNotNull(sensor);
@@ -61,17 +68,24 @@ public class MonitorModel extends Model {
     this.sensor = sensor;
     this.datasinks = datasinks;
     this.monitortags = monitorTags;
-    this.uuid = "0";
+    this.visorUuid = "0";
     this.owner = userid;
   }
 
-  public MonitorModel metric(String metric) {
-    this.metric = metric;
-    return this;
+  public StateType getOwnTargetState() {
+    return ownTargetState;
   }
 
-  public String getUuid() {
-    return uuid;
+  public String getOwnTargetId() {
+    return ownTargetId;
+  }
+
+  public TargetType getOwnTargetType() {
+    return ownTargetType;
+  }
+
+  public String getVisorUuid() {
+    return visorUuid;
   }
 
   public String getOwner() {
@@ -82,16 +96,12 @@ public class MonitorModel extends Model {
     this.owner = owner;
   }
 
-  public void setUuid(String uuid) {
-    this.uuid = uuid;
+  public void setVisorUuid(String uuid) {
+    this.visorUuid = uuid;
   }
 
   public String getMetric() {
     return metric;
-  }
-
-  public void setMetric(String metric) {
-    this.metric = metric;
   }
 
   public List<TargetModel> getTargets() {

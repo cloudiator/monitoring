@@ -5,11 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
-import io.github.cloudiator.rest.model.DataSink;
-import io.github.cloudiator.rest.model.Monitor;
-import io.github.cloudiator.rest.model.MonitoringTarget;
 import io.github.cloudiator.rest.model.PullSensor;
 import io.github.cloudiator.rest.model.PushSensor;
 import io.github.cloudiator.rest.model.Sensor;
@@ -20,9 +16,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import java.util.stream.Collectors;
-import javax.swing.text.html.Option;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 public class MonitorDomainRepository {
@@ -47,13 +40,13 @@ public class MonitorDomainRepository {
     this.dataSinkDomainRepository = dataSinkDomainRepository;
   }
 
-  public MonitorModel findYourMonitorByMetric(String metric, String owner) {
-    checkNotNull(metric, "Metric is null");
-    checkArgument(!metric.isEmpty(), "Metric is empty");
-    Optional<MonitorModel> result = monitorModelRepository.findYourMonitorByMetric(metric, owner);
-    if (!result.isPresent()){
+  public MonitorModel findYourMonitorByMetricAndTarget(String metric, TargetType targetType,
+      String targetId, String owner) {
+    Optional<MonitorModel> result = monitorModelRepository
+        .findYourMonitorByMetricAndTarget(metric, targetType, targetId, owner);
+    if (!result.isPresent()) {
       return null;
-    }else {
+    } else {
       return result.get();
     }
   }
@@ -78,11 +71,12 @@ public class MonitorDomainRepository {
     return result;
   }
 
-  public MonitorModel createDBMonitor(String dbMetric, DomainMonitorModel domainMonitorModel, String userid) {
+  public MonitorModel createDBMonitor(DomainMonitorModel domainMonitorModel, String userid) {
 
     //Targets
     final List<TargetModel> targetModelList = targetDomainRepository
-        .createTargetModelList(domainMonitorModel.getTargets()).stream().collect(Collectors.toList());
+        .createTargetModelList(domainMonitorModel.getTargets()).stream()
+        .collect(Collectors.toList());
 
     //Sensor
     Sensor sensor = domainMonitorModel.getSensor();
@@ -111,7 +105,9 @@ public class MonitorDomainRepository {
     }
 
     //Monitor
-    MonitorModel createdModel = new MonitorModel(dbMetric, targetModelList,
+    MonitorModel createdModel = new MonitorModel(domainMonitorModel.getMetric(),
+        TargetType.valueOf(domainMonitorModel.getOwnTargetType().name()),
+        domainMonitorModel.getOwnTargetId(), targetModelList,
         monitorSensor, dataSinkModelList, tags, userid);
 
     // monitorModel is fully initialized
@@ -120,11 +116,13 @@ public class MonitorDomainRepository {
     return createdModel;
   }
 
-  public MonitorModel updateMonitorFromRest(MonitorModel dbmonitor, DomainMonitorModel restMonitor,
+  public MonitorModel updateMonitorFromRest(String userId,
+      DomainMonitorModel restMonitor,
       boolean updateSensor,
       boolean updateTag, boolean updateTarget, boolean updateSink) {
-    checkNotNull(dbmonitor, "Monitor is null. ");
+    checkNotNull(dbMetric, "Monitor is null. ");
     checkNotNull(restMonitor, "Monitor is null. ");
+    MonitorModel dbmonitor = findYourMonitorByMetric(restMonitor, userId);
     //Sensor
     if (updateSensor) {
       Sensor sensor = restMonitor.getSensor();
@@ -168,14 +166,16 @@ public class MonitorDomainRepository {
     return dbmonitor;
   }
 
-  public MonitorModel updateMonitorUuid(String monitorMetric, DomainMonitorModel domainMonitor, String userId) {
-    Optional<MonitorModel> dbResult = monitorModelRepository.findYourMonitorByMetric(monitorMetric,userId);
-    if (!dbResult.isPresent()){
+  public MonitorModel updateMonitorUuid(String monitorMetric, DomainMonitorModel domainMonitor,
+      String userId) {
+    Optional<MonitorModel> dbResult = monitorModelRepository
+        .findYourMonitorByMetric(monitorMetric, userId);
+    if (!dbResult.isPresent()) {
       throw new IllegalStateException("Monitor does not exist.");
     }
     MonitorModel dbMonitor = dbResult.get();
 
-    dbMonitor.setUuid(domainMonitor.getUuid());
+    dbMonitor.setVisorUuid(domainMonitor.getUuid());
 
     //save Monitor
     monitorModelRepository.save(dbMonitor);

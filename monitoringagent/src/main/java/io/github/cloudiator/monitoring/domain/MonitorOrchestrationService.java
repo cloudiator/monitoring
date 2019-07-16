@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public interface MonitorOrchestrationService {
 
-  DomainMonitorModel createMonitor(String dbMetric, DomainMonitorModel newMonitor, String userid);
+  DomainMonitorModel createMonitor(DomainMonitorModel newMonitor, String userid);
 
   List<DomainMonitorModel> getAllMonitors();
 
@@ -18,13 +18,15 @@ public interface MonitorOrchestrationService {
 
   void updateMonitor(String dbMetric, DomainMonitorModel domainMonitor, String userId);
 
-  void updateMonitorFromRest(MonitorModel dbmonitor, DomainMonitorModel restMonitor, boolean updateSensor,
+  void updateMonitorFromRest(String dbMetric, String userId, DomainMonitorModel restMonitor, boolean updateSensor,
       boolean updateTag, boolean updateTarget, boolean updateSink);
 
   DomainMonitorModel deleteMonitor(String monitormetric);
 
-  Optional<DomainMonitorModel> getMonitor(String monitorMetric, String userid);
+  Optional<DomainMonitorModel> getMonitor(DomainMonitorModel monitor, String userid);
 
-  List<DomainMonitorModel> getMonitorsWithSameMetric(String metric, String userId);
+  boolean existingMonitor(DomainMonitorModel monitorModel,String userId);
+
+  List<String> getMonitorsWithSameMetric(String metric, String userId);
 
 }

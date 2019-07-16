@@ -32,13 +32,15 @@ public class MonitorModelRepositoryJpa extends
   }
 
   @Override
-  public Optional<MonitorModel> findYourMonitorByMetric(String metric, String owner) {
+  public Optional<MonitorModel> findYourMonitorByMetricAndTarget(String metric,
+      TargetType targetType, String targetId, String owner) {
     String query = String.format(
-        "select m from %s m where m.metric=:metric and m.owner=:owner",
+        "select m from %s m where m.metric=:metric and m.owner=:owner and m.targetType=:targetType and m.targetId=:targetId",
         type.getName());
     final MonitorModel monitorModel = (MonitorModel) JpaResultHelper
         .getSingleResultOrNull(
-            em().createQuery(query).setParameter("metric", metric).setParameter("owner", owner));
+            em().createQuery(query).setParameter("metric", metric).setParameter("owner", owner)
+                .setParameter("targetId", targetId).setParameter("targetType", targetType));
     return Optional.ofNullable(monitorModel);
   }
 

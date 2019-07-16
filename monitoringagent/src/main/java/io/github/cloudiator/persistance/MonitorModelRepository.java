@@ -7,7 +7,7 @@ public interface MonitorModelRepository extends ModelRepository<MonitorModel> {
 
   Optional<MonitorModel> findMonitorByMetric(String metric);
 
-  Optional<MonitorModel> findYourMonitorByMetric(String metric, String owner);
+  Optional<MonitorModel> findYourMonitorByMetricAndTarget(String metric,TargetType targetType, String TargetId, String owner);
 
   List<MonitorModel> findMonitorsOnTarget(String targetId,String owner);
 
