@@ -5,6 +5,7 @@ import com.google.inject.name.Named;
 
 import io.github.cloudiator.monitoring.converter.MonitorToVisorMonitorConverter;
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
+import io.github.cloudiator.monitoring.models.TargetState;
 import io.github.cloudiator.rest.converter.JobConverter;
 import io.github.cloudiator.rest.converter.ProcessConverter;
 import io.github.cloudiator.rest.converter.ScheduleConverter;
@@ -70,13 +71,11 @@ public class MonitorManagementService {
 
 
   public DomainMonitorModel checkAndCreate(DomainMonitorModel monitor,
-      String userid) {
-    Optional<DomainMonitorModel> dbMonitor = monitorOrchestrationService
-        .getMonitor(monitor, userid);
-    if (dbMonitor.isPresent()) {
+      String userId) {
+    if (monitorOrchestrationService.existingMonitor(monitor, userId)) {
       return null;
     } else {
-      return monitorOrchestrationService.createMonitor(monitor, userid);
+      return monitorOrchestrationService.createMonitor(monitor, userId);
     }
   }
 
@@ -110,17 +109,10 @@ public class MonitorManagementService {
   }
 
 
-  public DomainMonitorModel checkAndDeleteMonitor(String metric, MonitoringTarget target) {
+  public DomainMonitorModel getMonitor(String metric, MonitoringTarget monitoringTarget,
+      String userId) {
     DomainMonitorModel result = monitorOrchestrationService
-        .deleteMonitor(generateDBMetric(metric, target.getIdentifier(), target.getType()));
-    return result;
-  }
-
-
-  public DomainMonitorModel getMonitor(String metric, MonitoringTarget target, String userid) {
-    DomainMonitorModel result = monitorOrchestrationService
-        .getMonitor(generateDBMetric(metric, target.getIdentifier(), target.getType()), userid)
-        .get();
+        .getMonitor(metric, monitoringTarget, userId).get();
     if (result == null) {
       throw new IllegalArgumentException("Monitor not found. ");
     }
@@ -181,29 +173,26 @@ public class MonitorManagementService {
       executorService.execute(new Runnable() {
         public void run() {
           try {
-            String user = userId;
-            Node targetnode = targetNode;
-            DomainMonitorModel monitorex = result;
-            MonitoringTarget monitoringTarget = target;
+            String threadUser = userId;
+            Node threadNode = targetNode;
+            DomainMonitorModel threadDomainMonitor = result;
+            MonitoringTarget threadTarget = target;
 
             if (installMelodicTools) {
               try {
-                visorMonitorHandler.installEMSClient(userId, targetNode);
+                visorMonitorHandler.installEMSClient(threadUser, threadNode);
 
               } catch (IllegalStateException e) {
                 LOGGER.debug("Exception during EMSInstallation: " + e);
                 LOGGER.debug("---");
               }
             }
-            visorMonitorHandler.installVisor(user, targetnode);
+            visorMonitorHandler.installVisor(threadUser, threadNode);
             io.github.cloudiator.visor.rest.model.Monitor visorback = visorMonitorHandler
-                .configureVisor(targetnode, monitorex);
-            String dbMetric = generateDBMetric(monitorex.getMetric(),
-                monitoringTarget.getIdentifier(), monitoringTarget.getType());
-            monitorex.setUuid(visorback.getUuid());
-            LOGGER.debug(
-                "Metric: " + monitorex.getMetric() + ", uuid: " + monitorex.getUuid());
-            monitorOrchestrationService.updateMonitor(dbMetric, monitorex, user);
+                .configureVisor(threadNode, threadDomainMonitor);
+            threadDomainMonitor.setUuid(visorback.getUuid());
+            LOGGER.debug("Got uuid: " + threadDomainMonitor.getUuid());
+            monitorOrchestrationService.updateMonitor(threadDomainMonitor, threadUser);
             LOGGER.debug("visor install and config done");
           } catch (Throwable t) {
             LOGGER.error("Unexpected Exception", t);
@@ -254,13 +243,13 @@ public class MonitorManagementService {
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         executorService.execute(new Runnable() {
           public void run() {
-            String user = userId;
-            Node targetnode = processNode;
-            DomainMonitorModel monitorex = result;
-            MonitoringTarget monitoringTarget = target;
+            String threadUser = userId;
+            Node threadNode = processNode;
+            DomainMonitorModel threadDomainMonitor = result;
+            MonitoringTarget threadTarget = target;
             if (installMelodicTools) {
               try {
-                visorMonitorHandler.installEMSClient(user, targetnode);
+                visorMonitorHandler.installEMSClient(threadUser, threadNode);
               } catch (IllegalStateException e) {
                 LOGGER.debug("Exception during EMSInstallation: " + e);
                 LOGGER.debug("---");
@@ -268,14 +257,11 @@ public class MonitorManagementService {
                 LOGGER.debug("Exception while EMSInstallation " + re);
               }
             }
-            visorMonitorHandler.installVisor(user, targetnode);
+            visorMonitorHandler.installVisor(threadUser, threadNode);
             io.github.cloudiator.visor.rest.model.Monitor visorback = visorMonitorHandler
-                .configureVisor(targetnode, monitorex);
-            String dbMetric = generateDBMetric(monitorex.getMetric(),
-                monitoringTarget.getIdentifier(), monitoringTarget.getType());
-
-            monitorex.setUuid(visorback.getUuid());
-            monitorOrchestrationService.updateMonitor(dbMetric, monitorex, user);
+                .configureVisor(threadNode, threadDomainMonitor);
+            threadDomainMonitor.setUuid(visorback.getUuid());
+            monitorOrchestrationService.updateMonitor(threadDomainMonitor, threadUser);
             LOGGER.debug("visor install and config done");
           }
         });
@@ -317,9 +303,7 @@ public class MonitorManagementService {
         //throw Exception
       }
       // writing DBMonitor
-      result = checkAndCreate(
-          generateDBMetric(monitor.getMetric(), target.getIdentifier(), target.getType()), monitor,
-          userId);
+      result = checkAndCreate(monitor, userId);
       if (result == null) {
         throw new IllegalArgumentException("Monitor already exists.");
       } else {
@@ -367,9 +351,7 @@ public class MonitorManagementService {
         //throw Exception
       }
       // writing DBMonitor
-      DomainMonitorModel result = checkAndCreate(
-          generateDBMetric(monitor.getMetric(), target.getIdentifier(), target.getType()), monitor,
-          userId);
+      DomainMonitorModel result = checkAndCreate(monitor, userId);
       if (result == null) {
         throw new IllegalArgumentException("Monitor already exists.");
       } else {
@@ -381,11 +363,7 @@ public class MonitorManagementService {
         MonitoringTarget ctarget = new MonitoringTarget().identifier(cProcess.getId())
             .type(TypeEnum.PROCESS);
         handleProcess(userId, ctarget, monitor);
-
-
       }
-
-
     } catch (ResponseException re) {
       LOGGER.debug("Exception while getting jobs.");
     }
@@ -400,6 +378,7 @@ public class MonitorManagementService {
 
   /* NO USED FUNCTION REST-PUT is not used */
   public DomainMonitorModel updateMonitorFromRest(Monitor monitor, String userId) {
+    /*
     //checking for related Monitors in Database
     boolean updateSensor = false;
     boolean updateTags = false;
@@ -433,43 +412,43 @@ public class MonitorManagementService {
               updateTarget,
               updateDatasinks);
     }
-
-    return restMonitor;
+    */
+    return (DomainMonitorModel) monitor;
   }
 
 
-  public void deleteMonitor(String userId, String metric, MonitoringTarget target) {
+  public void deleteMonitor(String userId, String metric, MonitoringTarget monitoringTarget) {
     Node targetNode;
-    switch (target.getType()) {
+    switch (monitoringTarget.getType()) {
       case NODE:
-        targetNode = visorMonitorHandler.getNodeById(userId, target.getIdentifier());
+        targetNode = visorMonitorHandler.getNodeById(userId, monitoringTarget.getIdentifier());
         break;
       case PROCESS:
-        CloudiatorProcess process = getProcessFromTarget(userId, target);
+        CloudiatorProcess process = getProcessFromTarget(userId, monitoringTarget);
         targetNode = visorMonitorHandler
             .getNodeById(userId, ((SingleProcess) process).getNode());
         break;
       default:
-        throw new IllegalStateException("unkown TargetType: " + target.getType());
+        throw new IllegalStateException("unkown TargetType: " + monitoringTarget.getType());
     }
     DomainMonitorModel candidate;
-    Optional<DomainMonitorModel> dbresult = monitorOrchestrationService
-        .getMonitor(generateDBMetric(metric, target.getIdentifier(), target.getType()), userId);
-    if (!dbresult.isPresent()) {
+    Optional<DomainMonitorModel> dbResult = monitorOrchestrationService
+        .getMonitor(metric, monitoringTarget, userId);
+    if (!dbResult.isPresent()) {
       LOGGER.debug("no Result in Database!");
       throw new IllegalArgumentException("Got no Monitor from DB to delete");
     }
-    candidate = dbresult.get();
+    candidate = dbResult.get();
     if (candidate.getUuid().isEmpty() || candidate.getUuid().equals("0")) {
       LOGGER.debug("No VisorUuid found in Monitor: " + metric);
-      LOGGER.debug("Can't delete Visor.");
+      LOGGER.debug("Can't delete Visor. Removing Monitor from DB");
     } else {
       LOGGER.debug("stopping Visor");
       //Stopping VisorInstance
       visorMonitorHandler.deleteVisorMonitor(targetNode, candidate);
     }
     //Deleting DBMonitor
-    candidate = checkAndDeleteMonitor(metric, target);
+    monitorOrchestrationService.deleteMonitor(candidate, userId);
     LOGGER.debug("Monitor deleted.");
   }
 
@@ -483,11 +462,9 @@ public class MonitorManagementService {
         .getMonitorsOnTarget(node.id(), userId);
     System.out.println("affected: " + affectedMonitors.toString());
     for (DomainMonitorModel dMonitor : affectedMonitors) {
-      monitorOrchestrationService
-          .deleteMonitor(generateDBMetric(dMonitor.getMetric(), node.id(), TypeEnum.NODE));
-      System.out.println("delete Monitor");
+      dMonitor.setOwnTargetState(TargetState.DELETED);
+      monitorOrchestrationService.updateTargetState(dMonitor);
     }
-
   }
 
   public void handledeletedProcess(CloudiatorProcess cloudiatorProcess, String userId) {
@@ -495,11 +472,10 @@ public class MonitorManagementService {
     List<DomainMonitorModel> affectedMonitos = monitorOrchestrationService
         .getMonitorsOnTarget(singleProcess.getId(), userId);
     System.out.println(affectedMonitos.size() + "Monitors affected!");
-    for (DomainMonitorModel dmonitor : affectedMonitos) {
-      monitorOrchestrationService.deleteMonitor(
-          generateDBMetric(dmonitor.getMetric(), singleProcess.getId(), TypeEnum.PROCESS));
+    for (DomainMonitorModel dbMonitor : affectedMonitos) {
+      dbMonitor.setOwnTargetState(TargetState.DELETED);
+      monitorOrchestrationService.updateTargetState(dbMonitor);
     }
-
   }
 
 

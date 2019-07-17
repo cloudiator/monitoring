@@ -5,13 +5,13 @@ import java.util.Optional;
 
 public interface MonitorModelRepository extends ModelRepository<MonitorModel> {
 
-  Optional<MonitorModel> findMonitorByMetric(String metric);
+  Optional<MonitorModel> findMonitorByMetricAndTarget(String metric, TargetType targetType,
+      String targetId);
 
-  Optional<MonitorModel> findYourMonitorByMetricAndTarget(String metric,TargetType targetType, String TargetId, String owner);
+  Optional<MonitorModel> findYourMonitorByMetricAndTarget(String metric, TargetType targetType,
+      String targetId, String owner);
 
-  List<MonitorModel> findMonitorsOnTarget(String targetId,String owner);
-
-  List<MonitorModel> findMonitorsWithTarget(String targetId, String owner);
+  List<MonitorModel> findMonitorsOnTarget(String targetId, String owner);
 
   List<MonitorModel> getAllYourMonitors(String userid);
 

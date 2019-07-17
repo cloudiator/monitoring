@@ -6,6 +6,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.inject.Inject;
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
+import io.github.cloudiator.rest.model.MonitoringTarget;
 import io.github.cloudiator.rest.model.PullSensor;
 import io.github.cloudiator.rest.model.PushSensor;
 import io.github.cloudiator.rest.model.Sensor;
@@ -116,6 +117,7 @@ public class MonitorDomainRepository {
     return createdModel;
   }
 
+  /* TODO Rest putMonitor not working
   public MonitorModel updateMonitorFromRest(String userId,
       DomainMonitorModel restMonitor,
       boolean updateSensor,
@@ -165,26 +167,51 @@ public class MonitorDomainRepository {
     monitorModelRepository.save(dbmonitor);
     return dbmonitor;
   }
+  */
 
-  public MonitorModel updateMonitorUuid(String monitorMetric, DomainMonitorModel domainMonitor,
+  public MonitorModel updateMonitorUuid(DomainMonitorModel domainMonitor,
       String userId) {
     Optional<MonitorModel> dbResult = monitorModelRepository
-        .findYourMonitorByMetric(monitorMetric, userId);
+        .findYourMonitorByMetricAndTarget(domainMonitor.getMetric(),
+            TargetType.valueOf(domainMonitor.getOwnTargetType().name()),
+            domainMonitor.getOwnTargetId(), userId);
     if (!dbResult.isPresent()) {
       throw new IllegalStateException("Monitor does not exist.");
     }
     MonitorModel dbMonitor = dbResult.get();
-
     dbMonitor.setVisorUuid(domainMonitor.getUuid());
-
     //save Monitor
     monitorModelRepository.save(dbMonitor);
     return dbMonitor;
   }
 
+  public MonitorModel updateTargetState(DomainMonitorModel domainMonitor) {
+    MonitorModel dbMonitor = monitorModelRepository
+        .findMonitorByMetricAndTarget(domainMonitor.getMetric(),
+            TargetType.valueOf(domainMonitor.getOwnTargetType().name()),
+            domainMonitor.getOwnTargetId()).get();
+    dbMonitor.setOwnTargetState(StateType.valueOf(domainMonitor.getOwnTargetState().name()));
+    //save Monitor
+    monitorModelRepository.save(dbMonitor);
+    return dbMonitor;
+  }
 
-  public MonitorModel deleteMonitor(String metric) {
-    Optional<MonitorModel> dbMonitor = monitorModelRepository.findMonitorByMetric(metric);
+  public MonitorModel deleteMonitor(DomainMonitorModel domainMonitorModel, String userId) {
+    Optional<MonitorModel> monitorModel = monitorModelRepository
+        .findYourMonitorByMetricAndTarget(domainMonitorModel.getMetric(),
+            TargetType.valueOf(domainMonitorModel.getOwnTargetType().name()),
+            domainMonitorModel.getOwnTargetId(), userId);
+    monitorModelRepository.delete(monitorModel.get());
+    return monitorModel.get();
+  }
+
+
+  public MonitorModel findAndDeleteMonitor(String metric, MonitoringTarget monitoringTarget,
+      String userId) {
+    Optional<MonitorModel> dbMonitor = monitorModelRepository
+        .findYourMonitorByMetricAndTarget(metric,
+            TargetType.valueOf(monitoringTarget.getType().name()), monitoringTarget.getIdentifier(),
+            userId);
     if (!dbMonitor.isPresent()) {
       throw new IllegalStateException("Monitor does not exist.");
     } else {

@@ -76,6 +76,10 @@ public class MonitorModel extends Model {
     return ownTargetState;
   }
 
+  public void setOwnTargetState(StateType ownTargetState) {
+    this.ownTargetState = ownTargetState;
+  }
+
   public String getOwnTargetId() {
     return ownTargetId;
   }
