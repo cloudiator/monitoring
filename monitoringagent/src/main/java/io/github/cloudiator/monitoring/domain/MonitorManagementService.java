@@ -96,8 +96,8 @@ public class MonitorManagementService {
       result = null;
     } else {
       result = monitorOrchestrationService.createMonitor(domainMonitorModel, userId);
+      result.addTagItem("ownTarget: ",result.getOwnTargetType().toString()+": "+result.getOwnTargetId());
     }
-
     return result;
   }
 

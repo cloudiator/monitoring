@@ -52,6 +52,7 @@ public class MonitorModelConverter implements OneWayConverter<MonitorModel, Doma
         monitoringTargets, sensor,
         dataSinks, tags);
     result.setOwnTargetState(stateTypeConverter.apply(monitorModel.getOwnTargetState()));
+    result.setUuid(monitorModel.getVisorUuid());
 
     return result;
   }
