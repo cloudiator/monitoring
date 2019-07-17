@@ -172,40 +172,40 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
       String userid) {
     checkNotNull(metric, "Metric is null");
     checkNotNull(monitoringTarget, "MonitoringTarget is null");
-    Optional<DomainMonitorModel> result = TransactionRetryer
+    DomainMonitorModel result = TransactionRetryer
         .retry(minWaitingTime, maxWaitingTime, retryAttempts,
             () -> repeatedGetMonitor(metric, TargetType.valueOf(monitoringTarget.getType().name()),
                 monitoringTarget.getIdentifier(), userid));
     if (result == null) {
       return Optional.empty();
     } else {
-      return result;
+      return Optional.ofNullable(result);
     }
   }
 
   @Transactional
-  public Optional<DomainMonitorModel> repeatedGetMonitor(String metric, TargetType targetType,
+  public DomainMonitorModel repeatedGetMonitor(String metric, TargetType targetType,
       String targetId, String userId) {
-    Optional<DomainMonitorModel> model = Optional.empty();
+    DomainMonitorModel model= null;
     MonitorModel result = monitorDomainRepository
         .findYourMonitorByMetricAndTarget(metric, targetType, targetId, userId);
     if (result != null) {
-      model = Optional.ofNullable(monitorModelConverter.apply(result));
+      model = monitorModelConverter.apply(result);
     }
     return model;
   }
 
   @Override
   public boolean existingMonitor(DomainMonitorModel domainMonitorModel, String userId) {
-    Optional<DomainMonitorModel> result = TransactionRetryer
+    DomainMonitorModel result = TransactionRetryer
         .retry(minWaitingTime, maxWaitingTime, retryAttempts,
             () -> repeatedGetMonitor(domainMonitorModel.getMetric(),
                 TargetType.valueOf(domainMonitorModel.getOwnTargetType().name()),
                 domainMonitorModel.getOwnTargetId(), userId));
-    if (result.isPresent()) {
-      return true;
-    } else {
+    if (result == null ) {
       return false;
+    } else {
+      return true;
     }
   }
 

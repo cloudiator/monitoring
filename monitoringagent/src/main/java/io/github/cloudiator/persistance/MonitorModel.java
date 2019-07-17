@@ -3,6 +3,7 @@ package io.github.cloudiator.persistance;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import io.github.cloudiator.monitoring.models.TargetState;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -64,12 +65,15 @@ public class MonitorModel extends Model {
     checkNotNull(metric);
     checkNotNull(sensor);
     this.metric = metric;
+    this.ownTargetType = ownTargetType;
+    this.ownTargetId = ownTargetId;
     this.targets = targets;
     this.sensor = sensor;
     this.datasinks = datasinks;
     this.monitortags = monitorTags;
-    this.visorUuid = "0";
+    this.visorUuid = "";
     this.owner = userid;
+    this.ownTargetState = StateType.PENDING;
   }
 
   public StateType getOwnTargetState() {

@@ -40,11 +40,13 @@ public class GetMonitorListener implements Runnable {
 
               dbmonitor = monitorManagementService
                   .getMonitor(content.getMetric(),
-                      targetConverter.applyBack(content.getTarget()),content.getUserId());
+                      targetConverter.applyBack(content.getTarget()), content.getUserId());
 
-              if (dbmonitor.getUuid() != null ) {
-                dbmonitor.addTagItem("VisorUuid", dbmonitor.getUuid());
-              }
+              //Writing DomainInformation to Tags
+              dbmonitor.addTagItem("ownTarget",
+                  dbmonitor.getOwnTargetType().toString() + ": " + dbmonitor.getOwnTargetId());
+              dbmonitor.addTagItem("TargetState: ", dbmonitor.getOwnTargetState().toString());
+              dbmonitor.addTagItem("VisorUuid: ", dbmonitor.getUuid());
 
               GetMonitorResponse.Builder responseBuilder = GetMonitorResponse.newBuilder()
                   .setMonitor(monitorConverter.apply(dbmonitor));

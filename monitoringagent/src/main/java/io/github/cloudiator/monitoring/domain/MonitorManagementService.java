@@ -6,6 +6,7 @@ import com.google.inject.name.Named;
 import io.github.cloudiator.monitoring.converter.MonitorToVisorMonitorConverter;
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.monitoring.models.TargetState;
+import io.github.cloudiator.persistance.StateType;
 import io.github.cloudiator.rest.converter.JobConverter;
 import io.github.cloudiator.rest.converter.ProcessConverter;
 import io.github.cloudiator.rest.converter.ScheduleConverter;
@@ -155,7 +156,6 @@ public class MonitorManagementService {
           throw new IllegalArgumentException("unkown MonitorTargetType: " + mTarget.getType());
       }
       count++;
-      domainMonitor.setMetric(newMonitor.getMetric());
     }
     return requestedMonitor;
   }
@@ -193,6 +193,8 @@ public class MonitorManagementService {
             threadDomainMonitor.setUuid(visorback.getUuid());
             LOGGER.debug("Got uuid: " + threadDomainMonitor.getUuid());
             monitorOrchestrationService.updateMonitor(threadDomainMonitor, threadUser);
+            threadDomainMonitor.setOwnTargetState(TargetState.valueOf(threadNode.state().name()));
+            monitorOrchestrationService.updateTargetState(threadDomainMonitor);
             LOGGER.debug("visor install and config done");
           } catch (Throwable t) {
             LOGGER.error("Unexpected Exception", t);
