@@ -1,8 +1,10 @@
 package io.github.cloudiator.monitoring.models;
 
+
 import io.github.cloudiator.rest.model.DataSink;
 import io.github.cloudiator.rest.model.Monitor;
 import io.github.cloudiator.rest.model.MonitoringTarget;
+import io.github.cloudiator.rest.model.MonitoringTarget.TypeEnum;
 import io.github.cloudiator.rest.model.Sensor;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,25 +14,30 @@ import java.util.Objects;
 
 public class DomainMonitorModel extends Monitor {
 
-  private String uuid = "0";
+  private String uuid;
+
+  private TypeEnum ownTargetType;
+
+  private String ownTargetId;
+
+  private TargetState ownTargetState;
 
   public DomainMonitorModel() {
     super();
   }
 
-  public DomainMonitorModel(String metric, List<MonitoringTarget> targets, Sensor sensor,
+  public DomainMonitorModel(String metric, TypeEnum ownTargetType, String ownTargetId,
+      List<MonitoringTarget> targets, Sensor sensor,
       List<DataSink> sinks, Map tags) {
     super.metric(metric);
+    this.ownTargetType = ownTargetType;
+    this.ownTargetId = ownTargetId;
+    this.ownTargetState = TargetState.PENDING;
     super.targets(targets);
     super.sensor(sensor);
     super.sinks(sinks);
     super.tags(tags);
-    this.uuid = "0";
-  }
-
-  public DomainMonitorModel metric(String metric) {
-    super.metric(metric);
-    return this;
+    this.uuid = "";
   }
 
   public void setUuid(String uuid) {
@@ -41,6 +48,29 @@ public class DomainMonitorModel extends Monitor {
     return uuid;
   }
 
+  public String getOwnTargetId() {
+    return ownTargetId;
+  }
+
+  public void setOwnTargetId(String ownTargetId) {
+    this.ownTargetId = ownTargetId;
+  }
+
+  public TypeEnum getOwnTargetType() {
+    return ownTargetType;
+  }
+
+  public void setOwnTargetType(TypeEnum ownTargetType) {
+    this.ownTargetType = ownTargetType;
+  }
+
+  public TargetState getOwnTargetState() {
+    return ownTargetState;
+  }
+
+  public void setOwnTargetState(TargetState ownTargetState) {
+    this.ownTargetState = ownTargetState;
+  }
 
   public String getMetric() {
     String result = super.getMetric();
@@ -114,12 +144,15 @@ public class DomainMonitorModel extends Monitor {
       return true;
     } else if (o != null && this.getClass() == o.getClass()) {
       DomainMonitorModel monitor = (DomainMonitorModel) o;
-      return Objects.equals(this.getMetric(), monitor.getMetric()) && Objects
-          .equals(this.getTargets(), monitor.getTargets()) && Objects
-          .equals(this.getSensor(), monitor.getSensor())
-          && Objects.equals(this.getSinks(), monitor.getSinks()) && Objects
-          .equals(this.getTags(), monitor.getTags())
-          && Objects.equals(this.uuid, monitor.uuid);
+      return Objects.equals(this.getMetric(), monitor.getMetric()) &&
+          Objects.equals(this.getOwnTargetType(), monitor.getOwnTargetType()) &&
+          Objects.equals(this.getOwnTargetId(), monitor.getOwnTargetId()) &&
+          Objects.equals(this.getOwnTargetState(), monitor.getOwnTargetState()) &&
+          Objects.equals(this.getTargets(), monitor.getTargets()) &&
+          Objects.equals(this.getSensor(), monitor.getSensor()) &&
+          Objects.equals(this.getSinks(), monitor.getSinks()) &&
+          Objects.equals(this.getTags(), monitor.getTags()) &&
+          Objects.equals(this.uuid, monitor.uuid);
     } else {
       return false;
     }
@@ -127,7 +160,8 @@ public class DomainMonitorModel extends Monitor {
 
   public int hashCode() {
     return Objects
-        .hash(new Object[]{this.getMetric(), this.getTargets(), this.getSensor(), this.getSinks(),
+        .hash(new Object[]{this.getMetric(), this.getOwnTargetType(), this.getOwnTargetId(),
+            this.getOwnTargetState(), this.getTargets(), this.getSensor(), this.getSinks(),
             this.getTags(), this.uuid});
   }
 
@@ -135,6 +169,12 @@ public class DomainMonitorModel extends Monitor {
     StringBuilder sb = new StringBuilder();
     sb.append("class DomainMonitormodel {\n");
     sb.append("    metric: ").append(this.toIndentedString(this.getMetric())).append("\n");
+    sb.append("    ownTargetType: ").append(this.toIndentedString(this.getOwnTargetType()))
+        .append("\n");
+    sb.append("    ownTargetId: ").append(this.toIndentedString(this.getOwnTargetId()))
+        .append("\n");
+    sb.append("    ownTargetState: ").append(this.toIndentedString(this.getOwnTargetState()))
+        .append("\n");
     sb.append("    targets: ").append(this.toIndentedString(this.getTargets())).append("\n");
     sb.append("    sensor: ").append(this.toIndentedString(this.getSensor())).append("\n");
     sb.append("    sinks: ").append(this.toIndentedString(this.getSinks())).append("\n");

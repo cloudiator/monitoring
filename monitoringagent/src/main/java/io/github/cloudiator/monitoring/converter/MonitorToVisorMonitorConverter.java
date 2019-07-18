@@ -61,8 +61,8 @@ public class MonitorToVisorMonitorConverter implements
 
   @Override
   public DomainMonitorModel applyBack(io.github.cloudiator.visor.rest.model.Monitor visorMonitor) {
-    DomainMonitorModel result = new DomainMonitorModel()
-        .metric(visorMonitor.getMetricName());
+    DomainMonitorModel result = new DomainMonitorModel();
+    result.setMetric(visorMonitor.getMetricName());
     result.setSinks(dataSinkConverter.applyBack(visorMonitor.getDataSinks()));
     result.setTags(visorMonitor.getMonitorContext());
     result.setUuid(visorMonitor.getUuid());

@@ -9,7 +9,9 @@ import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.persistance.MonitorDomainRepository;
 import io.github.cloudiator.persistance.MonitorModel;
 import io.github.cloudiator.persistance.MonitorModelConverter;
-import java.util.ArrayList;
+import io.github.cloudiator.persistance.StateType;
+import io.github.cloudiator.persistance.TargetType;
+import io.github.cloudiator.rest.model.MonitoringTarget;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -34,16 +36,16 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   }
 
   @Override
-  public DomainMonitorModel createMonitor(String dbMetric, DomainMonitorModel newMonitor, String userid) {
+  public DomainMonitorModel createMonitor(DomainMonitorModel newMonitor, String userid) {
     DomainMonitorModel result = TransactionRetryer
         .retry(minWaitingTime, maxWaitingTime, retryAttempts,
-            () -> repeatedCreation(dbMetric, newMonitor, userid));
+            () -> repeatedCreation(newMonitor, userid));
     return result;
   }
 
   @Transactional
-  DomainMonitorModel repeatedCreation(String dbMetric, DomainMonitorModel Monitor, String userid) {
-    MonitorModel result = monitorDomainRepository.createDBMonitor(dbMetric, Monitor, userid);
+  DomainMonitorModel repeatedCreation(DomainMonitorModel Monitor, String userid) {
+    MonitorModel result = monitorDomainRepository.createDBMonitor(Monitor, userid);
     return monitorModelConverter.apply(result);
   }
 
@@ -57,9 +59,10 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
 
   @Transactional
   List<DomainMonitorModel> repeatedGetMonitorsOnTarget(String targetId, String userid) {
-    List<DomainMonitorModel> result = monitorDomainRepository
+    List<MonitorModel> result = monitorDomainRepository
         .findMonitorsOnTarget(targetId, userid);
-    return result;
+    return result.stream().map(monitorModel -> monitorModelConverter.apply(monitorModel)).collect(
+        Collectors.toList());
   }
 
 
@@ -67,7 +70,9 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   @Transactional
   public List<DomainMonitorModel> getAllMonitors() {
     return monitorDomainRepository
-        .getAllMonitors();
+        .getAllMonitors().stream().map(monitorModel -> monitorModelConverter.apply(monitorModel))
+        .collect(
+            Collectors.toList());
   }
 
   @Override
@@ -77,85 +82,137 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
         .getAllYourMonitors(userid);
   }
 
+  // NOT WORKING REST
   @Override
-  public void updateMonitorFromRest(MonitorModel dbmonitor, DomainMonitorModel restMonitor,
+  public void updateMonitorFromRest(String dbMetric, String userId, DomainMonitorModel restMonitor,
       boolean updateSensor,
       boolean updateTag, boolean updateTarget, boolean updateSink) {
+  }
+
+   /*
     TransactionRetryer
         .retry(minWaitingTime, maxWaitingTime, retryAttempts,
-            () -> repeatedRestUpdate(dbmonitor, restMonitor, updateSensor, updateTag, updateTarget,
+            () -> repeatedRestUpdate(userId, restMonitor, updateSensor, updateTag, updateTarget,
                 updateSink));
   }
 
+
   @Transactional
-  public MonitorModel repeatedRestUpdate(MonitorModel dbmonitor, DomainMonitorModel restMonitor,
+  public DomainMonitorModel repeatedRestUpdate(String userId, DomainMonitorModel restMonitor,
       boolean updateSensor,
       boolean updateTag, boolean updateTarget, boolean updateSink) {
     MonitorModel result = monitorDomainRepository
-        .updateMonitorFromRest(dbmonitor, restMonitor, updateSensor, updateTag, updateTarget,
+        .updateMonitorFromRest(userId, restMonitor, updateSensor, updateTag, updateTarget,
             updateSink);
-    return result;
+    return monitorModelConverter.apply(result);
   }
+  */
 
   @Override
-  public void updateMonitor(String monitorMetric, DomainMonitorModel dbmonitor, String userId) {
+  public void updateMonitor(DomainMonitorModel dbMonitor, String userId) {
     TransactionRetryer
         .retry(minWaitingTime, maxWaitingTime, retryAttempts,
-            () -> repeatedUpdate(monitorMetric, dbmonitor, userId));
+            () -> repeatedUpdate(dbMonitor, userId));
   }
 
   @Transactional
-  public MonitorModel repeatedUpdate(String monitorMetric, DomainMonitorModel domainMonitor,
-      String userId) {
+  public DomainMonitorModel repeatedUpdate(DomainMonitorModel dbMonitor, String userId) {
     MonitorModel result = monitorDomainRepository
-        .updateMonitorUuid(monitorMetric, domainMonitor, userId);
-    return result;
-  }
-
-  @Override
-  public DomainMonitorModel deleteMonitor(String metric) {
-    DomainMonitorModel result = TransactionRetryer
-        .retry(minWaitingTime, maxWaitingTime, retryAttempts, () -> repeatedDeleteMonitor(metric));
-    return result;
-  }
-
-
-  @Transactional
-  DomainMonitorModel repeatedDeleteMonitor(String metric) {
-    MonitorModel result = monitorDomainRepository.deleteMonitor(metric);
+        .updateMonitorUuid(dbMonitor, userId);
     return monitorModelConverter.apply(result);
   }
 
   @Override
-  public Optional<DomainMonitorModel> getMonitor(String dbMetric, String userid) {
-    checkNotNull(dbMetric, "Metric is null");
-    Optional<DomainMonitorModel> result = TransactionRetryer
+  public void updateTargetState(DomainMonitorModel dbMonitor) {
+    TransactionRetryer
         .retry(minWaitingTime, maxWaitingTime, retryAttempts,
-            () -> repeatedGetMonitor(dbMetric, userid));
+            () -> repeatedUpdateTargetState(dbMonitor));
+  }
+
+  @Transactional
+  public DomainMonitorModel repeatedUpdateTargetState(DomainMonitorModel dbMonitor) {
+    MonitorModel result = monitorDomainRepository
+        .updateTargetState(dbMonitor);
+    return monitorModelConverter.apply(result);
+  }
+
+  @Override
+  public DomainMonitorModel deleteMonitor(DomainMonitorModel domainMonitorModel, String userId) {
+    DomainMonitorModel result = TransactionRetryer
+        .retry(minWaitingTime, maxWaitingTime, retryAttempts,
+            () -> repeatedDeleteMonitor(domainMonitorModel, userId));
+    return result;
+  }
+
+  @Transactional
+  DomainMonitorModel repeatedDeleteMonitor(DomainMonitorModel domainMonitorModel, String userId) {
+    MonitorModel result = monitorDomainRepository.deleteMonitor(domainMonitorModel, userId);
+    return monitorModelConverter.apply(result);
+  }
+
+  @Override
+  public DomainMonitorModel findAndDeleteMonitor(String metric, MonitoringTarget monitoringTarget,
+      String userId) {
+    DomainMonitorModel result = TransactionRetryer
+        .retry(minWaitingTime, maxWaitingTime, retryAttempts,
+            () -> repeatedFindAndDelete(metric, monitoringTarget, userId));
+    return result;
+  }
+
+  @Transactional
+  DomainMonitorModel repeatedFindAndDelete(String metric, MonitoringTarget monitoringTarget,
+      String userId) {
+    MonitorModel result = monitorDomainRepository
+        .findAndDeleteMonitor(metric, monitoringTarget, userId);
+    return monitorModelConverter.apply(result);
+  }
+
+  @Override
+  public Optional<DomainMonitorModel> getMonitor(String metric, MonitoringTarget monitoringTarget,
+      String userid) {
+    checkNotNull(metric, "Metric is null");
+    checkNotNull(monitoringTarget, "MonitoringTarget is null");
+    DomainMonitorModel result = TransactionRetryer
+        .retry(minWaitingTime, maxWaitingTime, retryAttempts,
+            () -> repeatedGetMonitor(metric, TargetType.valueOf(monitoringTarget.getType().name()),
+                monitoringTarget.getIdentifier(), userid));
     if (result == null) {
       return Optional.empty();
     } else {
-      return result;
+      return Optional.ofNullable(result);
     }
   }
 
-
-
   @Transactional
-  public Optional<DomainMonitorModel> repeatedGetMonitor(String DbMetric, String userId) {
-    Optional<DomainMonitorModel> model = Optional.empty();
+  public DomainMonitorModel repeatedGetMonitor(String metric, TargetType targetType,
+      String targetId, String userId) {
+    DomainMonitorModel model= null;
     MonitorModel result = monitorDomainRepository
-        .findYourMonitorByMetric(DbMetric, userId);
+        .findYourMonitorByMetricAndTarget(metric, targetType, targetId, userId);
     if (result != null) {
-      model = Optional.ofNullable(monitorModelConverter.apply(result));
+      model = monitorModelConverter.apply(result);
     }
     return model;
   }
 
+  @Override
+  public boolean existingMonitor(DomainMonitorModel domainMonitorModel, String userId) {
+    DomainMonitorModel result = TransactionRetryer
+        .retry(minWaitingTime, maxWaitingTime, retryAttempts,
+            () -> repeatedGetMonitor(domainMonitorModel.getMetric(),
+                TargetType.valueOf(domainMonitorModel.getOwnTargetType().name()),
+                domainMonitorModel.getOwnTargetId(), userId));
+    if (result == null ) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+
 
   @Override
-  public List<DomainMonitorModel> getMonitorsWithSameMetric(String metric, String userId) {
-    List<DomainMonitorModel> result =
+  public List<String> getMonitorsWithSameMetric(String metric, String userId) {
+    List<String> result =
         TransactionRetryer
             .retry(minWaitingTime, maxWaitingTime, retryAttempts,
                 () -> repeatedGetMonitorsWithSameMetric(metric, userId));
@@ -163,11 +220,12 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   }
 
   @Transactional
-  List<DomainMonitorModel> repeatedGetMonitorsWithSameMetric(String metric, String userId) {
+  List<String> repeatedGetMonitorsWithSameMetric(String metric, String userId) {
     List<MonitorModel> result = monitorDomainRepository
         .findAllMonitorsWithSameMetric(metric, userId);
-    return result.stream().map(monitorModel -> monitorModelConverter.apply(monitorModel))
-        .collect(Collectors.toList());
+    List<String> metricList = result.stream().map(monitorModel -> monitorModel.getMetric()).collect(
+        Collectors.toList());
+    return metricList;
 
 
   }

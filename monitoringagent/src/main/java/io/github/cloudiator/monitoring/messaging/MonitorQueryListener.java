@@ -41,10 +41,12 @@ public class MonitorQueryListener implements Runnable {
                   .getAllYourMonitors(content.getUserId());
               MonitorQueryResponse.Builder responseBuilder = MonitorQueryResponse.newBuilder();
               for (DomainMonitorModel monitor : dbmonitors) {
+                //Writing DomainInformation to MonitorTags
+                monitor.addTagItem("ownTarget",
+                    monitor.getOwnTargetType().toString() + ": " + monitor.getOwnTargetId());
+                monitor.addTagItem("TargetState: ", monitor.getOwnTargetState().toString());
+                monitor.addTagItem("VisorUuid: ", monitor.getUuid());
 
-                if (monitor.getUuid() != null) {
-                  monitor.addTagItem("VisorUuid", monitor.getUuid());
-                }
                 responseBuilder.addMonitor(monitorConverter.apply(monitor));
               }
               MonitorQueryResponse result = responseBuilder.build();

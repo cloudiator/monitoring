@@ -21,24 +21,28 @@ public class MonitorModelRepositoryJpa extends
   }
 
   @Override
-  public Optional<MonitorModel> findMonitorByMetric(String metric) {
+  public Optional<MonitorModel> findMonitorByMetricAndTarget(String metric, TargetType targetType,
+      String targetId) {
 
     String query = String.format(
-        "select m from %s m  where m.metric=:metric",
+        "select m from %s m  where m.metric=:metric and m.ownTargetType=:ownTargetType and m.ownTargetId=:ownTargetId",
         type.getName());
     final MonitorModel monitorModel = (MonitorModel) JpaResultHelper
-        .getSingleResultOrNull(em().createQuery(query).setParameter("metric", metric));
+        .getSingleResultOrNull(em().createQuery(query).setParameter("metric", metric)
+            .setParameter("ownTargetType", targetType).setParameter("ownTargetId", targetId));
     return Optional.ofNullable(monitorModel);
   }
 
   @Override
-  public Optional<MonitorModel> findYourMonitorByMetric(String metric, String owner) {
+  public Optional<MonitorModel> findYourMonitorByMetricAndTarget(String metric,
+      TargetType targetType, String targetId, String owner) {
     String query = String.format(
-        "select m from %s m where m.metric=:metric and m.owner=:owner",
+        "select m from %s m where m.metric=:metric and m.owner=:owner and m.ownTargetType=:targetType and m.ownTargetId=:targetId",
         type.getName());
     final MonitorModel monitorModel = (MonitorModel) JpaResultHelper
         .getSingleResultOrNull(
-            em().createQuery(query).setParameter("metric", metric).setParameter("owner", owner));
+            em().createQuery(query).setParameter("metric", metric).setParameter("owner", owner)
+                .setParameter("targetId", targetId).setParameter("targetType", targetType));
     return Optional.ofNullable(monitorModel);
   }
 
@@ -49,18 +53,6 @@ public class MonitorModelRepositoryJpa extends
             type.getName());
     Query query = em().createQuery(queryString).setParameter("owner", owner)
         .setParameter("metric", "%" + targetId);
-    //noinspection unchecked
-    return query.getResultList();
-  }
-
-  @Override
-  public List<MonitorModel> findMonitorsWithTarget(String targetId, String owner) {
-    String queryString = String
-        .format(
-            "select m from %s m inner join m.targets target where target.identifier =:targetId and m.owner =:owner",
-            type.getName());
-    Query query = em().createQuery(queryString).setParameter("owner", owner)
-        .setParameter("targetId", targetId);
     //noinspection unchecked
     return query.getResultList();
   }
