@@ -256,23 +256,6 @@ public class VisorMonitorHandler {
 
   }
 
-  public List<io.github.cloudiator.visor.rest.model.Monitor> getAllVisorMonitors(Node targetNode) {
-    LOGGER.debug("GET ALLVISORMONITORS");
-    List<io.github.cloudiator.visor.rest.model.Monitor> allMonitors = new ArrayList<>();
-    String visorpath = String.format("http://%s:%s", targetNode.connectTo().ip(), VisorPort);
-    String localpath = String.format("http://localhost:31415");
-    ApiClient apiClient = new ApiClient().setBasePath(visorpath);
-    DefaultApi api = new DefaultApi(apiClient);
-    try {
-      allMonitors.addAll(api.getMonitors());
-      return allMonitors;
-    } catch (ApiException e) {
-      throw new IllegalStateException("Error while getMonitors: " + e.getMessage());
-
-    }
-  }
-
-
   public Node getNodeById(String userId, String nodeId) {
     try {
 

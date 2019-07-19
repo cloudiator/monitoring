@@ -39,7 +39,7 @@ public class NodeEventListener implements Runnable {
           @Override
           public void accept(String id, NodeEvent nodeEvent) {
             try {
-              System.out.println("Got Event: "+nodeEvent.toString());
+              LOGGER.debug("Got NodeEvent: "+nodeEvent.toString());
               switch(nodeEvent.getTo()){
                 case NODE_STATE_PENDING:
 
@@ -48,7 +48,6 @@ public class NodeEventListener implements Runnable {
 
                   break;
                 case NODE_STATE_DELETED:
-                  System.out.println("Got deleted Event ");
                   Node node = nodeMessageConverter.applyBack(nodeEvent.getNode());
                   monitorManagementService.handeldeletedNode(node, nodeEvent.getNode().getUserId());
 

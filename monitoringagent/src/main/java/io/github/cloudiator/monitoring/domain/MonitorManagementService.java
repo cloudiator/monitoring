@@ -49,10 +49,6 @@ public class MonitorManagementService {
   private final VisorMonitorHandler visorMonitorHandler;
   private final MonitorOrchestrationService monitorOrchestrationService;
   private final ProcessService processService;
-  private final JobService jobService;
-  private final TaskConverter TASK_CONVERTER = new TaskConverter();
-  private final MonitorToVisorMonitorConverter VISOR_MONITOR_CONVERTER = MonitorToVisorMonitorConverter.INSTANCE;
-  private final JobConverter JOB_CONVERTER = new JobConverter();
   private final ProcessConverter PROCESS_CONVERTER = ProcessConverter.INSTANCE;
   private final ScheduleConverter SCHEDULE_CONVERTER = new ScheduleConverter();
   private final boolean installMelodicTools;
@@ -61,13 +57,11 @@ public class MonitorManagementService {
   @Inject
   public MonitorManagementService(VisorMonitorHandler visorMonitorHandler,
       BasicMonitorOrchestrationService monitorOrchestrationService, ProcessService processService,
-      JobService jobService,
       @Named("melodicTools") boolean installMelodicTools) {
     this.visorMonitorHandler = visorMonitorHandler;
     this.monitorOrchestrationService = monitorOrchestrationService;
     this.processService = processService;
     this.installMelodicTools = installMelodicTools;
-    this.jobService = jobService;
   }
 
 
@@ -82,10 +76,9 @@ public class MonitorManagementService {
 
   //TODO aufräumen
   private DomainMonitorModel createDBMonitor(String userId, MonitoringTarget target,
-      DomainMonitorModel domainMonitorModel, Node targetNode) {
+      DomainMonitorModel domainMonitorModel) {
     //writing Tags
     Map tags = domainMonitorModel.getTags();
-    tags.put("IP", targetNode.connectTo().ip());
     domainMonitorModel.setTags(tags);
     domainMonitorModel.setOwnTargetType(target.getType());
     domainMonitorModel.setOwnTargetId(target.getIdentifier());
@@ -162,8 +155,7 @@ public class MonitorManagementService {
 
   public DomainMonitorModel handleNode(String userId, MonitoringTarget target,
       DomainMonitorModel monitor) {
-    Node targetNode = visorMonitorHandler.getNodeById(userId, target.getIdentifier());
-    DomainMonitorModel result = createDBMonitor(userId, target, monitor, targetNode);
+    DomainMonitorModel result = createDBMonitor(userId, target, monitor);
     if (result == null) {
       throw new IllegalArgumentException("Monitor already exists:" + monitor.getMetric());
     } else {
@@ -174,9 +166,10 @@ public class MonitorManagementService {
         public void run() {
           try {
             String threadUser = userId;
-            Node threadNode = targetNode;
             DomainMonitorModel threadDomainMonitor = result;
-            MonitoringTarget threadTarget = target;
+            Node threadNode = visorMonitorHandler.getNodeById(userId,threadDomainMonitor.getOwnTargetId());
+            threadDomainMonitor.addTagItem("NodeIP: ",threadNode.connectTo().ip());
+
 
             if (installMelodicTools) {
               try {
@@ -191,11 +184,10 @@ public class MonitorManagementService {
             io.github.cloudiator.visor.rest.model.Monitor visorback = visorMonitorHandler
                 .configureVisor(threadNode, threadDomainMonitor);
             threadDomainMonitor.setUuid(visorback.getUuid());
-            LOGGER.debug("Got uuid: " + threadDomainMonitor.getUuid());
             monitorOrchestrationService.updateMonitor(threadDomainMonitor, threadUser);
             threadDomainMonitor.setOwnTargetState(TargetState.valueOf(threadNode.state().name()));
             monitorOrchestrationService.updateTargetState(threadDomainMonitor);
-            LOGGER.debug("visor install and config done");
+            LOGGER.debug("Visor config done and Monitor updated");
           } catch (Throwable t) {
             LOGGER.error("Unexpected Exception", t);
           }
@@ -234,9 +226,7 @@ public class MonitorManagementService {
     CloudiatorProcess process = getProcessFromTarget(userId, target);
     //  handling Process on Node
     if (process instanceof SingleProcess) {
-      Node processNode = visorMonitorHandler
-          .getNodeById(userId, ((SingleProcess) process).getNode());
-      DomainMonitorModel result = createDBMonitor(userId, target, domainMonitor, processNode);
+      DomainMonitorModel result = createDBMonitor(userId, target, domainMonitor);
       if (result == null) {
         throw new IllegalArgumentException("Monitor already exists.");
       } else {
@@ -246,9 +236,12 @@ public class MonitorManagementService {
         executorService.execute(new Runnable() {
           public void run() {
             String threadUser = userId;
-            Node threadNode = processNode;
             DomainMonitorModel threadDomainMonitor = result;
-            MonitoringTarget threadTarget = target;
+            Node threadNode = visorMonitorHandler
+                .getNodeById(userId, ((SingleProcess) process).getNode());
+            threadDomainMonitor.addTagItem("ProcessNode: ",threadNode.name());
+            threadDomainMonitor.addTagItem("NodeIP: ",threadNode.connectTo().ip());
+            threadDomainMonitor.addTagItem("NodeState: ",threadNode.state().name());
             if (installMelodicTools) {
               try {
                 visorMonitorHandler.installEMSClient(threadUser, threadNode);
@@ -462,7 +455,7 @@ public class MonitorManagementService {
   public void handeldeletedNode(Node node, String userId) {
     List<DomainMonitorModel> affectedMonitors = monitorOrchestrationService
         .getMonitorsOnTarget(node.id(), userId);
-    System.out.println("affected: " + affectedMonitors.toString());
+    LOGGER.debug("affected Monitors: " + affectedMonitors.size());
     for (DomainMonitorModel dMonitor : affectedMonitors) {
       dMonitor.setOwnTargetState(TargetState.DELETED);
       monitorOrchestrationService.updateTargetState(dMonitor);
@@ -471,10 +464,10 @@ public class MonitorManagementService {
 
   public void handledeletedProcess(CloudiatorProcess cloudiatorProcess, String userId) {
     SingleProcess singleProcess = (SingleProcess) cloudiatorProcess;
-    List<DomainMonitorModel> affectedMonitos = monitorOrchestrationService
+    List<DomainMonitorModel> affectedMonitors = monitorOrchestrationService
         .getMonitorsOnTarget(singleProcess.getId(), userId);
-    System.out.println(affectedMonitos.size() + "Monitors affected!");
-    for (DomainMonitorModel dbMonitor : affectedMonitos) {
+    LOGGER.debug("affected Monitors: " + affectedMonitors.size());
+    for (DomainMonitorModel dbMonitor : affectedMonitors) {
       dbMonitor.setOwnTargetState(TargetState.DELETED);
       monitorOrchestrationService.updateTargetState(dbMonitor);
     }

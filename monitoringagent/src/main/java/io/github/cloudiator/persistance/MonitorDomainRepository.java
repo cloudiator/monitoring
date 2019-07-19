@@ -169,7 +169,7 @@ public class MonitorDomainRepository {
   }
   */
 
-  public MonitorModel updateMonitorUuid(DomainMonitorModel domainMonitor,
+  public MonitorModel updateMonitorUuidAndTags(DomainMonitorModel domainMonitor,
       String userId) {
     Optional<MonitorModel> dbResult = monitorModelRepository
         .findYourMonitorByMetricAndTarget(domainMonitor.getMetric(),
@@ -179,7 +179,11 @@ public class MonitorDomainRepository {
       throw new IllegalStateException("Monitor does not exist.");
     }
     MonitorModel dbMonitor = dbResult.get();
+    //Update VisorUuid
     dbMonitor.setVisorUuid(domainMonitor.getUuid());
+    //Update Tags
+    dbMonitor.setMonitortags(domainMonitor.getTags());
+
     //save Monitor
     monitorModelRepository.save(dbMonitor);
     return dbMonitor;
