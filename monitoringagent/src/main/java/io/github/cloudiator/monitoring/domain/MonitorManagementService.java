@@ -89,7 +89,8 @@ public class MonitorManagementService {
       result = null;
     } else {
       result = monitorOrchestrationService.createMonitor(domainMonitorModel, userId);
-      result.addTagItem("ownTarget: ",result.getOwnTargetType().toString()+": "+result.getOwnTargetId());
+      result.addTagItem("ownTarget: ",
+          result.getOwnTargetType().toString() + ": " + result.getOwnTargetId());
     }
     return result;
   }
@@ -167,9 +168,9 @@ public class MonitorManagementService {
           try {
             String threadUser = userId;
             DomainMonitorModel threadDomainMonitor = result;
-            Node threadNode = visorMonitorHandler.getNodeById(userId,threadDomainMonitor.getOwnTargetId());
-            threadDomainMonitor.addTagItem("NodeIP: ",threadNode.connectTo().ip());
-
+            Node threadNode = visorMonitorHandler
+                .getNodeById(userId, threadDomainMonitor.getOwnTargetId());
+            threadDomainMonitor.addTagItem("NodeIP: ", threadNode.connectTo().ip());
 
             if (installMelodicTools) {
               try {
@@ -198,19 +199,19 @@ public class MonitorManagementService {
     }
   }
 
-  public CloudiatorProcess getProcessFromTarget(String userId, MonitoringTarget target) {
+  public CloudiatorProcess getProcessFromTarget(String userId, String targetId) {
 
     ProcessQueryRequest processQueryRequest = ProcessQueryRequest.newBuilder()
-        .setUserId(userId).setProcessId(target.getIdentifier()).build();
+        .setUserId(userId).setProcessId(targetId).build();
     CloudiatorProcess process = null;
     try {
       ProcessQueryResponse processQueryResponse = processService
           .queryProcesses(processQueryRequest);
       if (processQueryResponse.getProcessesCount() == 0) {
-        throw new IllegalStateException("Process not found: " + target);
+        throw new IllegalStateException("Process not found: " + targetId);
       }
       if (processQueryResponse.getProcessesCount() > 1) {
-        throw new IllegalStateException("More than one Process found: " + target);
+        throw new IllegalStateException("More than one Process found: " + targetId);
       }
       process = PROCESS_CONVERTER
           .applyBack(processQueryResponse.getProcesses(0));
@@ -223,7 +224,7 @@ public class MonitorManagementService {
 
   public DomainMonitorModel handleProcess(String userId, MonitoringTarget target,
       DomainMonitorModel domainMonitor) {
-    CloudiatorProcess process = getProcessFromTarget(userId, target);
+    CloudiatorProcess process = getProcessFromTarget(userId, target.getIdentifier());
     //  handling Process on Node
     if (process instanceof SingleProcess) {
       DomainMonitorModel result = createDBMonitor(userId, target, domainMonitor);
@@ -239,9 +240,9 @@ public class MonitorManagementService {
             DomainMonitorModel threadDomainMonitor = result;
             Node threadNode = visorMonitorHandler
                 .getNodeById(userId, ((SingleProcess) process).getNode());
-            threadDomainMonitor.addTagItem("ProcessNode: ",threadNode.name());
-            threadDomainMonitor.addTagItem("NodeIP: ",threadNode.connectTo().ip());
-            threadDomainMonitor.addTagItem("NodeState: ",threadNode.state().name());
+            threadDomainMonitor.addTagItem("ProcessNode: ", threadNode.name());
+            threadDomainMonitor.addTagItem("NodeIP: ", threadNode.connectTo().ip());
+            threadDomainMonitor.addTagItem("NodeState: ", threadNode.state().name());
             if (installMelodicTools) {
               try {
                 visorMonitorHandler.installEMSClient(threadUser, threadNode);
@@ -413,27 +414,34 @@ public class MonitorManagementService {
 
 
   public void deleteMonitor(String userId, String metric, MonitoringTarget monitoringTarget) {
-    Node targetNode;
-    switch (monitoringTarget.getType()) {
-      case NODE:
-        targetNode = visorMonitorHandler.getNodeById(userId, monitoringTarget.getIdentifier());
-        break;
-      case PROCESS:
-        CloudiatorProcess process = getProcessFromTarget(userId, monitoringTarget);
-        targetNode = visorMonitorHandler
-            .getNodeById(userId, ((SingleProcess) process).getNode());
-        break;
-      default:
-        throw new IllegalStateException("unkown TargetType: " + monitoringTarget.getType());
-    }
-    DomainMonitorModel candidate;
     Optional<DomainMonitorModel> dbResult = monitorOrchestrationService
         .getMonitor(metric, monitoringTarget, userId);
     if (!dbResult.isPresent()) {
       LOGGER.debug("no Result in Database!");
       throw new IllegalArgumentException("Got no Monitor from DB to delete");
     }
-    candidate = dbResult.get();
+    DomainMonitorModel candidate = dbResult.get();
+    if(candidate.getTags().containsKey("IP"))
+    Node targetNode = null;
+    switch (candidate.getOwnTargetType()) {
+      case PROCESS:
+        CloudiatorProcess process = getProcessFromTarget(userId, candidate.getOwnTargetId());
+        targetNode = visorMonitorHandler
+            .getNodeById(userId, ((SingleProcess) process).getNode());
+        break;
+      case NODE:
+        targetNode = visorMonitorHandler.getNodeById(userId, candidate.getOwnTargetId());
+        break;
+      case JOB:
+        break;
+      case TASK:
+        break;
+      case CLOUD:
+        break;
+      default:
+        throw new IllegalArgumentException("unkown TargetType: " + candidate.getOwnTargetType());
+    }
+
     if (candidate.getUuid().isEmpty() || candidate.getUuid().equals("0")) {
       LOGGER.debug("No VisorUuid found in Monitor: " + metric);
       LOGGER.debug("Can't delete Visor. Removing Monitor from DB");

@@ -239,11 +239,11 @@ public class VisorMonitorHandler {
     return true;
   }
 
-  public void deleteVisorMonitor(Node targetNode, DomainMonitorModel domainMonitor) {
+  public void deleteVisorMonitor(String nodeIP, DomainMonitorModel domainMonitor) {
 
     DefaultApi apiInstance = new DefaultApi();
     ApiClient apiClient = new ApiClient();
-    String basepath = String.format("http://%s:%s", targetNode.connectTo().ip(), VisorPort);
+    String basepath = String.format("http://%s:%s", nodeIP, VisorPort);
     apiClient.setBasePath(basepath);
     apiInstance.setApiClient(apiClient);
 
