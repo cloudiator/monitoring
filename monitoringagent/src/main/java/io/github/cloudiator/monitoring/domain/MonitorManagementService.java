@@ -421,25 +421,34 @@ public class MonitorManagementService {
       throw new IllegalArgumentException("Got no Monitor from DB to delete");
     }
     DomainMonitorModel candidate = dbResult.get();
-    if(candidate.getTags().containsKey("IP"))
-    Node targetNode = null;
-    switch (candidate.getOwnTargetType()) {
-      case PROCESS:
-        CloudiatorProcess process = getProcessFromTarget(userId, candidate.getOwnTargetId());
-        targetNode = visorMonitorHandler
-            .getNodeById(userId, ((SingleProcess) process).getNode());
-        break;
-      case NODE:
-        targetNode = visorMonitorHandler.getNodeById(userId, candidate.getOwnTargetId());
-        break;
-      case JOB:
-        break;
-      case TASK:
-        break;
-      case CLOUD:
-        break;
-      default:
-        throw new IllegalArgumentException("unkown TargetType: " + candidate.getOwnTargetType());
+    String nodeIp;
+    if(!(candidate.getTags().containsKey("IP")||candidate.getTags().containsKey("NodeIP"))) {
+      Node targetNode = null;
+      switch (candidate.getOwnTargetType()) {
+        case PROCESS:
+          CloudiatorProcess process = getProcessFromTarget(userId, candidate.getOwnTargetId());
+          targetNode = visorMonitorHandler
+              .getNodeById(userId, ((SingleProcess) process).getNode());
+          break;
+        case NODE:
+          targetNode = visorMonitorHandler.getNodeById(userId, candidate.getOwnTargetId());
+          break;
+        case JOB:
+          break;
+        case TASK:
+          break;
+        case CLOUD:
+          break;
+        default:
+          throw new IllegalArgumentException("unkown TargetType: " + candidate.getOwnTargetType());
+      }
+      nodeIp = targetNode.connectTo().ip();
+    }else{
+      if (candidate.getTags().containsKey("IP")){
+        nodeIp= candidate.getTags().get("IP");
+      }else{
+        nodeIp= candidate.getTags().get("NodeIP");
+      }
     }
 
     if (candidate.getUuid().isEmpty() || candidate.getUuid().equals("0")) {
@@ -448,7 +457,7 @@ public class MonitorManagementService {
     } else {
       LOGGER.debug("stopping Visor");
       //Stopping VisorInstance
-      visorMonitorHandler.deleteVisorMonitor(targetNode, candidate);
+      visorMonitorHandler.deleteVisorMonitor(nodeIp, candidate);
     }
     //Deleting DBMonitor
     monitorOrchestrationService.deleteMonitor(candidate, userId);
