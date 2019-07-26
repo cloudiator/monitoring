@@ -127,7 +127,7 @@ public class VisorMonitorHandler {
       throw new IllegalStateException("Error during VisorInstallation", e.getCause());
     }
     LOGGER.debug(
-        "finished VisorInstallationProcess on: " + node.name() + " IP: " + node.connectTo().ip()
+        "finished VisorInstallationProcess on: " + node.name() + " NodeIP: " + node.connectTo().ip()
             .toString());
     return true;
   }
@@ -248,7 +248,9 @@ public class VisorMonitorHandler {
     apiInstance.setApiClient(apiClient);
 
     try {
-      apiInstance.deleteMonitor(domainMonitor.getUuid());
+     // apiInstance.deleteMonitor(domainMonitor.getUuid());
+     ApiResponse response = apiInstance.deleteMonitorWithHttpInfo(domainMonitor.getUuid());
+     LOGGER.debug("Got VisorResponse: "+response.toString());
     } catch (ApiException ae) {
       LOGGER.debug("ApiException occured: " + ae);
       throw new IllegalStateException("Error at deleting VisorMonitor: " + ae);
