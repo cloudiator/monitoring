@@ -127,7 +127,7 @@ public class VisorMonitorHandler {
       throw new IllegalStateException("Error during VisorInstallation", e.getCause());
     }
     LOGGER.debug(
-        "finished VisorInstallationProcess on: " + node.name() + " IP: " + node.connectTo().ip()
+        "finished VisorInstallationProcess on: " + node.name() + " NodeIP: " + node.connectTo().ip()
             .toString());
     return true;
   }
@@ -239,39 +239,24 @@ public class VisorMonitorHandler {
     return true;
   }
 
-  public void deleteVisorMonitor(Node targetNode, DomainMonitorModel domainMonitor) {
+  public void deleteVisorMonitor(String nodeIP, DomainMonitorModel domainMonitor) {
 
     DefaultApi apiInstance = new DefaultApi();
     ApiClient apiClient = new ApiClient();
-    String basepath = String.format("http://%s:%s", targetNode.connectTo().ip(), VisorPort);
+    String basepath = String.format("http://%s:%s", nodeIP, VisorPort);
     apiClient.setBasePath(basepath);
     apiInstance.setApiClient(apiClient);
 
     try {
-      apiInstance.deleteMonitor(domainMonitor.getUuid());
+     // apiInstance.deleteMonitor(domainMonitor.getUuid());
+     ApiResponse response = apiInstance.deleteMonitorWithHttpInfo(domainMonitor.getUuid());
+     LOGGER.debug("Got VisorResponse: "+response.toString());
     } catch (ApiException ae) {
       LOGGER.debug("ApiException occured: " + ae);
       throw new IllegalStateException("Error at deleting VisorMonitor: " + ae);
     }
 
   }
-
-  public List<io.github.cloudiator.visor.rest.model.Monitor> getAllVisorMonitors(Node targetNode) {
-    LOGGER.debug("GET ALLVISORMONITORS");
-    List<io.github.cloudiator.visor.rest.model.Monitor> allMonitors = new ArrayList<>();
-    String visorpath = String.format("http://%s:%s", targetNode.connectTo().ip(), VisorPort);
-    String localpath = String.format("http://localhost:31415");
-    ApiClient apiClient = new ApiClient().setBasePath(visorpath);
-    DefaultApi api = new DefaultApi(apiClient);
-    try {
-      allMonitors.addAll(api.getMonitors());
-      return allMonitors;
-    } catch (ApiException e) {
-      throw new IllegalStateException("Error while getMonitors: " + e.getMessage());
-
-    }
-  }
-
 
   public Node getNodeById(String userId, String nodeId) {
     try {

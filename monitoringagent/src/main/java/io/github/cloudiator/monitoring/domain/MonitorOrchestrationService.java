@@ -31,7 +31,7 @@ public interface MonitorOrchestrationService {
   DomainMonitorModel findAndDeleteMonitor(String metric, MonitoringTarget monitoringTarget,
       String userId);
 
-  Optional<DomainMonitorModel> getMonitor(String metric, MonitoringTarget target, String userid);
+  Optional<DomainMonitorModel> getMonitor(String metric, MonitoringTarget target, String userId);
 
   boolean existingMonitor(DomainMonitorModel monitorModel, String userId);
 

@@ -3,7 +3,7 @@ package io.github.cloudiator.persistance;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import io.github.cloudiator.monitoring.models.TargetState;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

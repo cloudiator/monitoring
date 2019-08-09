@@ -82,7 +82,7 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
         .getAllYourMonitors(userid);
   }
 
-  // NOT WORKING REST
+  // NO WORKING INTERFACE IN REST
   @Override
   public void updateMonitorFromRest(String dbMetric, String userId, DomainMonitorModel restMonitor,
       boolean updateSensor,
@@ -118,7 +118,7 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   @Transactional
   public DomainMonitorModel repeatedUpdate(DomainMonitorModel dbMonitor, String userId) {
     MonitorModel result = monitorDomainRepository
-        .updateMonitorUuid(dbMonitor, userId);
+        .updateMonitorUuidAndTags(dbMonitor, userId);
     return monitorModelConverter.apply(result);
   }
 
