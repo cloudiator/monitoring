@@ -2,6 +2,7 @@ sudo: required
 jdk:
   - oraclejdk8
 language: java
+dist: trusty
 install: travis_wait mvn -q install -U -DskipTests=true
 script: travis_wait mvn -q org.jacoco:jacoco-maven-plugin:prepare-agent install -Dmaven.javadoc.skip=true
   sonar:sonar
