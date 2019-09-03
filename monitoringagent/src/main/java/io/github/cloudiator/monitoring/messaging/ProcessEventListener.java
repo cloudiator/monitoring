@@ -39,8 +39,8 @@ public class ProcessEventListener implements Runnable {
           @Override
           public void accept(String id, ProcessEvent processEvent) {
             try {
-              System.out.println("Got processEvent: "+processEvent.toString());
-              switch(processEvent.getTo()){
+              System.out.println("Got processEvent: " + processEvent.toString());
+              switch (processEvent.getTo()) {
                 case PROCESS_STATE_PENDING:
 
                   break;
@@ -49,10 +49,11 @@ public class ProcessEventListener implements Runnable {
                   break;
                 case PROCESS_STATE_DELETED:
                   System.out.println("Got deleted Event ");
-                  SingleProcess deletedProcess = (SingleProcess) PROCESS_CONVERTER.applyBack(processEvent.getProcess());
-                  monitorManagementService.handledeletedProcess(deletedProcess, processEvent.getUserId());
-                  System.out.println("NODE:" +deletedProcess.getNode().toString());
-
+                  SingleProcess deletedProcess = (SingleProcess) PROCESS_CONVERTER
+                      .applyBack(processEvent.getProcess());
+                  monitorManagementService
+                      .handledeletedProcess(deletedProcess, processEvent.getUserId());
+                  System.out.println("NODE:" + deletedProcess.getNode().toString());
 
                   //Node node = nodeMessageConverter.applyBack(nodeEvent.getNode());
                   //monitorManagementService.handeldeletedNode(node, nodeEvent.getNode().getUserId());
