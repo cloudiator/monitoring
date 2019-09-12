@@ -422,7 +422,11 @@ public class MonitorManagementService {
     }
     DomainMonitorModel candidate = dbResult.get();
     String nodeIp;
-    if(!(candidate.getTags().containsKey("IP")||candidate.getTags().containsKey("NodeIP"))) {
+    if (candidate.getTags().containsKey("IP")) {
+      nodeIp = candidate.getTags().get("IP");
+    } else if (candidate.getTags().containsKey("NodeIP")) {
+      nodeIp = candidate.getTags().get("NodeIP");
+    } else {
       Node targetNode = null;
       switch (candidate.getOwnTargetType()) {
         case PROCESS:
@@ -443,21 +447,15 @@ public class MonitorManagementService {
           throw new IllegalArgumentException("unkown TargetType: " + candidate.getOwnTargetType());
       }
       nodeIp = targetNode.connectTo().ip();
-    }else{
-      if (candidate.getTags().containsKey("IP")){
-        nodeIp= candidate.getTags().get("IP");
-      }else{
-        nodeIp= candidate.getTags().get("NodeIP");
-      }
     }
-
     if (candidate.getUuid().isEmpty() || candidate.getUuid().equals("0")) {
       LOGGER.debug("No VisorUuid found in Monitor: " + metric);
       LOGGER.debug("Can't delete Visor. Removing Monitor from DB");
     } else {
       LOGGER.debug("stopping Visor");
       //Stopping VisorInstance
-      visorMonitorHandler.deleteVisorMonitor(nodeIp, candidate);
+      Integer visorStatusResponse = VisorRetryer.retry(1000, 2000, 5,
+          () -> visorMonitorHandler.deleteVisorMonitor(nodeIp, candidate));
     }
     //Deleting DBMonitor
     monitorOrchestrationService.deleteMonitor(candidate, userId);

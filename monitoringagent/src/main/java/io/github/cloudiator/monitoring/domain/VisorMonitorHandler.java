@@ -239,7 +239,7 @@ public class VisorMonitorHandler {
     return true;
   }
 
-  public void deleteVisorMonitor(String nodeIP, DomainMonitorModel domainMonitor) {
+  public Integer deleteVisorMonitor(String nodeIP, DomainMonitorModel domainMonitor) {
 
     DefaultApi apiInstance = new DefaultApi();
     ApiClient apiClient = new ApiClient();
@@ -250,7 +250,8 @@ public class VisorMonitorHandler {
     try {
      // apiInstance.deleteMonitor(domainMonitor.getUuid());
      ApiResponse response = apiInstance.deleteMonitorWithHttpInfo(domainMonitor.getUuid());
-     LOGGER.debug("Got VisorResponse: "+response.toString());
+     LOGGER.debug("Got VisorResponse: "+response.getStatusCode());
+     return response.getStatusCode();
     } catch (ApiException ae) {
       LOGGER.debug("ApiException occured: " + ae);
       throw new IllegalStateException("Error at deleting VisorMonitor: " + ae);
