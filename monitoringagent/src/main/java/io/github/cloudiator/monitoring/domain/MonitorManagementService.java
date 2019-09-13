@@ -466,6 +466,10 @@ public class MonitorManagementService {
    * Event Handling
    *********************/
 
+  public void handleEvent(){
+
+  }
+
 
   public void handeldeletedNode(Node node, String userId) {
     List<DomainMonitorModel> affectedMonitors = monitorOrchestrationService

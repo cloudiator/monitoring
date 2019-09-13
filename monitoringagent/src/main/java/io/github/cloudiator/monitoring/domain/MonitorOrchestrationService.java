@@ -3,8 +3,10 @@ package io.github.cloudiator.monitoring.domain;
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.persistance.MonitorModel;
 import io.github.cloudiator.persistance.StateType;
+import io.github.cloudiator.persistance.TargetType;
 import io.github.cloudiator.rest.model.Monitor;
 import io.github.cloudiator.rest.model.MonitoringTarget;
+import io.github.cloudiator.rest.model.MonitoringTarget.TypeEnum;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,6 +19,9 @@ public interface MonitorOrchestrationService {
   List<DomainMonitorModel> getAllYourMonitors(String userid);
 
   List<DomainMonitorModel> getMonitorsOnTarget(String targetId, String userId);
+
+  List<DomainMonitorModel> getMonitorsOnTarget(TargetType targetType, String targetId,
+      String userId);
 
   void updateMonitor(DomainMonitorModel domainMonitor, String userId);
 

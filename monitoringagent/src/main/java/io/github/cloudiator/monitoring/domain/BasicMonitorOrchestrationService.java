@@ -12,6 +12,7 @@ import io.github.cloudiator.persistance.MonitorModelConverter;
 import io.github.cloudiator.persistance.StateType;
 import io.github.cloudiator.persistance.TargetType;
 import io.github.cloudiator.rest.model.MonitoringTarget;
+import io.github.cloudiator.rest.model.MonitoringTarget.TypeEnum;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -64,6 +65,23 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
     return result.stream().map(monitorModel -> monitorModelConverter.apply(monitorModel)).collect(
         Collectors.toList());
   }
+
+  @Override
+  public List<DomainMonitorModel> getMonitorsOnTarget(TargetType targetType, String targetId, String userId) {
+    List<DomainMonitorModel> result = TransactionRetryer
+        .retry(minWaitingTime, maxWaitingTime, retryAttempts,
+            () -> repeatedGetMonitorsOnTarget(targetType,targetId, userId));
+    return result;
+  }
+
+  @Transactional
+  List<DomainMonitorModel> repeatedGetMonitorsOnTarget(TargetType targetType,String targetId, String userId) {
+    List<MonitorModel> result = monitorDomainRepository
+        .findMonitorsOnTarget(targetType, targetId, userId);
+    return result.stream().map(monitorModel -> monitorModelConverter.apply(monitorModel)).collect(
+        Collectors.toList());
+  }
+
 
 
   @Override

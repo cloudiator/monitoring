@@ -13,6 +13,8 @@ public interface MonitorModelRepository extends ModelRepository<MonitorModel> {
 
   List<MonitorModel> findMonitorsOnTarget(String targetId, String owner);
 
+  List<MonitorModel> findMonitorsOnTarget(TargetType targetType, String targetId, String owner);
+
   List<MonitorModel> getAllYourMonitors(String userid);
 
   List<MonitorModel> findAllMonitorsWithSameMetric(String metric, String owner);

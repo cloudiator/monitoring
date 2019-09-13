@@ -58,6 +58,20 @@ public class MonitorModelRepositoryJpa extends
   }
 
   @Override
+  public List<MonitorModel> findMonitorsOnTarget(TargetType targetType, String targetId,
+      String owner) {
+    String queryString = String
+        .format(
+            "select m from %s m where m.owner =:owner and m.ownTargetType like :targetType and m.ownTargetId like :targetId",
+            type.getName());
+    Query query = em().createQuery(queryString).setParameter("owner", owner)
+        .setParameter("targetType", targetType)
+        .setParameter("targetId", targetId);
+    //noinspection unchecked
+    return query.getResultList();
+  }
+
+  @Override
   public List<MonitorModel> getAllYourMonitors(String owner) {
     String queryString = String
         .format("select m from %s m where m.owner=:owner", type.getName());

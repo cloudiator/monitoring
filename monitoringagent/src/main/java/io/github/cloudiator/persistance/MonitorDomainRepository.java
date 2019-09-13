@@ -7,6 +7,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.inject.Inject;
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.rest.model.MonitoringTarget;
+import io.github.cloudiator.rest.model.MonitoringTarget.TypeEnum;
 import io.github.cloudiator.rest.model.PullSensor;
 import io.github.cloudiator.rest.model.PushSensor;
 import io.github.cloudiator.rest.model.Sensor;
@@ -69,6 +70,13 @@ public class MonitorDomainRepository {
   public List<MonitorModel> findMonitorsOnTarget(String targetId, String owner) {
     List<MonitorModel> result = new ArrayList<>();
     result = monitorModelRepository.findMonitorsOnTarget(targetId, owner);
+    return result;
+  }
+
+  public List<MonitorModel> findMonitorsOnTarget(TargetType targetType, String targetId,
+      String owner) {
+    List<MonitorModel> result = new ArrayList<>();
+    result = monitorModelRepository.findMonitorsOnTarget(targetType, targetId, owner);
     return result;
   }
 
