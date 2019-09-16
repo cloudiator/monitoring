@@ -4,7 +4,8 @@ public enum TargetState {
   PENDING,
   RUNNING,
   DELETED,
-  ERROR;
+  ERROR,
+  FINISHED;
 
   private TargetState() {
   }

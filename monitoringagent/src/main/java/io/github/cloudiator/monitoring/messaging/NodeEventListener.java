@@ -4,7 +4,9 @@ import com.google.inject.Inject;
 import io.github.cloudiator.domain.Node;
 import io.github.cloudiator.messaging.NodeToNodeMessageConverter;
 import io.github.cloudiator.monitoring.domain.MonitorManagementService;
+import io.github.cloudiator.monitoring.models.TargetState;
 import io.github.cloudiator.rest.converter.MonitorConverter;
+import io.github.cloudiator.rest.model.MonitoringTarget.TypeEnum;
 import org.cloudiator.messages.General.Error;
 import org.cloudiator.messages.Monitor.MonitorQueryRequest;
 import org.cloudiator.messages.Monitor.MonitorQueryResponse;
@@ -39,26 +41,26 @@ public class NodeEventListener implements Runnable {
           @Override
           public void accept(String id, NodeEvent nodeEvent) {
             try {
-              LOGGER.debug("Got NodeEvent: "+nodeEvent.toString());
-              switch(nodeEvent.getTo()){
+              TargetState targetState;
+              LOGGER.debug("Got NodeEvent: " + nodeEvent.toString());
+              switch (nodeEvent.getTo()) {
                 case NODE_STATE_PENDING:
-
+                  targetState = TargetState.PENDING;
                   break;
                 case NODE_STATE_RUNNING:
-
+                  targetState = TargetState.RUNNING;
                   break;
                 case NODE_STATE_DELETED:
-                  Node node = nodeMessageConverter.applyBack(nodeEvent.getNode());
-                  monitorManagementService.handeldeletedNode(node, nodeEvent.getNode().getUserId());
-
+                  targetState = TargetState.DELETED;
                   break;
                 case NODE_STATE_ERROR:
-
-                  break;
                 case UNRECOGNIZED:
                 default:
+                  targetState = TargetState.ERROR;
                   break;
               }
+              monitorManagementService
+                  .handleEvent(TypeEnum.NODE, nodeEvent.getNode().getId(), targetState);
 
             } catch (Exception e) {
               LOGGER.error("Error while receiving NodeEvent. ", e);
