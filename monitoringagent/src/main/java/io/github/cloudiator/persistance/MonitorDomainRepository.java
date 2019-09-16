@@ -73,10 +73,9 @@ public class MonitorDomainRepository {
     return result;
   }
 
-  public List<MonitorModel> findMonitorsOnTarget(TargetType targetType, String targetId,
-      String owner) {
+  public List<MonitorModel> findMonitorsOnTarget(TargetType targetType, String targetId) {
     List<MonitorModel> result = new ArrayList<>();
-    result = monitorModelRepository.findMonitorsOnTarget(targetType, targetId, owner);
+    result = monitorModelRepository.findMonitorsOnTarget(targetType, targetId);
     return result;
   }
 
@@ -208,6 +207,7 @@ public class MonitorDomainRepository {
     return dbMonitor;
   }
 
+
   public MonitorModel deleteMonitor(DomainMonitorModel domainMonitorModel, String userId) {
     Optional<MonitorModel> monitorModel = monitorModelRepository
         .findYourMonitorByMetricAndTarget(domainMonitorModel.getMetric(),
@@ -235,6 +235,13 @@ public class MonitorDomainRepository {
   public List<MonitorModel> findAllMonitorsWithSameMetric(String metric, String userId) {
     List<MonitorModel> result = new ArrayList<>();
     result = monitorModelRepository.findAllMonitorsWithSameMetric(metric, userId);
+    return result;
+  }
+
+  public int updateTargetStateInMonitors(TargetType targetType, String targetId,
+      StateType stateType) {
+    int result = monitorModelRepository
+        .updateTargetStateInMonitors(targetType, targetId, stateType);
     return result;
   }
 

@@ -58,13 +58,12 @@ public class MonitorModelRepositoryJpa extends
   }
 
   @Override
-  public List<MonitorModel> findMonitorsOnTarget(TargetType targetType, String targetId,
-      String owner) {
+  public List<MonitorModel> findMonitorsOnTarget(TargetType targetType, String targetId) {
     String queryString = String
         .format(
-            "select m from %s m where m.owner =:owner and m.ownTargetType like :targetType and m.ownTargetId like :targetId",
+            "select m from %s m where m.ownTargetType =:targetType and m.ownTargetId =:targetId",
             type.getName());
-    Query query = em().createQuery(queryString).setParameter("owner", owner)
+    Query query = em().createQuery(queryString)
         .setParameter("targetType", targetType)
         .setParameter("targetId", targetId);
     //noinspection unchecked
@@ -88,6 +87,17 @@ public class MonitorModelRepositoryJpa extends
         .setParameter("metric", metric + "%");
     //noinspection unchecked
     return query.getResultList();
+  }
+
+  @Override
+  public int updateTargetStateInMonitors(TargetType targetType, String targetId,
+      StateType stateType) {
+    String queryString = String.format(
+        "update MonitorModel set ownTargetState =:stateType where ownTargetType =:targetType and ownTargetId =:targetId",
+        type.getName());
+    Query query = em().createQuery(queryString).setParameter("stateType", stateType)
+        .setParameter("targetType", targetType).setParameter("targetId", targetId);
+    return query.executeUpdate();
   }
 
 

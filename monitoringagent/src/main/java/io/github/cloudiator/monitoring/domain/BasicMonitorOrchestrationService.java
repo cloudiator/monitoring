@@ -67,21 +67,20 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   }
 
   @Override
-  public List<DomainMonitorModel> getMonitorsOnTarget(TargetType targetType, String targetId, String userId) {
+  public List<DomainMonitorModel> getMonitorsOnTarget(TargetType targetType, String targetId) {
     List<DomainMonitorModel> result = TransactionRetryer
         .retry(minWaitingTime, maxWaitingTime, retryAttempts,
-            () -> repeatedGetMonitorsOnTarget(targetType,targetId, userId));
+            () -> repeatedGetMonitorsOnTarget(targetType, targetId));
     return result;
   }
 
   @Transactional
-  List<DomainMonitorModel> repeatedGetMonitorsOnTarget(TargetType targetType,String targetId, String userId) {
+  List<DomainMonitorModel> repeatedGetMonitorsOnTarget(TargetType targetType, String targetId) {
     List<MonitorModel> result = monitorDomainRepository
-        .findMonitorsOnTarget(targetType, targetId, userId);
+        .findMonitorsOnTarget(targetType, targetId);
     return result.stream().map(monitorModel -> monitorModelConverter.apply(monitorModel)).collect(
         Collectors.toList());
   }
-
 
 
   @Override
@@ -204,7 +203,7 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   @Transactional
   public DomainMonitorModel repeatedGetMonitor(String metric, TargetType targetType,
       String targetId, String userId) {
-    DomainMonitorModel model= null;
+    DomainMonitorModel model = null;
     MonitorModel result = monitorDomainRepository
         .findYourMonitorByMetricAndTarget(metric, targetType, targetId, userId);
     if (result != null) {
@@ -220,7 +219,7 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
             () -> repeatedGetMonitor(domainMonitorModel.getMetric(),
                 TargetType.valueOf(domainMonitorModel.getOwnTargetType().name()),
                 domainMonitorModel.getOwnTargetId(), userId));
-    if (result == null ) {
+    if (result == null) {
       return false;
     } else {
       return true;
@@ -238,14 +237,27 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   }
 
   @Transactional
-  List<String> repeatedGetMonitorsWithSameMetric(String metric, String userId) {
+  public List<String> repeatedGetMonitorsWithSameMetric(String metric, String userId) {
     List<MonitorModel> result = monitorDomainRepository
         .findAllMonitorsWithSameMetric(metric, userId);
     List<String> metricList = result.stream().map(monitorModel -> monitorModel.getMetric()).collect(
         Collectors.toList());
     return metricList;
+  }
 
+  @Override
+  public int updateTargetStateInMonitors(TargetType targetType, String targetId,
+      StateType stateType) {
+    int result = TransactionRetryer.retry(minWaitingTime, maxWaitingTime, retryAttempts,
+        () -> repeatedUpdateTargetState(targetType, targetId, stateType));
+    return result;
+  }
 
+  @Transactional
+  int repeatedUpdateTargetState(TargetType targetType, String targetId, StateType stateType) {
+    int result = monitorDomainRepository
+        .updateTargetStateInMonitors(targetType, targetId, stateType);
+    return result;
   }
 
 

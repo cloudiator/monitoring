@@ -20,12 +20,14 @@ public interface MonitorOrchestrationService {
 
   List<DomainMonitorModel> getMonitorsOnTarget(String targetId, String userId);
 
-  List<DomainMonitorModel> getMonitorsOnTarget(TargetType targetType, String targetId,
-      String userId);
+  List<DomainMonitorModel> getMonitorsOnTarget(TargetType targetType, String targetId);
 
   void updateMonitor(DomainMonitorModel domainMonitor, String userId);
 
   void updateTargetState(DomainMonitorModel domainMonitorModel);
+
+  int updateTargetStateInMonitors(TargetType targetType, String targetId,
+      StateType stateType);
 
   void updateMonitorFromRest(String dbMetric, String userId, DomainMonitorModel restMonitor,
       boolean updateSensor,

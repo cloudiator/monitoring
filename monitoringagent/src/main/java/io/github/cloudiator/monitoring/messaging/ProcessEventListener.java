@@ -4,8 +4,10 @@ import com.google.inject.Inject;
 import io.github.cloudiator.domain.Node;
 import io.github.cloudiator.messaging.NodeToNodeMessageConverter;
 import io.github.cloudiator.monitoring.domain.MonitorManagementService;
+import io.github.cloudiator.monitoring.models.TargetState;
 import io.github.cloudiator.rest.converter.ProcessConverter;
 import io.github.cloudiator.rest.model.CloudiatorProcess;
+import io.github.cloudiator.rest.model.MonitoringTarget.TypeEnum;
 import io.github.cloudiator.rest.model.SingleProcess;
 import org.cloudiator.messages.Node.NodeEvent;
 import org.cloudiator.messages.Process;
@@ -39,35 +41,29 @@ public class ProcessEventListener implements Runnable {
           @Override
           public void accept(String id, ProcessEvent processEvent) {
             try {
-              System.out.println("Got processEvent: "+processEvent.toString());
-              switch(processEvent.getTo()){
+              System.out.println("Got processEvent: " + processEvent.toString());
+              TargetState targetState;
+              switch (processEvent.getTo()) {
                 case PROCESS_STATE_PENDING:
-
+                  targetState = TargetState.PENDING;
                   break;
                 case PROCESS_STATE_RUNNING:
-
+                  targetState = TargetState.RUNNING;
                   break;
                 case PROCESS_STATE_DELETED:
-                  System.out.println("Got deleted Event ");
-                  SingleProcess deletedProcess = (SingleProcess) PROCESS_CONVERTER.applyBack(processEvent.getProcess());
-                  monitorManagementService.handledeletedProcess(deletedProcess, processEvent.getUserId());
-                  System.out.println("NODE:" +deletedProcess.getNode().toString());
-
-
-                  //Node node = nodeMessageConverter.applyBack(nodeEvent.getNode());
-                  //monitorManagementService.handeldeletedNode(node, nodeEvent.getNode().getUserId());
-
-                  break;
-                case PROCESS_STATE_ERROR:
-
+                  targetState = TargetState.DELETED;
                   break;
                 case PROCESS_STATE_FINISHED:
+                  targetState = TargetState.FINISHED;
                   break;
+                case PROCESS_STATE_ERROR:
                 case UNRECOGNIZED:
                 default:
+                  targetState = TargetState.ERROR;
                   break;
               }
-
+              monitorManagementService
+                  .handleEvent(TypeEnum.PROCESS, processEvent.getProcess().getId(), targetState);
             } catch (Exception e) {
               LOGGER.error("Error while receiving NodeEvent. ", e);
 

@@ -23,6 +23,9 @@ public class StateTypeConverter implements OneWayConverter<StateType, TargetStat
       case ERROR:
         result = TargetState.ERROR;
         break;
+      case FINISHED:
+        result = TargetState.FINISHED;
+        break;
       default:
         result = null;
     }
