@@ -4,7 +4,8 @@ public enum StateType {
   PENDING,
   RUNNING,
   DELETED,
-  ERROR;
+  ERROR,
+  FINISHED;
 
   private StateType() {
   }

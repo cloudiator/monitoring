@@ -7,6 +7,11 @@ import com.google.inject.name.Named;
 
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.monitoring.models.TargetState;
+
+import io.github.cloudiator.persistance.StateType;
+import io.github.cloudiator.persistance.TargetType;
+import io.github.cloudiator.rest.converter.JobConverter;
+
 import io.github.cloudiator.rest.converter.ProcessConverter;
 import io.github.cloudiator.rest.converter.ScheduleConverter;
 import io.github.cloudiator.rest.model.CloudiatorProcess;
@@ -384,41 +389,7 @@ public class MonitorManagementService {
 
   /* NO USED FUNCTION REST-PUT is not used */
   public DomainMonitorModel updateMonitorFromRest(Monitor monitor, String userId) {
-    /*
-    //checking for related Monitors in Database
-    boolean updateSensor = false;
-    boolean updateTags = false;
-    boolean updateTarget = false;
-    boolean updateDatasinks = false;
-    List<String> dbList = monitorOrchestrationService
-        .getMonitorsWithSameMetric(monitor.getMetric(), userId);
-    if (dbList.isEmpty()) {
-      //ERROR: check your input
-      return null;
-    }
-    DomainMonitorModel restMonitor = (DomainMonitorModel) monitor;
-    DomainMonitorModel dbMonitor = monitorOrchestrationService.getMonitor(dbList.get(0), userId)
-        .get();
-    if (!restMonitor.getSensor().equals(dbMonitor.getSensor())) {
-      updateSensor = true;
-    }
-    if (!restMonitor.getTags().equals(dbMonitor.getTags())) {
-      updateTags = true;
-    }
-    if (!restMonitor.getTargets().equals(dbMonitor.getTargets())) {
-      updateTarget = true;
-    }
-    if (!restMonitor.getSinks().equals(dbMonitor.getSinks())) {
-      updateDatasinks = true;
-    }
 
-    for (String mModel : dbList) {
-      monitorOrchestrationService
-          .updateMonitorFromRest(mModel, userId, restMonitor, updateSensor, updateTags,
-              updateTarget,
-              updateDatasinks);
-    }
-    */
     return (DomainMonitorModel) monitor;
   }
 
@@ -431,44 +402,48 @@ public class MonitorManagementService {
       throw new IllegalArgumentException("Got no Monitor from DB to delete");
     }
     DomainMonitorModel candidate = dbResult.get();
-    String nodeIp;
-    if (!(candidate.getTags().containsKey("IP") || candidate.getTags().containsKey("NodeIP"))) {
-      Node targetNode = null;
-      switch (candidate.getOwnTargetType()) {
-        case PROCESS:
-          CloudiatorProcess process = getProcessFromTarget(userId, candidate.getOwnTargetId());
-          targetNode = monitorHandler
-              .getNodeById(userId, ((SingleProcess) process).getNode());
-          break;
-        case NODE:
-          targetNode = monitorHandler.getNodeById(userId, candidate.getOwnTargetId());
-          break;
-        case JOB:
-          break;
-        case TASK:
-          break;
-        case CLOUD:
-          break;
-        default:
-          throw new IllegalArgumentException("unkown TargetType: " + candidate.getOwnTargetType());
-      }
-      nodeIp = targetNode.connectTo().ip();
-    } else {
+
+    LOGGER.debug("Deleting Monitor '" + candidate.getMetric() + "' TargetState: " + candidate
+        .getOwnTargetState());
+    if (candidate.getOwnTargetState() != TargetState.DELETED) {
+      String nodeIp;
       if (candidate.getTags().containsKey("IP")) {
         nodeIp = candidate.getTags().get("IP");
-      } else {
+      } else if (candidate.getTags().containsKey("NodeIP")) {
         nodeIp = candidate.getTags().get("NodeIP");
+      } else {
+        Node targetNode = null;
+        switch (candidate.getOwnTargetType()) {
+          case PROCESS:
+            CloudiatorProcess process = getProcessFromTarget(userId, candidate.getOwnTargetId());
+            targetNode = monitorHandler.getNodeById(userId, ((SingleProcess) process).getNode());
+            break;
+          case NODE:
+            targetNode = monitorHandler.getNodeById(userId, candidate.getOwnTargetId());
+            break;
+          case JOB:
+            break;
+          case TASK:
+            break;
+          case CLOUD:
+            break;
+          default:
+            throw new IllegalArgumentException(
+                "unkown TargetType: " + candidate.getOwnTargetType());
+        }
+        nodeIp = targetNode.connectTo().ip();
+      }
+      if (candidate.getUuid().isEmpty() || candidate.getUuid().equals("0")) {
+        LOGGER.debug("No VisorUuid found in Monitor: " + metric);
+        LOGGER.debug("Can't delete Visor. Removing Monitor from DB");
+      } else {
+        LOGGER.debug("stopping Visor");
+        //Stopping VisorInstance
+        Integer visorStatusResponse = VisorRetryer.retry(1000, 2000, 5,
+            () -> monitorHandler.deleteVisorMonitor(nodeIp, candidate));
       }
     }
 
-    if (candidate.getUuid().isEmpty() || candidate.getUuid().equals("0")) {
-      LOGGER.debug("No VisorUuid found in Monitor: " + metric);
-      LOGGER.debug("Can't delete Visor. Removing Monitor from DB");
-    } else {
-      LOGGER.debug("stopping Visor");
-      //Stopping VisorInstance
-      monitorHandler.deleteVisorMonitor(nodeIp, candidate);
-    }
     //Deleting DBMonitor
     monitorOrchestrationService.deleteMonitor(candidate, userId);
     LOGGER.debug("Monitor deleted.");
@@ -482,27 +457,20 @@ public class MonitorManagementService {
    * Event Handling
    *********************/
 
+  public void handleEvent(TypeEnum targetEnum, String targetId, TargetState targetState) {
+    //checking for ralated Monitors
+    List<DomainMonitorModel> relatedMonitors = monitorOrchestrationService.getMonitorsOnTarget(
+        TargetType.valueOf(targetEnum.toString()), targetId);
 
-  public void handeldeletedNode(Node node, String userId) {
-    List<DomainMonitorModel> affectedMonitors = monitorOrchestrationService
-        .getMonitorsOnTarget(node.id(), userId);
-    LOGGER.debug("affected Monitors: " + affectedMonitors.size());
-    for (DomainMonitorModel dMonitor : affectedMonitors) {
-      dMonitor.setOwnTargetState(TargetState.DELETED);
-      monitorOrchestrationService.updateTargetState(dMonitor);
+    //updating
+    if (relatedMonitors == null && relatedMonitors.isEmpty()) {
+      //do nothing
+    } else {
+      monitorOrchestrationService
+          .updateTargetStateInMonitors(TargetType.valueOf(targetEnum.toString()), targetId,
+              StateType.valueOf(targetState.name()));
+
     }
   }
-
-  public void handledeletedProcess(CloudiatorProcess cloudiatorProcess, String userId) {
-    SingleProcess singleProcess = (SingleProcess) cloudiatorProcess;
-    List<DomainMonitorModel> affectedMonitors = monitorOrchestrationService
-        .getMonitorsOnTarget(singleProcess.getId(), userId);
-    LOGGER.debug("affected Monitors: " + affectedMonitors.size());
-    for (DomainMonitorModel dbMonitor : affectedMonitors) {
-      dbMonitor.setOwnTargetState(TargetState.DELETED);
-      monitorOrchestrationService.updateTargetState(dbMonitor);
-    }
-  }
-
 
 }

@@ -12,6 +12,7 @@ import io.github.cloudiator.persistance.MonitorModelConverter;
 import io.github.cloudiator.persistance.StateType;
 import io.github.cloudiator.persistance.TargetType;
 import io.github.cloudiator.rest.model.MonitoringTarget;
+import io.github.cloudiator.rest.model.MonitoringTarget.TypeEnum;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -61,6 +62,22 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   List<DomainMonitorModel> repeatedGetMonitorsOnTarget(String targetId, String userid) {
     List<MonitorModel> result = monitorDomainRepository
         .findMonitorsOnTarget(targetId, userid);
+    return result.stream().map(monitorModel -> monitorModelConverter.apply(monitorModel)).collect(
+        Collectors.toList());
+  }
+
+  @Override
+  public List<DomainMonitorModel> getMonitorsOnTarget(TargetType targetType, String targetId) {
+    List<DomainMonitorModel> result = TransactionRetryer
+        .retry(minWaitingTime, maxWaitingTime, retryAttempts,
+            () -> repeatedGetMonitorsOnTarget(targetType, targetId));
+    return result;
+  }
+
+  @Transactional
+  List<DomainMonitorModel> repeatedGetMonitorsOnTarget(TargetType targetType, String targetId) {
+    List<MonitorModel> result = monitorDomainRepository
+        .findMonitorsOnTarget(targetType, targetId);
     return result.stream().map(monitorModel -> monitorModelConverter.apply(monitorModel)).collect(
         Collectors.toList());
   }
@@ -186,7 +203,7 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   @Transactional
   public DomainMonitorModel repeatedGetMonitor(String metric, TargetType targetType,
       String targetId, String userId) {
-    DomainMonitorModel model= null;
+    DomainMonitorModel model = null;
     MonitorModel result = monitorDomainRepository
         .findYourMonitorByMetricAndTarget(metric, targetType, targetId, userId);
     if (result != null) {
@@ -202,7 +219,7 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
             () -> repeatedGetMonitor(domainMonitorModel.getMetric(),
                 TargetType.valueOf(domainMonitorModel.getOwnTargetType().name()),
                 domainMonitorModel.getOwnTargetId(), userId));
-    if (result == null ) {
+    if (result == null) {
       return false;
     } else {
       return true;
@@ -220,14 +237,27 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   }
 
   @Transactional
-  List<String> repeatedGetMonitorsWithSameMetric(String metric, String userId) {
+  public List<String> repeatedGetMonitorsWithSameMetric(String metric, String userId) {
     List<MonitorModel> result = monitorDomainRepository
         .findAllMonitorsWithSameMetric(metric, userId);
     List<String> metricList = result.stream().map(monitorModel -> monitorModel.getMetric()).collect(
         Collectors.toList());
     return metricList;
+  }
 
+  @Override
+  public int updateTargetStateInMonitors(TargetType targetType, String targetId,
+      StateType stateType) {
+    int result = TransactionRetryer.retry(minWaitingTime, maxWaitingTime, retryAttempts,
+        () -> repeatedUpdateTargetState(targetType, targetId, stateType));
+    return result;
+  }
 
+  @Transactional
+  int repeatedUpdateTargetState(TargetType targetType, String targetId, StateType stateType) {
+    int result = monitorDomainRepository
+        .updateTargetStateInMonitors(targetType, targetId, stateType);
+    return result;
   }
 
 
