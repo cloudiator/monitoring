@@ -32,7 +32,7 @@ public class MonitorModel extends Model {
   @Column(nullable = false, updatable = false)
   private String ownTargetId;
 
-  @Column(nullable = false)
+  @Column(nullable = true, updatable = true)
   private StateType ownTargetState;
 
   @OneToMany(orphanRemoval = true, fetch = FetchType.LAZY)
@@ -73,7 +73,6 @@ public class MonitorModel extends Model {
     this.monitortags = monitorTags;
     this.visorUuid = "";
     this.owner = userid;
-    this.ownTargetState = StateType.PENDING;
   }
 
   public StateType getOwnTargetState() {

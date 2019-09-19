@@ -32,7 +32,6 @@ public class DomainMonitorModel extends Monitor {
     super.metric(metric);
     this.ownTargetType = ownTargetType;
     this.ownTargetId = ownTargetId;
-    this.ownTargetState = TargetState.PENDING;
     super.targets(targets);
     super.sensor(sensor);
     super.sinks(sinks);
@@ -68,8 +67,8 @@ public class DomainMonitorModel extends Monitor {
     return ownTargetState;
   }
 
-  public void setOwnTargetState(TargetState ownTargetState) {
-    this.ownTargetState = ownTargetState;
+  public void setOwnTargetState(TargetState TargetState) {
+    this.ownTargetState = TargetState;
   }
 
   public String getMetric() {

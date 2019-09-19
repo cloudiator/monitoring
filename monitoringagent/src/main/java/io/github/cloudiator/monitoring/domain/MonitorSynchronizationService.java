@@ -18,7 +18,7 @@ public class MonitorSynchronizationService implements Runnable {
   private static final ScheduledExecutorService databaseExecutor = new ScheduledSingleThreadExecutor();
 
   static {
-    MoreExecutors.addDelayedShutdownHook(databaseExecutor, 1, TimeUnit.MINUTES);
+    MoreExecutors.addDelayedShutdownHook(databaseExecutor, 100, TimeUnit.MILLISECONDS);
     LOGGER.info("Database Synchronization initialized");
   }
 
@@ -33,7 +33,7 @@ public class MonitorSynchronizationService implements Runnable {
   public void run() {
     LOGGER.info("starting synchronisation of Database");
     databaseExecutor
-        .scheduleAtFixedRate(() -> monitorManagementService.checkMonitorStatus(), 1, 900,
-            TimeUnit.SECONDS);
+        .scheduleAtFixedRate(() -> monitorManagementService.checkMonitorStatus(), 1, 15,
+            TimeUnit.MINUTES);
   }
 }

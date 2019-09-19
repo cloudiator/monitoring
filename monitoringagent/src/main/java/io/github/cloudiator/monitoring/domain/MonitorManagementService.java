@@ -8,10 +8,7 @@ import com.google.inject.name.Named;
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.monitoring.models.TargetState;
 
-import io.github.cloudiator.persistance.StateType;
 import io.github.cloudiator.persistance.TargetType;
-import io.github.cloudiator.rest.converter.JobConverter;
-
 import io.github.cloudiator.rest.converter.ProcessConverter;
 import io.github.cloudiator.rest.converter.ScheduleConverter;
 import io.github.cloudiator.rest.model.CloudiatorProcess;
@@ -26,12 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.cloudiator.messages.Process.ProcessQueryRequest;
@@ -58,10 +51,9 @@ public class MonitorManagementService {
   private static final ExecutorService monitorExecutor = Executors.newFixedThreadPool(10);
 
   static {
-    MoreExecutors.addDelayedShutdownHook(monitorExecutor, 1, TimeUnit.MINUTES);
+    MoreExecutors.addDelayedShutdownHook(monitorExecutor, 100, TimeUnit.MILLISECONDS);
     LOGGER.info("Monitoring initialized");
   }
-
 
 
   @Inject
@@ -91,6 +83,7 @@ public class MonitorManagementService {
     domainMonitorModel.setTags(tags);
     domainMonitorModel.setOwnTargetType(target.getType());
     domainMonitorModel.setOwnTargetId(target.getIdentifier());
+    domainMonitorModel.setOwnTargetState(TargetState.PENDING);
 
     //creating DBEntry
     DomainMonitorModel result;
@@ -108,7 +101,10 @@ public class MonitorManagementService {
   }
 
   public List<DomainMonitorModel> getAllYourMonitors(String userid) {
-    return monitorOrchestrationService.getAllYourMonitors(userid);
+    List<DomainMonitorModel> result = monitorOrchestrationService.getAllYourMonitors(userid);
+    VisorRetryer.retry(100, 200, 2,
+        () -> monitorOrchestrationService.getMonitorCount());
+    return result;
   }
 
 
@@ -141,7 +137,7 @@ public class MonitorManagementService {
       if (result == null) {
         throw new IllegalArgumentException("Monitor already exists:" + domainMonitor.getMetric());
       } else {
-        LOGGER.debug("Monitor in DB created");
+        LOGGER.debug(mTarget.getType() + "Monitor in DB created");
       }
       requestedMonitor = result;
 
@@ -173,6 +169,8 @@ public class MonitorManagementService {
   public DomainMonitorModel handleNode(String userId, MonitoringTarget target,
       DomainMonitorModel monitor) {
 
+    monitor.setOwnTargetType(target.getType());
+    monitor.setOwnTargetId(target.getIdentifier());
     monitorExecutor.execute(() -> monitorHandler.handleNodeMonitor(userId, monitor));
 
     /*
@@ -240,14 +238,22 @@ public class MonitorManagementService {
   public DomainMonitorModel handleProcess(String userId, MonitoringTarget target,
       DomainMonitorModel domainMonitor) {
     CloudiatorProcess process = getProcessFromTarget(userId, target.getIdentifier());
-    //  handling Process on Node
+    //  handling Monitor for ProcessNode
     if (process instanceof SingleProcess) {
+      target.setType(TypeEnum.NODE);
+      target.setIdentifier(((SingleProcess) process).getNode());
+      domainMonitor.addTagItem("ProcessIP:", process.getEndpoint());
+
       DomainMonitorModel result = createDBMonitor(userId, target, domainMonitor);
       if (result == null) {
         throw new IllegalArgumentException("Monitor already exists.");
       } else {
-        LOGGER.debug("Monitor in DB created");
+        LOGGER.debug(target.getType() + "Monitor in DB created");
 
+        //Handling Visor on Node
+        monitorExecutor.execute(() -> monitorHandler.handleNodeMonitor(userId, result));
+
+      /*
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         executorService.execute(new Runnable() {
           public void run() {
@@ -277,6 +283,7 @@ public class MonitorManagementService {
           }
         });
         executorService.shutdown();
+      */
       }
       return result;
     } else if (process instanceof ClusterProcess) {
@@ -342,7 +349,8 @@ public class MonitorManagementService {
   - monitor all related processes
    */
 
-  private DomainMonitorModel handleTask(String userId, MonitoringTarget target, DomainMonitorModel
+  private DomainMonitorModel handleTask(String userId, MonitoringTarget
+      target, DomainMonitorModel
       monitor) {
     List<Schedule> allSchedules = new ArrayList<>();
     Schedule scheduleToHandle = null;
@@ -393,7 +401,6 @@ public class MonitorManagementService {
     return (DomainMonitorModel) monitor;
   }
 
-
   public void deleteMonitor(String userId, String metric, MonitoringTarget monitoringTarget) {
     Optional<DomainMonitorModel> dbResult = monitorOrchestrationService
         .getMonitor(metric, monitoringTarget, userId);
@@ -407,11 +414,6 @@ public class MonitorManagementService {
         .getOwnTargetState());
     if (candidate.getOwnTargetState() != TargetState.DELETED) {
       String nodeIp;
-      if (candidate.getTags().containsKey("IP")) {
-        nodeIp = candidate.getTags().get("IP");
-      } else if (candidate.getTags().containsKey("NodeIP")) {
-        nodeIp = candidate.getTags().get("NodeIP");
-      } else {
         Node targetNode = null;
         switch (candidate.getOwnTargetType()) {
           case PROCESS:
@@ -432,7 +434,6 @@ public class MonitorManagementService {
                 "unkown TargetType: " + candidate.getOwnTargetType());
         }
         nodeIp = targetNode.connectTo().ip();
-      }
       if (candidate.getUuid().isEmpty() || candidate.getUuid().equals("0")) {
         LOGGER.debug("No VisorUuid found in Monitor: " + metric);
         LOGGER.debug("Can't delete Visor. Removing Monitor from DB");
@@ -450,7 +451,21 @@ public class MonitorManagementService {
   }
 
   public void checkMonitorStatus() {
-    LOGGER.info("checking Database.");
+    int monitorcount = monitorOrchestrationService.getMonitorCount();
+    LOGGER.info("Total Number of Monitors: " + monitorcount);
+    int max = 50;
+    int roundnumber = 1;
+    int place = 1;
+    /*
+    do {
+      roundnumber = (monitorcount > max) ? max : monitorcount;
+      List<DomainMonitorModel> monitors = monitorOrchestrationService
+          .getNumberedMonitors(1, roundnumber);
+
+
+    } while (roundnumber == monitorcount);
+    */
+
   }
 
   /**********************
@@ -466,9 +481,10 @@ public class MonitorManagementService {
     if (relatedMonitors == null && relatedMonitors.isEmpty()) {
       //do nothing
     } else {
+      LOGGER.debug("updating");
       monitorOrchestrationService
           .updateTargetStateInMonitors(TargetType.valueOf(targetEnum.toString()), targetId,
-              StateType.valueOf(targetState.name()));
+              targetState);
 
     }
   }

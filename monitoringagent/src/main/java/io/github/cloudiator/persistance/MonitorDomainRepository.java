@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 public class MonitorDomainRepository {
 
   final static MonitorModelConverter MONITOR_MODEL_CONVERTER = new MonitorModelConverter();
+  final static StateTypeConverter STATE_TYPE_CONVERTER = new StateTypeConverter();
 
   private final MonitorModelRepository monitorModelRepository;
   private final TargetDomainRepository targetDomainRepository;
@@ -117,6 +118,8 @@ public class MonitorDomainRepository {
         TargetType.valueOf(domainMonitorModel.getOwnTargetType().name()),
         domainMonitorModel.getOwnTargetId(), targetModelList,
         monitorSensor, dataSinkModelList, tags, userid);
+    createdModel
+        .setOwnTargetState(StateType.valueOf(domainMonitorModel.getOwnTargetState().name()));
 
     // monitorModel is fully initialized
     monitorModelRepository.save(createdModel);
@@ -124,59 +127,22 @@ public class MonitorDomainRepository {
     return createdModel;
   }
 
-  /* TODO Rest putMonitor not working
+  /* TODO Rest putMonitor not used
   public MonitorModel updateMonitorFromRest(String userId,
       DomainMonitorModel restMonitor,
       boolean updateSensor,
       boolean updateTag, boolean updateTarget, boolean updateSink) {
     checkNotNull(dbMetric, "Monitor is null. ");
     checkNotNull(restMonitor, "Monitor is null. ");
-    MonitorModel dbmonitor = findYourMonitorByMetric(restMonitor, userId);
-    //Sensor
-    if (updateSensor) {
-      Sensor sensor = restMonitor.getSensor();
-      switch (sensor.getType()) {
-        case "PullSensor":
-          dbmonitor.setSensor(sensorDomainRepository.createPullSensor((PullSensor) sensor));
-          break;
-        case "PushSensor":
-          dbmonitor
-              .setSensor(sensorDomainRepository.createPushSensor(((PushSensor) sensor).getPort()));
-          break;
-        default:
-          throw new IllegalArgumentException(
-              "MonitorceationError: No valid Sensor: " + restMonitor.getSensor().getType());
-      }
-    }
-    //DataSink
-    if (updateSink) {
-      List<DataSinkModel> dataSinkModelList = dataSinkDomainRepository
-          .createDataSinkModelList(restMonitor.getSinks());
-      dbmonitor.setDatasinks(dataSinkModelList);
 
-    }
-    //Targets
-    if (updateTarget) {
-      List<TargetModel> targetModelList = targetDomainRepository
-          .createTargetModelList(restMonitor.getTargets());
-      dbmonitor.setTargets(targetModelList);
-
-    }
-    //Tags
-    if (updateTag) {
-      Map<String, String> tags = new HashMap<>();
-      if (!restMonitor.getTags().isEmpty()) {
-        tags.putAll(restMonitor.getTags());
-      }
-      dbmonitor.setMonitoringTags(tags);
-    }
     //Monitor itself
     monitorModelRepository.save(dbmonitor);
-    return dbmonitor;
+    NOT IMPLEMENTED
+    return null;
   }
   */
 
-  public MonitorModel updateMonitorUuidAndTags(DomainMonitorModel domainMonitor,
+  public MonitorModel updateMonitorUuidTagsState(DomainMonitorModel domainMonitor,
       String userId) {
     Optional<MonitorModel> dbResult = monitorModelRepository
         .findYourMonitorByMetricAndTarget(domainMonitor.getMetric(),
@@ -190,6 +156,8 @@ public class MonitorDomainRepository {
     dbMonitor.setVisorUuid(domainMonitor.getUuid());
     //Update Tags
     dbMonitor.setMonitortags(domainMonitor.getTags());
+    //Update ownTargetState
+    dbMonitor.setOwnTargetState(StateType.valueOf(domainMonitor.getOwnTargetState().name()));
 
     //save Monitor
     monitorModelRepository.save(dbMonitor);
@@ -244,6 +212,19 @@ public class MonitorDomainRepository {
         .updateTargetStateInMonitors(targetType, targetId, stateType);
     return result;
   }
+
+  public int getMonitorCount() {
+    int result = monitorModelRepository.getMonitorCount();
+    return result;
+  }
+
+  public List<MonitorModel> getNumberedMonitors(int begin, int number) {
+    List<MonitorModel> result = new ArrayList<>();
+    result = monitorModelRepository.getNumberedMonitors(begin, number).stream()
+        .collect(Collectors.toList());
+    return result;
+  }
+
 
 }
 
