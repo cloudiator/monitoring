@@ -7,25 +7,17 @@ import com.github.rholder.retry.StopStrategies;
 import com.github.rholder.retry.WaitStrategies;
 import com.google.common.base.Predicates;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import io.github.cloudiator.domain.Node;
 import io.github.cloudiator.messaging.NodeToNodeMessageConverter;
 import io.github.cloudiator.monitoring.converter.MonitorToVisorMonitorConverter;
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
-import io.github.cloudiator.persistance.MonitorModel;
-import io.github.cloudiator.rest.converter.IpAddressConverter;
-import io.github.cloudiator.rest.model.Monitor;
-import io.github.cloudiator.rest.model.MonitoringTarget;
-import io.github.cloudiator.util.Base64IdEncoder;
-import io.github.cloudiator.util.IdEncoder;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import io.github.cloudiator.monitoring.models.TargetState;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import org.cloudiator.messages.InstallationEntities.Tool;
 import org.cloudiator.messaging.ResponseException;
+import org.cloudiator.messaging.services.ProcessService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.concurrent.ExecutionException;
@@ -45,22 +37,64 @@ import io.github.cloudiator.visor.rest.*;
 import io.github.cloudiator.visor.rest.api.DefaultApi;
 
 
-public class VisorMonitorHandler {
+public class MonitorHandler {
 
-
+  private final MonitorOrchestrationService monitorOrchestrationService;
   private final InstallationRequestService installationRequestService;
   private final NodeService nodeService;
+  private final ProcessService processService;
   private final MonitorToVisorMonitorConverter visorMonitorConverter = MonitorToVisorMonitorConverter.INSTANCE;
   private final NodeToNodeMessageConverter nodeMessageConverter = NodeToNodeMessageConverter.INSTANCE;
+  private final boolean installMelodicTools;
 
   private final String VisorPort = "31415";
-  private static final Logger LOGGER = LoggerFactory.getLogger(VisorMonitorHandler.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(MonitorHandler.class);
 
   @Inject
-  public VisorMonitorHandler(InstallationRequestService installationRequestService,
-      NodeService nodeService) {
+  public MonitorHandler(MonitorOrchestrationService monitorOrchestrationService,
+      InstallationRequestService installationRequestService,
+      NodeService nodeService, ProcessService processService,
+      @Named("melodicTools") boolean installMelodicTools) {
+    this.monitorOrchestrationService = monitorOrchestrationService;
     this.installationRequestService = installationRequestService;
     this.nodeService = nodeService;
+    this.processService = processService;
+    this.installMelodicTools = installMelodicTools;
+  }
+
+  /**
+   * HANDLE NODEMONITOR
+   */
+
+  public void handleNodeMonitor(String userid, DomainMonitorModel domainMonitorModel) {
+
+    //prepare = get Node
+    Node node = getNodeById(userid, domainMonitorModel.getOwnTargetId());
+    //install EMS
+    if (installMelodicTools) {
+      LOGGER.debug("Starting EMS Installation");
+      boolean ems = VisorRetryer.retry(1000, 2000, 5,
+          () -> installEMSClient(userid, node));
+      LOGGER.debug("EMS install = " + ems);
+    }
+    //install Visor
+    LOGGER.debug("Starting VISOR Installation");
+    boolean visor = VisorRetryer.retry(1000, 2000, 5,
+        () -> installVisor(userid, node));
+    LOGGER.debug("Visor install = " + visor);
+
+    // config visor
+    LOGGER.debug("Starting VISOR Configuration");
+    io.github.cloudiator.visor.rest.model.Monitor visorback = configureVisor(node,
+        domainMonitorModel);
+    domainMonitorModel.setUuid(visorback.getUuid());
+    Node runningnode = getNodeById(userid, domainMonitorModel.getOwnTargetId());
+    domainMonitorModel.setOwnTargetState(TargetState.valueOf(runningnode.state().name()));
+    domainMonitorModel.addTagItem("NodeIP:", runningnode.connectTo().ip());
+    monitorOrchestrationService.updateMonitor(domainMonitorModel, userid);
+    LOGGER.debug("monitorownState: " + domainMonitorModel.getOwnTargetState());
+
+    LOGGER.debug("MonitorHandler finished");
   }
 
   public boolean installEMSClient(String userId, Node node) {
@@ -69,26 +103,21 @@ public class VisorMonitorHandler {
             .ip().toString());
     try {
       NodeEntities.Node target = nodeMessageConverter.apply(node);
-
       final Builder installationBuilder = Installation.newBuilder().setNode(target)
           .addTool(Tool.EMS_CLIENT);
-
       final InstallationRequest installationRequest = InstallationRequest.newBuilder()
           .setInstallation(installationBuilder.build())
           .setUserId(userId).build();
-
       final SettableFutureResponseCallback<InstallationResponse, InstallationResponse> futureResponseCallback = SettableFutureResponseCallback
           .create();
-
       installationRequestService
           .createInstallationRequestAsync(installationRequest, futureResponseCallback);
-
       futureResponseCallback.get();
     } catch (InterruptedException e) {
-      LOGGER.debug("EMS install Exception catched: " + e);
+      LOGGER.debug("EMS install Exception has occurred: " + e);
       // throw new IllegalStateException("EMS Installation was interrupted during installation request.", e);
     } catch (ExecutionException e) {
-      LOGGER.debug("EMS install ExecutionException catched: " + e);
+      LOGGER.debug("EMS install ExecutionException has occurred: " + e);
       // throw new IllegalStateException("Error during EMSInstallation", e.getCause());
     }
     LOGGER.debug(
@@ -99,24 +128,20 @@ public class VisorMonitorHandler {
 
   public boolean installVisor(String userId, Node node) {
     LOGGER
-        .debug(" Starting VisorInstallationProcess on: " + node.name() + " IP: " + node.connectTo()
-            .ip().toString());
+        .debug(
+            " Starting VisorInstallationProcess on: " + node.name() + " IP: " + node.connectTo()
+                .ip().toString());
     try {
       NodeEntities.Node target = nodeMessageConverter.apply(node);
-
       final Builder installationBuilder = Installation.newBuilder().setNode(target)
           .addTool(InstallationEntities.Tool.VISOR);
-
       final InstallationRequest installationRequest = InstallationRequest.newBuilder()
           .setInstallation(installationBuilder.build())
           .setUserId(userId).build();
-
       final SettableFutureResponseCallback<InstallationResponse, InstallationResponse> futureResponseCallback = SettableFutureResponseCallback
           .create();
-
       installationRequestService
           .createInstallationRequestAsync(installationRequest, futureResponseCallback);
-
       futureResponseCallback.get();
     } catch (InterruptedException e) {
       //LOGGER.debug("Exception catched: " + e);
@@ -127,23 +152,19 @@ public class VisorMonitorHandler {
       throw new IllegalStateException("Error during VisorInstallation", e.getCause());
     }
     LOGGER.debug(
-        "finished VisorInstallationProcess on: " + node.name() + " NodeIP: " + node.connectTo().ip()
+        "finished VisorInstallationProcess on: " + node.name() + " NodeIP: " + node.connectTo()
+            .ip()
             .toString());
     return true;
   }
 
   public io.github.cloudiator.visor.rest.model.Monitor configureVisor(Node targetNode,
       DomainMonitorModel monitor) {
-    LOGGER
-        .debug("Starting VisorConfigurationProcess on: " + targetNode.connectTo().ip().toString());
-
-    String metric = monitor.getMetric().split("[+++]", 3)[0];
-    monitor.setMetric(metric);
-
+    LOGGER.debug(
+        "Starting VisorConfigurationProcess on: " + targetNode.connectTo().ip().toString());
     DefaultApi apiInstance = new DefaultApi();
     ApiClient apiClient = new ApiClient();
     String basepath = String.format("http://%s:%s", targetNode.connectTo().ip(), VisorPort);
-    //String basepath = String.format("http://localhost:31415");
     apiClient.setBasePath(basepath);
     apiInstance.setApiClient(apiClient);
 
@@ -154,15 +175,13 @@ public class VisorMonitorHandler {
         return (apiInstance.getMonitors() != null);
       }
     };
-
     Retryer<Boolean> retryer = RetryerBuilder.<Boolean>newBuilder()
         .retryIfResult(Predicates.<Boolean>isNull())
         .retryIfExceptionOfType(ApiException.class)
         .retryIfRuntimeException()
         .withWaitStrategy(WaitStrategies.fixedWait(1000, TimeUnit.MILLISECONDS))
-        .withStopStrategy(StopStrategies.stopAfterDelay(30, TimeUnit.SECONDS))
+        .withStopStrategy(StopStrategies.stopAfterDelay(20, TimeUnit.SECONDS))
         .build();
-
     try {
       retryer.call(visorready);
     } catch (RetryException e) {
@@ -170,16 +189,12 @@ public class VisorMonitorHandler {
     } catch (ExecutionException e) {
       e.printStackTrace();
     }
-
     LOGGER.debug("- calling Visor successful - ");
-
     io.github.cloudiator.visor.rest.model.Monitor visorMonitor = visorMonitorConverter
         .apply(monitor);
     io.github.cloudiator.visor.rest.model.Monitor visorResponse = null;
     try {
-
       visorResponse = apiInstance.postMonitors(visorMonitor);
-
     } catch (ApiException e) {
       System.err.println("Exception when calling DefaultApi#postMonitors:" + e.getResponseBody());
       e.printStackTrace();
@@ -187,100 +202,48 @@ public class VisorMonitorHandler {
     return visorResponse;
   }
 
-  public boolean configureVisortest(Node targetNode, DomainMonitorModel monitor) {
-    LOGGER.debug("Starting VisorConfigurationProcess on: localhost");
-
-    DefaultApi apiInstance = new DefaultApi();
-    ApiClient apiClient = new ApiClient();
-    String basepath = String.format("http://localhost:31415");
-    LOGGER.debug("Basepath: " + basepath.toString());
-    apiClient.setBasePath(basepath);
-    apiInstance.setApiClient(apiClient);
-    LOGGER.debug("apiClient: " + apiClient.toString());
-
-    Callable<Boolean> visorready = new Callable<Boolean>() {
-      @Override
-      public Boolean call() throws Exception {
-        LOGGER.debug(" - calling Visor - ");
-        return (apiInstance.getMonitors() != null);
-      }
-    };
-
-    Retryer<Boolean> retryer = RetryerBuilder.<Boolean>newBuilder()
-        .retryIfResult(Predicates.<Boolean>isNull())
-        .retryIfExceptionOfType(ApiException.class)
-        .retryIfRuntimeException()
-        .withWaitStrategy(WaitStrategies.fixedWait(500, TimeUnit.MILLISECONDS))
-        .withStopStrategy(StopStrategies.stopAfterDelay(10000, TimeUnit.MILLISECONDS))
-        .build();
-
-    try {
-      retryer.call(visorready);
-    } catch (RetryException e) {
-      e.printStackTrace();
-    } catch (ExecutionException e) {
-      e.printStackTrace();
-    }
-
-    LOGGER.debug("- calling Visor successful - ");
-    io.github.cloudiator.visor.rest.model.Monitor visorMonitor = visorMonitorConverter
-        .apply(monitor);
-
-    try {
-      LOGGER.debug("POSTing Monitor: ");
-
-      io.github.cloudiator.visor.rest.model.Monitor visorResponse = apiInstance
-          .postMonitors(visorMonitor);
-
-    } catch (ApiException e) {
-      System.err.println("Exception when calling DefaultApi#postMonitors:" + e.getResponseBody());
-      e.printStackTrace();
-    }
-    return true;
-  }
-
   public Integer deleteVisorMonitor(String nodeIP, DomainMonitorModel domainMonitor) {
-
     DefaultApi apiInstance = new DefaultApi();
     ApiClient apiClient = new ApiClient();
     String basepath = String.format("http://%s:%s", nodeIP, VisorPort);
     apiClient.setBasePath(basepath);
     apiInstance.setApiClient(apiClient);
-
     try {
-     // apiInstance.deleteMonitor(domainMonitor.getUuid());
-     ApiResponse response = apiInstance.deleteMonitorWithHttpInfo(domainMonitor.getUuid());
-     LOGGER.debug("Got VisorResponse: "+response.getStatusCode());
-     return response.getStatusCode();
+      // apiInstance.deleteMonitor(domainMonitor.getUuid());
+      ApiResponse response = apiInstance.deleteMonitorWithHttpInfo(domainMonitor.getUuid());
+      return response.getStatusCode();
     } catch (ApiException ae) {
-      LOGGER.debug("ApiException occured: " + ae);
+      LOGGER.debug("ApiException occured: " + ae.getCode());
       throw new IllegalStateException("Error at deleting VisorMonitor: " + ae);
     }
-
   }
 
   public Node getNodeById(String userId, String nodeId) {
     try {
-
       NodeQueryMessage request = NodeQueryMessage.newBuilder().setNodeId(nodeId)
           .setUserId(userId)
           .build();
       NodeQueryResponse response = nodeService.queryNodes(request);
-
       if (response.getNodesCount() > 1) {
         throw new IllegalStateException("More than one Node back ");
       } else if (response.getNodesCount() == 0) {
         throw new IllegalStateException("Node not found");
       }
       NodeEntities.Node nodeEntity = response.getNodesList().get(0);
-
       return nodeMessageConverter.applyBack(nodeEntity);
-
     } catch (ResponseException re) {
       throw new AssertionError(re.getMessage());
     } catch (Exception e) {
       throw new AssertionError("Problem by getting Node:" + e.getMessage());
     }
+  }
+
+  /**
+   * HANDLE PROCESSMONITOR
+   */
+
+  public void handleProcessMonitor(String userid, DomainMonitorModel domainMonitorModel) {
+
   }
 
 }

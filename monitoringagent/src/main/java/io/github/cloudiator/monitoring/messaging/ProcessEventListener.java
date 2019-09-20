@@ -42,6 +42,7 @@ public class ProcessEventListener implements Runnable {
           public void accept(String id, ProcessEvent processEvent) {
             try {
               System.out.println("Got processEvent: " + processEvent.toString());
+
               TargetState targetState;
               switch (processEvent.getTo()) {
                 case PROCESS_STATE_PENDING:

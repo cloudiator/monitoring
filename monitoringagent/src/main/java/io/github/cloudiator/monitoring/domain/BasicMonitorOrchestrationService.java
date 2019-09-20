@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.inject.persist.Transactional;
 import io.github.cloudiator.monitoring.models.DomainMonitorModel;
+import io.github.cloudiator.monitoring.models.TargetState;
 import io.github.cloudiator.persistance.MonitorDomainRepository;
 import io.github.cloudiator.persistance.MonitorModel;
 import io.github.cloudiator.persistance.MonitorModelConverter;
@@ -100,20 +101,19 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   }
 
   // NO WORKING INTERFACE IN REST
+  /*
   @Override
   public void updateMonitorFromRest(String dbMetric, String userId, DomainMonitorModel restMonitor,
       boolean updateSensor,
       boolean updateTag, boolean updateTarget, boolean updateSink) {
   }
 
-   /*
+
     TransactionRetryer
         .retry(minWaitingTime, maxWaitingTime, retryAttempts,
             () -> repeatedRestUpdate(userId, restMonitor, updateSensor, updateTag, updateTarget,
                 updateSink));
   }
-
-
   @Transactional
   public DomainMonitorModel repeatedRestUpdate(String userId, DomainMonitorModel restMonitor,
       boolean updateSensor,
@@ -135,7 +135,7 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
   @Transactional
   public DomainMonitorModel repeatedUpdate(DomainMonitorModel dbMonitor, String userId) {
     MonitorModel result = monitorDomainRepository
-        .updateMonitorUuidAndTags(dbMonitor, userId);
+        .updateMonitorUuidTagsState(dbMonitor, userId);
     return monitorModelConverter.apply(result);
   }
 
@@ -247,9 +247,10 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
 
   @Override
   public int updateTargetStateInMonitors(TargetType targetType, String targetId,
-      StateType stateType) {
+      TargetState targetState) {
     int result = TransactionRetryer.retry(minWaitingTime, maxWaitingTime, retryAttempts,
-        () -> repeatedUpdateTargetState(targetType, targetId, stateType));
+        () -> repeatedUpdateTargetState(targetType, targetId,
+            StateType.valueOf(targetState.name())));
     return result;
   }
 
@@ -258,6 +259,36 @@ public class BasicMonitorOrchestrationService implements MonitorOrchestrationSer
     int result = monitorDomainRepository
         .updateTargetStateInMonitors(targetType, targetId, stateType);
     return result;
+  }
+
+  @Override
+  public int getMonitorCount() {
+    int result = TransactionRetryer.retry(minWaitingTime, maxWaitingTime, retryAttempts,
+        () -> repeatedGetMonitorCount());
+    return result;
+  }
+
+  @Transactional
+  int repeatedGetMonitorCount() {
+    int result = monitorDomainRepository.getMonitorCount();
+    return result;
+  }
+
+
+  @Override
+  public List<DomainMonitorModel> getNumberedMonitors(int begin, int number) {
+    List<DomainMonitorModel> result = TransactionRetryer
+        .retry(minWaitingTime, maxWaitingTime, retryAttempts,
+            () -> repeatedGetNumberedMonitors(begin, number));
+    return result;
+  }
+
+  @Transactional
+  List<DomainMonitorModel> repeatedGetNumberedMonitors(int begin, int number) {
+    List<MonitorModel> result = monitorDomainRepository
+        .getNumberedMonitors(begin, number);
+    return result.stream().map(monitorModel -> monitorModelConverter.apply(monitorModel)).collect(
+        Collectors.toList());
   }
 
 

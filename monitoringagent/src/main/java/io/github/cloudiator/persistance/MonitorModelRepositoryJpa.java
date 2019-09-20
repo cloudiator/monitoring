@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.TypeLiteral;
 import io.github.cloudiator.util.JpaResultHelper;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import javax.persistence.EntityManager;
@@ -82,7 +83,7 @@ public class MonitorModelRepositoryJpa extends
   @Override
   public List<MonitorModel> findAllMonitorsWithSameMetric(String metric, String owner) {
     String queryString = String
-        .format("from %s where owner =:owner and metric like :metric", type.getName());
+        .format("select m from %s where m.owner =:owner and m.metric like :metric", type.getName());
     Query query = em().createQuery(queryString).setParameter("owner", owner)
         .setParameter("metric", metric + "%");
     //noinspection unchecked
@@ -93,11 +94,29 @@ public class MonitorModelRepositoryJpa extends
   public int updateTargetStateInMonitors(TargetType targetType, String targetId,
       StateType stateType) {
     String queryString = String.format(
-        "update MonitorModel set ownTargetState =:stateType where ownTargetType =:targetType and ownTargetId =:targetId",
+        "UPDATE MonitorModel SET ownTargetState =:stateType WHERE ownTargetType =:targetType AND ownTargetId =:targetId",
         type.getName());
     Query query = em().createQuery(queryString).setParameter("stateType", stateType)
         .setParameter("targetType", targetType).setParameter("targetId", targetId);
     return query.executeUpdate();
+  }
+
+  @Override
+  public int getMonitorCount() {
+    String queryString = String.format("select count(m.id) from MonitorModel m", type.getName());
+    Query query = em().createQuery(queryString);
+    Long countresult = (long) query.getSingleResult();
+    return countresult.intValue();
+  }
+
+  @Override
+  public List<MonitorModel> getNumberedMonitors(int begin, int number) {
+    String queryString = String.format(
+        "SELECT * FROM MonitorModel LIMIT begin,number",
+        type.getName());
+    Query query = em().createQuery(queryString).setParameter("begin", begin)
+        .setParameter("number", number);
+    return query.getResultList();
   }
 
 

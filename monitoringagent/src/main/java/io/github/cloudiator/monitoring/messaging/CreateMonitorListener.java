@@ -2,6 +2,7 @@ package io.github.cloudiator.monitoring.messaging;
 
 
 import com.google.inject.Inject;
+import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.rest.converter.MonitorConverter;
 import io.github.cloudiator.monitoring.domain.MonitorManagementService;
 import io.github.cloudiator.rest.model.Monitor;
@@ -38,8 +39,11 @@ public class CreateMonitorListener implements Runnable {
 
               Monitor contentMonitor = monitorConverter.applyBack(content.getNewmonitor());
 
-              Monitor createdMonitor = monitorManagementService
+              DomainMonitorModel createdMonitor = monitorManagementService
                   .handleNewMonitor(content.getUserId(), contentMonitor);
+              createdMonitor.addTagItem("ownTarget: ",
+                  createdMonitor.getOwnTargetType().toString() + ": " + createdMonitor
+                      .getOwnTargetId());
 
               CreateMonitorResponse monitorResponse = CreateMonitorResponse.newBuilder()
                   .setMonitor(monitorConverter.apply(createdMonitor)).build();

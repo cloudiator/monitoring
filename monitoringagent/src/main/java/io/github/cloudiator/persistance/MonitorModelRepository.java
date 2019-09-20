@@ -21,4 +21,8 @@ public interface MonitorModelRepository extends ModelRepository<MonitorModel> {
 
   int updateTargetStateInMonitors(TargetType targetType, String targetId,
       StateType stateType);
+
+  int getMonitorCount();
+
+  List<MonitorModel> getNumberedMonitors(int begin, int number);
 }
