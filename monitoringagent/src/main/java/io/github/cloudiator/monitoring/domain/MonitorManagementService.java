@@ -19,6 +19,7 @@ import io.github.cloudiator.rest.model.MonitoringTarget.TypeEnum;
 import io.github.cloudiator.rest.model.Schedule;
 import io.github.cloudiator.rest.model.SingleProcess;
 import io.github.cloudiator.domain.Node;
+import io.github.cloudiator.visor.rest.ApiException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -242,8 +243,13 @@ public class MonitorManagementService {
     if (process instanceof SingleProcess) {
       target.setType(TypeEnum.NODE);
       target.setIdentifier(((SingleProcess) process).getNode());
-      domainMonitor.addTagItem("ProcessIP:", process.getEndpoint());
+      domainMonitor.addTagItem("Endpoint:", process.getEndpoint());
+      domainMonitor.setOwnTargetState(TargetState.valueOf(process.getState().name()));
+      //updating ProcessMonitor
+      monitorExecutor
+          .execute(() -> monitorOrchestrationService.updateMonitor(domainMonitor, userId));
 
+      //creating NodeMonitor
       DomainMonitorModel result = createDBMonitor(userId, target, domainMonitor);
       if (result == null) {
         throw new IllegalArgumentException("Monitor already exists.");
@@ -410,41 +416,63 @@ public class MonitorManagementService {
     }
     DomainMonitorModel candidate = dbResult.get();
 
-    LOGGER.debug("Deleting Monitor '" + candidate.getMetric() + "' TargetState: " + candidate
+    LOGGER.debug("Deleting Monitor '" + candidate.getOwnTargetType() + ": " + candidate.getMetric()
+        + "' TargetState: " + candidate
         .getOwnTargetState());
-    if (candidate.getOwnTargetState() != TargetState.DELETED) {
-      String nodeIp;
-        Node targetNode = null;
-        switch (candidate.getOwnTargetType()) {
-          case PROCESS:
-            CloudiatorProcess process = getProcessFromTarget(userId, candidate.getOwnTargetId());
+    String nodeIp;
+    Node targetNode = null;
+    switch (candidate.getOwnTargetType()) {
+      case PROCESS:
+        //ONLY SINGLEPROCESS
+        CloudiatorProcess process = getProcessFromTarget(userId, candidate.getOwnTargetId());
+        if (((SingleProcess) process).getNode().isEmpty()) {
+          LOGGER.debug("no related Node in Process");
+        } else {
+          try {
             targetNode = monitorHandler.getNodeById(userId, ((SingleProcess) process).getNode());
-            break;
-          case NODE:
-            targetNode = monitorHandler.getNodeById(userId, candidate.getOwnTargetId());
-            break;
-          case JOB:
-            break;
-          case TASK:
-            break;
-          case CLOUD:
-            break;
-          default:
-            throw new IllegalArgumentException(
-                "unkown TargetType: " + candidate.getOwnTargetType());
+            LOGGER.debug("deleting related NodeMonitor");
+            MonitoringTarget nodeTarget = new MonitoringTarget().type(TypeEnum.NODE)
+                .identifier(targetNode.id());
+            monitorExecutor.execute(() -> deleteMonitor(userId, metric, nodeTarget));
+          } catch (AssertionError as) {
+            LOGGER.debug("Node not present - continue deleting ProcessMonitor");
+          }
         }
-        nodeIp = targetNode.connectTo().ip();
-      if (candidate.getUuid().isEmpty() || candidate.getUuid().equals("0")) {
-        LOGGER.debug("No VisorUuid found in Monitor: " + metric);
-        LOGGER.debug("Can't delete Visor. Removing Monitor from DB");
-      } else {
-        LOGGER.debug("stopping Visor");
-        //Stopping VisorInstance
-        Integer visorStatusResponse = VisorRetryer.retry(1000, 2000, 5,
-            () -> monitorHandler.deleteVisorMonitor(nodeIp, candidate));
-      }
-    }
+        break;
+      case NODE:
+        if (candidate.getOwnTargetState() != TargetState.DELETED) {
+          targetNode = monitorHandler.getNodeById(userId, candidate.getOwnTargetId());
+          nodeIp = targetNode.connectTo().ip();
+          if (candidate.getUuid().isEmpty() || candidate.getUuid().equals("0")) {
+            LOGGER.debug("No VisorUuid found in Monitor: " + metric);
+            LOGGER.debug("Removing Monitor from DB");
+          } else {
+            LOGGER.debug("stopping Visor");
+            //Stopping VisorInstance
+            try {
 
+              Integer visorStatusResponse = VisorRetryer.retry(1000, 2000, 5,
+                  () -> monitorHandler.deleteVisorMonitor(nodeIp, candidate));
+              LOGGER.debug("visorStatusResponse by deletingMonitor: " + visorStatusResponse);
+            } catch (IllegalStateException ill) {
+              LOGGER.debug(
+                  "IllegalStateException while deleting VisorMonitor - continue deleting DbEntry");
+            } catch (Exception e) {
+              LOGGER.debug("Exception: " + e);
+            }
+          }
+        }
+        break;
+      case JOB:
+        break;
+      case TASK:
+        break;
+      case CLOUD:
+        break;
+      default:
+        throw new IllegalArgumentException(
+            "unkown TargetType: " + candidate.getOwnTargetType());
+    }
     //Deleting DBMonitor
     monitorOrchestrationService.deleteMonitor(candidate, userId);
     LOGGER.debug("Monitor deleted.");

@@ -90,7 +90,7 @@ public class MonitorHandler {
     domainMonitorModel.setUuid(visorback.getUuid());
     Node runningnode = getNodeById(userid, domainMonitorModel.getOwnTargetId());
     domainMonitorModel.setOwnTargetState(TargetState.valueOf(runningnode.state().name()));
-    domainMonitorModel.addTagItem("NodeIP:",runningnode.connectTo().ip());
+    domainMonitorModel.addTagItem("NodeIP:", runningnode.connectTo().ip());
     monitorOrchestrationService.updateMonitor(domainMonitorModel, userid);
     LOGGER.debug("monitorownState: " + domainMonitorModel.getOwnTargetState());
 
@@ -211,10 +211,9 @@ public class MonitorHandler {
     try {
       // apiInstance.deleteMonitor(domainMonitor.getUuid());
       ApiResponse response = apiInstance.deleteMonitorWithHttpInfo(domainMonitor.getUuid());
-      LOGGER.debug("Got VisorResponse: " + response.getStatusCode());
       return response.getStatusCode();
     } catch (ApiException ae) {
-      LOGGER.debug("ApiException occured: " + ae);
+      LOGGER.debug("ApiException occured: " + ae.getCode());
       throw new IllegalStateException("Error at deleting VisorMonitor: " + ae);
     }
   }
