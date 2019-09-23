@@ -241,14 +241,13 @@ public class MonitorManagementService {
     CloudiatorProcess process = getProcessFromTarget(userId, target.getIdentifier());
     //  handling Monitor for ProcessNode
     if (process instanceof SingleProcess) {
-      target.setType(TypeEnum.NODE);
-      target.setIdentifier(((SingleProcess) process).getNode());
       domainMonitor.addTagItem("Endpoint:", process.getEndpoint());
       domainMonitor.setOwnTargetState(TargetState.valueOf(process.getState().name()));
       //updating ProcessMonitor
-      monitorExecutor
-          .execute(() -> monitorOrchestrationService.updateMonitor(domainMonitor, userId));
+      monitorOrchestrationService.updateMonitor(domainMonitor, userId);
 
+      target.setType(TypeEnum.NODE);
+      target.setIdentifier(((SingleProcess) process).getNode());
       //creating NodeMonitor
       DomainMonitorModel result = createDBMonitor(userId, target, domainMonitor);
       if (result == null) {
@@ -456,7 +455,7 @@ public class MonitorManagementService {
               LOGGER.debug("visorStatusResponse by deletingMonitor: " + visorStatusResponse);
             } catch (IllegalStateException ill) {
               LOGGER.debug(
-                  "IllegalStateException while deleting VisorMonitor - continue deleting DbEntry");
+                  "IllegalStateException: VisorMonitor not found - continue deleting DbEntry");
             } catch (Exception e) {
               LOGGER.debug("Exception: " + e);
             }
