@@ -71,6 +71,7 @@ public class MonitorHandler {
     //prepare = get Node
     Node node = getNodeById(userid, domainMonitorModel.getOwnTargetId());
     //install EMS
+    //install EMS everytime
     if (true) {
       LOGGER.debug("Starting EMS Installation");
       boolean ems = VisorRetryer.retry(1000, 2000, 5,
