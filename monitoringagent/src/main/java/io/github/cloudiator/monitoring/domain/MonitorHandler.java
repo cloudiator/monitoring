@@ -66,7 +66,7 @@ public class MonitorHandler {
    * HANDLE NODEMONITOR
    */
 
-  public void handleNodeMonitor(String userid, DomainMonitorModel domainMonitorModel) {
+  public synchronized void handleNodeMonitor(String userid, DomainMonitorModel domainMonitorModel) {
 
     //prepare = get Node
     Node node = getNodeById(userid, domainMonitorModel.getOwnTargetId());

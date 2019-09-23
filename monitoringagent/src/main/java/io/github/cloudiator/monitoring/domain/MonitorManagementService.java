@@ -46,6 +46,7 @@ public class MonitorManagementService {
   private final ProcessService processService;
   private final ProcessConverter PROCESS_CONVERTER = ProcessConverter.INSTANCE;
   private final ScheduleConverter SCHEDULE_CONVERTER = new ScheduleConverter();
+  private static final MonitorQueueController MONITOR_QUEUE_CONTROLLER = new MonitorQueueController();
   // -> MonitorHandler
   private final boolean installMelodicTools;
   //
