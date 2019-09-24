@@ -46,7 +46,7 @@ public class MonitorManagementService {
   private final ProcessService processService;
   private final ProcessConverter PROCESS_CONVERTER = ProcessConverter.INSTANCE;
   private final ScheduleConverter SCHEDULE_CONVERTER = new ScheduleConverter();
-  private static final MonitorQueueController MONITOR_QUEUE_CONTROLLER = new MonitorQueueController();
+  private final MonitorQueueController MONITOR_QUEUE_CONTROLLER;
   // -> MonitorHandler
   private final boolean installMelodicTools;
   //
@@ -61,11 +61,13 @@ public class MonitorManagementService {
   @Inject
   public MonitorManagementService(MonitorHandler monitorHandler,
       BasicMonitorOrchestrationService monitorOrchestrationService, ProcessService processService,
-      @Named("melodicTools") boolean installMelodicTools) {
+      @Named("melodicTools") boolean installMelodicTools,
+      MonitorQueueController monitorQueueController) {
     this.monitorHandler = monitorHandler;
     this.monitorOrchestrationService = monitorOrchestrationService;
     this.processService = processService;
     this.installMelodicTools = installMelodicTools;
+    this.MONITOR_QUEUE_CONTROLLER = monitorQueueController;
   }
 
 
@@ -86,6 +88,7 @@ public class MonitorManagementService {
     domainMonitorModel.setOwnTargetType(target.getType());
     domainMonitorModel.setOwnTargetId(target.getIdentifier());
     domainMonitorModel.setOwnTargetState(TargetState.PENDING);
+    domainMonitorModel.setOwner(userId);
 
     //creating DBEntry
     DomainMonitorModel result;
@@ -173,7 +176,9 @@ public class MonitorManagementService {
 
     monitor.setOwnTargetType(target.getType());
     monitor.setOwnTargetId(target.getIdentifier());
-    monitorExecutor.execute(() -> monitorHandler.handleNodeMonitor(userId, monitor));
+   // monitorExecutor.execute(() -> monitorHandler.handleNodeMonitor(userId, monitor));
+    boolean test = MONITOR_QUEUE_CONTROLLER.handleMonitorRequest(target.getIdentifier(), monitor);
+    LOGGER.debug("QueueControllerAction: " + test);
 
     /*
     ExecutorService executorService = Executors.newSingleThreadExecutor();

@@ -7,6 +7,7 @@ import io.github.cloudiator.monitoring.config.JpaModule;
 import io.github.cloudiator.monitoring.config.MonitorConfigModule;
 import io.github.cloudiator.monitoring.config.MonitorContext;
 import de.uniulm.omi.cloudiator.util.configuration.Configuration;
+import io.github.cloudiator.monitoring.domain.MonitorQueueController;
 import io.github.cloudiator.monitoring.domain.MonitorSynchronizationService;
 import io.github.cloudiator.monitoring.messaging.CreateMonitorListener;
 import io.github.cloudiator.monitoring.messaging.DeleteMonitorListener;
