@@ -176,7 +176,7 @@ public class MonitorManagementService {
 
     monitor.setOwnTargetType(target.getType());
     monitor.setOwnTargetId(target.getIdentifier());
-   // monitorExecutor.execute(() -> monitorHandler.handleNodeMonitor(userId, monitor));
+    // monitorExecutor.execute(() -> monitorHandler.handleNodeMonitor(userId, monitor));
     boolean test = MONITOR_QUEUE_CONTROLLER.handleMonitorRequest(target.getIdentifier(), monitor);
     LOGGER.debug("QueueControllerAction: " + test);
 
@@ -262,7 +262,8 @@ public class MonitorManagementService {
         LOGGER.debug(target.getType() + "Monitor in DB created");
 
         //Handling Visor on Node
-        monitorExecutor.execute(() -> monitorHandler.handleNodeMonitor(userId, result));
+       // monitorExecutor.execute(() -> monitorHandler.handleNodeMonitor(userId, result));
+        MONITOR_QUEUE_CONTROLLER.handleMonitorRequest(result.getOwnTargetId(),result);
 
       /*
         ExecutorService executorService = Executors.newSingleThreadExecutor();
@@ -486,6 +487,8 @@ public class MonitorManagementService {
   public void checkMonitorStatus() {
     int monitorcount = monitorOrchestrationService.getMonitorCount();
     LOGGER.info("Total Number of Monitors: " + monitorcount);
+    int queueMapSizue = MONITOR_QUEUE_CONTROLLER.getQueueMapSize();
+    LOGGER.info("QueueMapSize: " + queueMapSizue);
     int max = 50;
     int roundnumber = 1;
     int place = 1;
