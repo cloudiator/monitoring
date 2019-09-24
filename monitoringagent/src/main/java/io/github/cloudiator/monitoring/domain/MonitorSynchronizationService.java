@@ -31,7 +31,7 @@ public class MonitorSynchronizationService implements Runnable {
 
   @Override
   public void run() {
-    LOGGER.info("starting synchronisation of Database");
+    LOGGER.info("starting MonitorStatusChecks");
     databaseExecutor
         .scheduleAtFixedRate(() -> monitorManagementService.checkMonitorStatus(), 1, 15,
             TimeUnit.MINUTES);

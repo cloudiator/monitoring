@@ -33,7 +33,6 @@ public class MonitorQueueController {
 
   private Queue<DomainMonitorModel> createNewQueue(String nodeId, DomainMonitorModel request) {
     LOGGER.debug("add new Queue");
-    System.out.println("add new Queue");
     Queue<DomainMonitorModel> result = new LinkedList<>();
     result.add(request);
     queueMap.put(nodeId, result);
@@ -68,12 +67,13 @@ public class MonitorQueueController {
   }
 
   public boolean handleMonitorRequest(String nodeId, DomainMonitorModel domainMonitorModel) {
-    LOGGER.info("handling Monitor");
-    System.out.println("QueueController handling Monitor");
+    LOGGER.debug("QueueController handling Monitor");
     Queue<DomainMonitorModel> usedQueue;
     if (existingQueue(nodeId)) {
+      LOGGER.debug("adding Monitor to existing Queue");
       usedQueue = getQueue(nodeId);
       usedQueue.add(domainMonitorModel);
+      LOGGER.debug("QueueSize: " + usedQueue.size());
     } else {
       usedQueue = createNewQueue(nodeId, domainMonitorModel);
       LOGGER.debug("QueueMapEntries: " + queueMap.size() + " - running newConsumer");
@@ -87,5 +87,6 @@ public class MonitorQueueController {
     UPDATE,
     REMOVE;
   }
+
 
 }

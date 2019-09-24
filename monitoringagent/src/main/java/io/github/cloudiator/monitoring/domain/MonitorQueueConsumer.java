@@ -30,10 +30,11 @@ public class MonitorQueueConsumer implements Runnable {
     while (!queue.isEmpty()) {
       DomainMonitorModel actualMonitor = queue.poll();
       LOGGER.debug("handling Monitor: " + actualMonitor.getMetric());
+      LOGGER.debug(queue.size() + " remaining Monitors in Queue");
       monitorHandler.handleNodeMonitor(actualMonitor.getOwner(), actualMonitor);
 
     }
-    LOGGER.debug("Removing NodeQueue: " + nodeId);
+    LOGGER.debug("Removing empty NodeQueue: " + nodeId);
     monitorQueueController.removeQueue(nodeId);
   }
 }

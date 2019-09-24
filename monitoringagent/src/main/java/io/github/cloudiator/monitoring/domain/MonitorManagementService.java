@@ -180,41 +180,6 @@ public class MonitorManagementService {
     boolean test = MONITOR_QUEUE_CONTROLLER.handleMonitorRequest(target.getIdentifier(), monitor);
     LOGGER.debug("QueueControllerAction: " + test);
 
-    /*
-    ExecutorService executorService = Executors.newSingleThreadExecutor();
-    executorService.execute(new Runnable() {
-      public void run() {
-        try {
-          String threadUser = userId;
-          DomainMonitorModel threadDomainMonitor = monitor;
-          Node threadNode = monitorHandler
-              .getNodeById(userId, threadDomainMonitor.getOwnTargetId());
-          threadDomainMonitor.addTagItem("NodeIP: ", threadNode.connectTo().ip());
-
-          if (installMelodicTools) {
-            try {
-              monitorHandler.installEMSClient(threadUser, threadNode);
-
-            } catch (IllegalStateException e) {
-              LOGGER.debug("Exception during EMSInstallation: " + e);
-              LOGGER.debug("---");
-            }
-          }
-          monitorHandler.installVisor(threadUser, threadNode);
-          io.github.cloudiator.visor.rest.model.Monitor visorback = monitorHandler
-              .configureVisor(threadNode, threadDomainMonitor);
-          threadDomainMonitor.setUuid(visorback.getUuid());
-          monitorOrchestrationService.updateMonitor(threadDomainMonitor, threadUser);
-          threadDomainMonitor.setOwnTargetState(TargetState.valueOf(threadNode.state().name()));
-          monitorOrchestrationService.updateTargetState(threadDomainMonitor);
-          LOGGER.debug("Visor config done and Monitor updated");
-        } catch (Throwable t) {
-          LOGGER.error("Unexpected Exception", t);
-        }
-      }
-    });
-    executorService.shutdown();
-    */
     return monitor;
   }
 
@@ -265,37 +230,7 @@ public class MonitorManagementService {
        // monitorExecutor.execute(() -> monitorHandler.handleNodeMonitor(userId, result));
         MONITOR_QUEUE_CONTROLLER.handleMonitorRequest(result.getOwnTargetId(),result);
 
-      /*
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-        executorService.execute(new Runnable() {
-          public void run() {
-            String threadUser = userId;
-            DomainMonitorModel threadDomainMonitor = result;
-            Node threadNode = monitorHandler
-                .getNodeById(userId, ((SingleProcess) process).getNode());
-            threadDomainMonitor.addTagItem("ProcessNode: ", threadNode.name());
-            threadDomainMonitor.addTagItem("NodeIP: ", threadNode.connectTo().ip());
-            threadDomainMonitor.addTagItem("NodeState: ", threadNode.state().name());
-            if (installMelodicTools) {
-              try {
-                monitorHandler.installEMSClient(threadUser, threadNode);
-              } catch (IllegalStateException e) {
-                LOGGER.debug("Exception during EMSInstallation: " + e);
-                LOGGER.debug("---");
-              } catch (Exception re) {
-                LOGGER.debug("Exception while EMSInstallation " + re);
-              }
-            }
-            monitorHandler.installVisor(threadUser, threadNode);
-            io.github.cloudiator.visor.rest.model.Monitor visorback = monitorHandler
-                .configureVisor(threadNode, threadDomainMonitor);
-            threadDomainMonitor.setUuid(visorback.getUuid());
-            monitorOrchestrationService.updateMonitor(threadDomainMonitor, threadUser);
-            LOGGER.debug("visor install and config done");
-          }
-        });
-        executorService.shutdown();
-      */
+
       }
       return result;
     } else if (process instanceof ClusterProcess) {

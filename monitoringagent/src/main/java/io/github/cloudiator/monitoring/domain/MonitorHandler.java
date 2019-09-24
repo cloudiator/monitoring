@@ -73,19 +73,19 @@ public class MonitorHandler {
     //install EMS
     //install EMS everytime
     if (true) {
-      LOGGER.debug("Starting EMS Installation");
+      // LOGGER.debug("Starting EMS Installation");
       boolean ems = VisorRetryer.retry(1000, 2000, 5,
           () -> installEMSClient(userid, node));
-      LOGGER.debug("EMS install = " + ems);
+      // LOGGER.debug("EMS install = " + ems);
     }
     //install Visor
-    LOGGER.debug("Starting VISOR Installation");
+    //  LOGGER.debug("Starting VISOR Installation");
     boolean visor = VisorRetryer.retry(1000, 2000, 5,
         () -> installVisor(userid, node));
-    LOGGER.debug("Visor install = " + visor);
+    // LOGGER.debug("Visor install = " + visor);
 
     // config visor
-    LOGGER.debug("Starting VISOR Configuration");
+    // LOGGER.debug("Starting VISOR Configuration");
     io.github.cloudiator.visor.rest.model.Monitor visorback = configureVisor(node,
         domainMonitorModel);
     domainMonitorModel.setUuid(visorback.getUuid());
@@ -93,7 +93,7 @@ public class MonitorHandler {
     domainMonitorModel.setOwnTargetState(TargetState.valueOf(runningnode.state().name()));
     domainMonitorModel.addTagItem("NodeIP:", runningnode.connectTo().ip());
     monitorOrchestrationService.updateMonitor(domainMonitorModel, userid);
-    LOGGER.debug("monitorownState: " + domainMonitorModel.getOwnTargetState());
+    //  LOGGER.debug("monitorownState: " + domainMonitorModel.getOwnTargetState());
 
     LOGGER.debug("MonitorHandler finished");
   }
