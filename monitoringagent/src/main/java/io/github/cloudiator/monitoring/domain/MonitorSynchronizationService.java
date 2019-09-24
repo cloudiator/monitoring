@@ -34,6 +34,6 @@ public class MonitorSynchronizationService implements Runnable {
     LOGGER.info("starting synchronisation of Database");
     databaseExecutor
         .scheduleAtFixedRate(() -> monitorManagementService.checkMonitorStatus(), 1, 15,
-            TimeUnit.SECONDS);
+            TimeUnit.MINUTES);
   }
 }
