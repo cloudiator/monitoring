@@ -42,7 +42,6 @@ public class MonitorHandler {
   private final MonitorOrchestrationService monitorOrchestrationService;
   private final InstallationRequestService installationRequestService;
   private final NodeService nodeService;
-  private final ProcessService processService;
   private final MonitorToVisorMonitorConverter visorMonitorConverter = MonitorToVisorMonitorConverter.INSTANCE;
   private final NodeToNodeMessageConverter nodeMessageConverter = NodeToNodeMessageConverter.INSTANCE;
   private final boolean installMelodicTools;
@@ -53,12 +52,11 @@ public class MonitorHandler {
   @Inject
   public MonitorHandler(MonitorOrchestrationService monitorOrchestrationService,
       InstallationRequestService installationRequestService,
-      NodeService nodeService, ProcessService processService,
+      NodeService nodeService,
       @Named("melodicTools") boolean installMelodicTools) {
     this.monitorOrchestrationService = monitorOrchestrationService;
     this.installationRequestService = installationRequestService;
     this.nodeService = nodeService;
-    this.processService = processService;
     this.installMelodicTools = installMelodicTools;
   }
 
@@ -239,12 +237,5 @@ public class MonitorHandler {
     }
   }
 
-  /**
-   * HANDLE PROCESSMONITOR
-   */
-
-  public void handleProcessMonitor(String userid, DomainMonitorModel domainMonitorModel) {
-
-  }
 
 }

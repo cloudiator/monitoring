@@ -42,7 +42,9 @@ public class NodeEventListener implements Runnable {
           public void accept(String id, NodeEvent nodeEvent) {
             try {
               TargetState targetState;
-              LOGGER.debug("Got NodeEvent: " + nodeEvent.toString());
+              LOGGER.debug(
+                  "Got NodeEvent: " + nodeEvent.getNode().getId() + ": " + nodeEvent.getFrom()
+                      + " to " + nodeEvent.getTo());
               switch (nodeEvent.getTo()) {
                 case NODE_STATE_PENDING:
                   targetState = TargetState.PENDING;

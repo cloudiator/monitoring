@@ -41,7 +41,9 @@ public class ProcessEventListener implements Runnable {
           @Override
           public void accept(String id, ProcessEvent processEvent) {
             try {
-              System.out.println("Got processEvent: " + processEvent.toString());
+              System.out.println(
+                  "Got ProcessEvent: " + processEvent.getProcess().getId() + ": " + processEvent
+                      .getFrom() + " to " + processEvent.getTo());
 
               TargetState targetState;
               switch (processEvent.getTo()) {

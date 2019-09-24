@@ -227,8 +227,8 @@ public class MonitorManagementService {
         LOGGER.debug(target.getType() + "Monitor in DB created");
 
         //Handling Visor on Node
-       // monitorExecutor.execute(() -> monitorHandler.handleNodeMonitor(userId, result));
-        MONITOR_QUEUE_CONTROLLER.handleMonitorRequest(result.getOwnTargetId(),result);
+        // monitorExecutor.execute(() -> monitorHandler.handleNodeMonitor(userId, result));
+        MONITOR_QUEUE_CONTROLLER.handleMonitorRequest(result.getOwnTargetId(), result);
 
 
       }
@@ -449,10 +449,10 @@ public class MonitorManagementService {
         TargetType.valueOf(targetEnum.toString()), targetId);
 
     //updating
-    if (relatedMonitors == null && relatedMonitors.isEmpty()) {
+    if (relatedMonitors == null || relatedMonitors.isEmpty()) {
       //do nothing
     } else {
-      LOGGER.debug("updating");
+      LOGGER.debug("Eventhandling causes updating " + relatedMonitors.size() + " Monitors");
       monitorOrchestrationService
           .updateTargetStateInMonitors(TargetType.valueOf(targetEnum.toString()), targetId,
               targetState);
