@@ -22,6 +22,8 @@ public class DomainMonitorModel extends Monitor {
 
   private TargetState ownTargetState;
 
+  private String owner;
+
   public DomainMonitorModel() {
     super();
   }
@@ -80,6 +82,13 @@ public class DomainMonitorModel extends Monitor {
     super.setMetric(metric);
   }
 
+  public void setOwner(String owner) {
+    this.owner = owner;
+  }
+
+  public String getOwner() {
+    return owner;
+  }
 
   public DomainMonitorModel addTargetsItem(MonitoringTarget targetsItem) {
     List<MonitoringTarget> monitoringTargetList = this.getTargets();

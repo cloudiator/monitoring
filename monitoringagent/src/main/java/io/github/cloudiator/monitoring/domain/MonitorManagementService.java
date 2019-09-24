@@ -46,7 +46,7 @@ public class MonitorManagementService {
   private final ProcessService processService;
   private final ProcessConverter PROCESS_CONVERTER = ProcessConverter.INSTANCE;
   private final ScheduleConverter SCHEDULE_CONVERTER = new ScheduleConverter();
-  private static final MonitorQueueController MONITOR_QUEUE_CONTROLLER = new MonitorQueueController();
+  private final MonitorQueueController MONITOR_QUEUE_CONTROLLER;
   // -> MonitorHandler
   private final boolean installMelodicTools;
   //
@@ -61,11 +61,13 @@ public class MonitorManagementService {
   @Inject
   public MonitorManagementService(MonitorHandler monitorHandler,
       BasicMonitorOrchestrationService monitorOrchestrationService, ProcessService processService,
-      @Named("melodicTools") boolean installMelodicTools) {
+      @Named("melodicTools") boolean installMelodicTools,
+      MonitorQueueController monitorQueueController) {
     this.monitorHandler = monitorHandler;
     this.monitorOrchestrationService = monitorOrchestrationService;
     this.processService = processService;
     this.installMelodicTools = installMelodicTools;
+    this.MONITOR_QUEUE_CONTROLLER = monitorQueueController;
   }
 
 
@@ -86,6 +88,7 @@ public class MonitorManagementService {
     domainMonitorModel.setOwnTargetType(target.getType());
     domainMonitorModel.setOwnTargetId(target.getIdentifier());
     domainMonitorModel.setOwnTargetState(TargetState.PENDING);
+    domainMonitorModel.setOwner(userId);
 
     //creating DBEntry
     DomainMonitorModel result;
@@ -173,43 +176,10 @@ public class MonitorManagementService {
 
     monitor.setOwnTargetType(target.getType());
     monitor.setOwnTargetId(target.getIdentifier());
-    monitorExecutor.execute(() -> monitorHandler.handleNodeMonitor(userId, monitor));
+    // monitorExecutor.execute(() -> monitorHandler.handleNodeMonitor(userId, monitor));
+    boolean test = MONITOR_QUEUE_CONTROLLER.handleMonitorRequest(target.getIdentifier(), monitor);
+    LOGGER.debug("QueueControllerAction: " + test);
 
-    /*
-    ExecutorService executorService = Executors.newSingleThreadExecutor();
-    executorService.execute(new Runnable() {
-      public void run() {
-        try {
-          String threadUser = userId;
-          DomainMonitorModel threadDomainMonitor = monitor;
-          Node threadNode = monitorHandler
-              .getNodeById(userId, threadDomainMonitor.getOwnTargetId());
-          threadDomainMonitor.addTagItem("NodeIP: ", threadNode.connectTo().ip());
-
-          if (installMelodicTools) {
-            try {
-              monitorHandler.installEMSClient(threadUser, threadNode);
-
-            } catch (IllegalStateException e) {
-              LOGGER.debug("Exception during EMSInstallation: " + e);
-              LOGGER.debug("---");
-            }
-          }
-          monitorHandler.installVisor(threadUser, threadNode);
-          io.github.cloudiator.visor.rest.model.Monitor visorback = monitorHandler
-              .configureVisor(threadNode, threadDomainMonitor);
-          threadDomainMonitor.setUuid(visorback.getUuid());
-          monitorOrchestrationService.updateMonitor(threadDomainMonitor, threadUser);
-          threadDomainMonitor.setOwnTargetState(TargetState.valueOf(threadNode.state().name()));
-          monitorOrchestrationService.updateTargetState(threadDomainMonitor);
-          LOGGER.debug("Visor config done and Monitor updated");
-        } catch (Throwable t) {
-          LOGGER.error("Unexpected Exception", t);
-        }
-      }
-    });
-    executorService.shutdown();
-    */
     return monitor;
   }
 
@@ -257,39 +227,10 @@ public class MonitorManagementService {
         LOGGER.debug(target.getType() + "Monitor in DB created");
 
         //Handling Visor on Node
-        monitorExecutor.execute(() -> monitorHandler.handleNodeMonitor(userId, result));
+        // monitorExecutor.execute(() -> monitorHandler.handleNodeMonitor(userId, result));
+        MONITOR_QUEUE_CONTROLLER.handleMonitorRequest(result.getOwnTargetId(), result);
 
-      /*
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-        executorService.execute(new Runnable() {
-          public void run() {
-            String threadUser = userId;
-            DomainMonitorModel threadDomainMonitor = result;
-            Node threadNode = monitorHandler
-                .getNodeById(userId, ((SingleProcess) process).getNode());
-            threadDomainMonitor.addTagItem("ProcessNode: ", threadNode.name());
-            threadDomainMonitor.addTagItem("NodeIP: ", threadNode.connectTo().ip());
-            threadDomainMonitor.addTagItem("NodeState: ", threadNode.state().name());
-            if (installMelodicTools) {
-              try {
-                monitorHandler.installEMSClient(threadUser, threadNode);
-              } catch (IllegalStateException e) {
-                LOGGER.debug("Exception during EMSInstallation: " + e);
-                LOGGER.debug("---");
-              } catch (Exception re) {
-                LOGGER.debug("Exception while EMSInstallation " + re);
-              }
-            }
-            monitorHandler.installVisor(threadUser, threadNode);
-            io.github.cloudiator.visor.rest.model.Monitor visorback = monitorHandler
-                .configureVisor(threadNode, threadDomainMonitor);
-            threadDomainMonitor.setUuid(visorback.getUuid());
-            monitorOrchestrationService.updateMonitor(threadDomainMonitor, threadUser);
-            LOGGER.debug("visor install and config done");
-          }
-        });
-        executorService.shutdown();
-      */
+
       }
       return result;
     } else if (process instanceof ClusterProcess) {
@@ -481,6 +422,8 @@ public class MonitorManagementService {
   public void checkMonitorStatus() {
     int monitorcount = monitorOrchestrationService.getMonitorCount();
     LOGGER.info("Total Number of Monitors: " + monitorcount);
+    int queueMapSizue = MONITOR_QUEUE_CONTROLLER.getQueueMapSize();
+    LOGGER.info("QueueMapSize: " + queueMapSizue);
     int max = 50;
     int roundnumber = 1;
     int place = 1;
@@ -506,10 +449,10 @@ public class MonitorManagementService {
         TargetType.valueOf(targetEnum.toString()), targetId);
 
     //updating
-    if (relatedMonitors == null && relatedMonitors.isEmpty()) {
+    if (relatedMonitors == null || relatedMonitors.isEmpty()) {
       //do nothing
     } else {
-      LOGGER.debug("updating");
+      LOGGER.debug("Eventhandling causes updating " + relatedMonitors.size() + " Monitors");
       monitorOrchestrationService
           .updateTargetStateInMonitors(TargetType.valueOf(targetEnum.toString()), targetId,
               targetState);

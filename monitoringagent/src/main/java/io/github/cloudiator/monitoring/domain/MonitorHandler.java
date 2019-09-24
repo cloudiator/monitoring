@@ -42,7 +42,6 @@ public class MonitorHandler {
   private final MonitorOrchestrationService monitorOrchestrationService;
   private final InstallationRequestService installationRequestService;
   private final NodeService nodeService;
-  private final ProcessService processService;
   private final MonitorToVisorMonitorConverter visorMonitorConverter = MonitorToVisorMonitorConverter.INSTANCE;
   private final NodeToNodeMessageConverter nodeMessageConverter = NodeToNodeMessageConverter.INSTANCE;
   private final boolean installMelodicTools;
@@ -53,12 +52,11 @@ public class MonitorHandler {
   @Inject
   public MonitorHandler(MonitorOrchestrationService monitorOrchestrationService,
       InstallationRequestService installationRequestService,
-      NodeService nodeService, ProcessService processService,
+      NodeService nodeService,
       @Named("melodicTools") boolean installMelodicTools) {
     this.monitorOrchestrationService = monitorOrchestrationService;
     this.installationRequestService = installationRequestService;
     this.nodeService = nodeService;
-    this.processService = processService;
     this.installMelodicTools = installMelodicTools;
   }
 
@@ -66,25 +64,25 @@ public class MonitorHandler {
    * HANDLE NODEMONITOR
    */
 
-  public synchronized void handleNodeMonitor(String userid, DomainMonitorModel domainMonitorModel) {
+  public void handleNodeMonitor(String userid, DomainMonitorModel domainMonitorModel) {
 
     //prepare = get Node
     Node node = getNodeById(userid, domainMonitorModel.getOwnTargetId());
     //install EMS everytime ignoring INSTALL_MELODIC_FLAG
     if (true) {
-      LOGGER.debug("Starting EMS Installation");
+      // LOGGER.debug("Starting EMS Installation");
       boolean ems = VisorRetryer.retry(1000, 2000, 5,
           () -> installEMSClient(userid, node));
-      LOGGER.debug("EMS install = " + ems);
+      // LOGGER.debug("EMS install = " + ems);
     }
     //install Visor
-    LOGGER.debug("Starting VISOR Installation");
+    //  LOGGER.debug("Starting VISOR Installation");
     boolean visor = VisorRetryer.retry(1000, 2000, 5,
         () -> installVisor(userid, node));
-    LOGGER.debug("Visor install = " + visor);
+    // LOGGER.debug("Visor install = " + visor);
 
     // config visor
-    LOGGER.debug("Starting VISOR Configuration");
+    // LOGGER.debug("Starting VISOR Configuration");
     io.github.cloudiator.visor.rest.model.Monitor visorback = configureVisor(node,
         domainMonitorModel);
     domainMonitorModel.setUuid(visorback.getUuid());
@@ -92,7 +90,7 @@ public class MonitorHandler {
     domainMonitorModel.setOwnTargetState(TargetState.valueOf(runningnode.state().name()));
     domainMonitorModel.addTagItem("NodeIP:", runningnode.connectTo().ip());
     monitorOrchestrationService.updateMonitor(domainMonitorModel, userid);
-    LOGGER.debug("monitorownState: " + domainMonitorModel.getOwnTargetState());
+    //  LOGGER.debug("monitorownState: " + domainMonitorModel.getOwnTargetState());
 
     LOGGER.debug("MonitorHandler finished");
   }
@@ -238,12 +236,5 @@ public class MonitorHandler {
     }
   }
 
-  /**
-   * HANDLE PROCESSMONITOR
-   */
-
-  public void handleProcessMonitor(String userid, DomainMonitorModel domainMonitorModel) {
-
-  }
 
 }

@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 public class MonitorSynchronizationService implements Runnable {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CreateMonitorListener.class);
-  private final MessageInterface messageInterface;
   private final MonitorManagementService monitorManagementService;
   private static final ScheduledExecutorService databaseExecutor = new ScheduledSingleThreadExecutor();
 
@@ -23,15 +22,13 @@ public class MonitorSynchronizationService implements Runnable {
   }
 
   @Inject
-  public MonitorSynchronizationService(MessageInterface messageInterface,
-      MonitorManagementService monitorManagementService) {
-    this.messageInterface = messageInterface;
+  public MonitorSynchronizationService(MonitorManagementService monitorManagementService) {
     this.monitorManagementService = monitorManagementService;
   }
 
   @Override
   public void run() {
-    LOGGER.info("starting synchronisation of Database");
+    LOGGER.info("starting MonitorStatusChecks");
     databaseExecutor
         .scheduleAtFixedRate(() -> monitorManagementService.checkMonitorStatus(), 1, 15,
             TimeUnit.MINUTES);
