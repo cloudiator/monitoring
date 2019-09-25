@@ -9,6 +9,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +20,9 @@ public class MonitorQueueController {
   private final MonitorHandler monitorHandler;
 
   private static final Map<String, Queue<DomainMonitorModel>> queueMap = new ConcurrentHashMap<>();
-  private static final ExecutorService queueExecutor = Executors.newFixedThreadPool(10);
+  private static final Map<String, MonitorQueue> monitorQueueMap = new ConcurrentHashMap<>();
+  private static final ThreadPoolExecutor queueExecutor = (ThreadPoolExecutor) Executors
+      .newFixedThreadPool(10);
 
   static {
     MoreExecutors.addDelayedShutdownHook(queueExecutor, 100, TimeUnit.MILLISECONDS);
@@ -63,10 +66,12 @@ public class MonitorQueueController {
   }
 
   public int getQueueMapSize() {
+
     return queueMap.size();
   }
 
   public boolean handleMonitorRequest(String nodeId, DomainMonitorModel domainMonitorModel) {
+
     LOGGER.debug("QueueController handling Monitor");
     Queue<DomainMonitorModel> usedQueue;
     if (existingQueue(nodeId)) {
@@ -77,8 +82,9 @@ public class MonitorQueueController {
     } else {
       usedQueue = createNewQueue(nodeId, domainMonitorModel);
       LOGGER.debug("QueueMapEntries: " + queueMap.size() + " - running newConsumer");
-      queueExecutor.execute(new MonitorQueueConsumer(nodeId, usedQueue, this, monitorHandler));
+      queueExecutor.submit(new MonitorQueueConsumer(nodeId, usedQueue, this, monitorHandler));
     }
+
     return true;
   }
 

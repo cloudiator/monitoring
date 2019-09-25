@@ -41,7 +41,7 @@ public class ProcessEventListener implements Runnable {
           @Override
           public void accept(String id, ProcessEvent processEvent) {
             try {
-              System.out.println(
+              LOGGER.debug(
                   "Got ProcessEvent: " + processEvent.getProcess().getId() + ": " + processEvent
                       .getFrom() + " to " + processEvent.getTo());
 
