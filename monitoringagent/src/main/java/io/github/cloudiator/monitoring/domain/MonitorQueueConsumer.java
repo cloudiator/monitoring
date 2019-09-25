@@ -6,7 +6,7 @@ import java.util.Queue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MonitorQueueConsumer implements Runnable {
+public class MonitorQueueConsumer extends Thread  /*implements Runnable*/ {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(MonitorQueueConsumer.class);
   private final MonitorQueueController monitorQueueController;
@@ -26,15 +26,35 @@ public class MonitorQueueConsumer implements Runnable {
 
   @Override
   public void run() {
+    try {
+      while (!queue.isEmpty()) {
+        DomainMonitorModel actualMonitor = queue.poll();
+        LOGGER.debug("handling Monitor: " + actualMonitor.getMetric());
+        LOGGER.debug(queue.size() + " remaining Monitors in Queue");
+        monitorHandler.handleNodeMonitor(actualMonitor.getOwner(), actualMonitor);
+      }
+      LOGGER.debug("Removing empty NodeQueue: " + nodeId);
+      monitorQueueController.removeQueue(nodeId);
 
-    while (!queue.isEmpty()) {
-      DomainMonitorModel actualMonitor = queue.poll();
-      LOGGER.debug("handling Monitor: " + actualMonitor.getMetric());
-      LOGGER.debug(queue.size() + " remaining Monitors in Queue");
-      monitorHandler.handleNodeMonitor(actualMonitor.getOwner(), actualMonitor);
-
+    } catch (IllegalStateException e) {
+      LOGGER.debug("IllegalStateException: " + e);
+      LOGGER.debug(
+          "remaining QueueSize: " + queue.size() + "cause of the error the queue will be deleted");
+      queue.clear();
+      monitorQueueController.removeQueue(nodeId);
+    } catch (AssertionError a) {
+      LOGGER.debug("AssertionError: " + a);
+      LOGGER.debug("Because of Problems by finding the node " + nodeId
+          + "\n removing related MonitorQueue. ");
+      LOGGER.debug("remaining QueueSize: " + queue.size());
+      queue.clear();
+      monitorQueueController.removeQueue(nodeId);
+    } catch (Exception e) {
+      LOGGER.debug("Exception happend: " + e);
+      LOGGER.debug(
+          "remaining QueueSize: " + queue.size() + "cause of the error the queue will be deleted");
+      queue.clear();
+      monitorQueueController.removeQueue(nodeId);
     }
-    LOGGER.debug("Removing empty NodeQueue: " + nodeId);
-    monitorQueueController.removeQueue(nodeId);
   }
 }
