@@ -70,7 +70,7 @@ public class MonitorQueueController {
     return queueMap.size();
   }
 
-  public boolean handleMonitorRequest(String nodeId, DomainMonitorModel domainMonitorModel) {
+  public synchronized boolean handleMonitorRequest(String nodeId, DomainMonitorModel domainMonitorModel) {
 
     LOGGER.debug("QueueController handling Monitor");
     Queue<DomainMonitorModel> usedQueue;
