@@ -42,7 +42,7 @@ public class ProcessEventListener implements Runnable {
           public void accept(String id, ProcessEvent processEvent) {
             try {
               LOGGER.debug(
-                  "Got ProcessEvent: " + processEvent.getProcess().getId() + ": " + processEvent
+                  "Got ProcessEvent: " + processEvent
                       .getFrom() + " to " + processEvent.getTo());
 
               TargetState targetState;

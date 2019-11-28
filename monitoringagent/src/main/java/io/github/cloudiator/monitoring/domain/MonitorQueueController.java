@@ -35,11 +35,11 @@ public class MonitorQueueController {
   }
 
   private Queue<DomainMonitorModel> createNewQueue(String nodeId, DomainMonitorModel request) {
-    LOGGER.debug("add new Queue");
+    LOGGER.debug("add new Queue ");
     Queue<DomainMonitorModel> result = new LinkedList<>();
     result.add(request);
     queueMap.put(nodeId, result);
-    LOGGER.debug("QueueMapSize: " + queueMap.size());
+    LOGGER.debug("new QueueMapSize: " + queueMap.size());
     return result;
   }
 
@@ -56,9 +56,7 @@ public class MonitorQueueController {
   }
 
   public void removeQueue(String nodeId) {
-    LOGGER.debug("removing MapEntry");
     queueMap.remove(nodeId);
-    LOGGER.debug("remaining Map: " + queueMap.size());
   }
 
   private synchronized void handleQueueMap(QueueAction action,
@@ -72,16 +70,16 @@ public class MonitorQueueController {
 
   public synchronized boolean handleMonitorRequest(String nodeId, DomainMonitorModel domainMonitorModel) {
 
-    LOGGER.debug("QueueController handling Monitor");
+    LOGGER.debug("QueueController handling Monitor "+domainMonitorModel.getMetric());
     Queue<DomainMonitorModel> usedQueue;
     if (existingQueue(nodeId)) {
-      LOGGER.debug("adding Monitor to existing Queue");
+      LOGGER.debug("found existing Queue, adding Monitor");
       usedQueue = getQueue(nodeId);
       usedQueue.add(domainMonitorModel);
-      LOGGER.debug("QueueSize: " + usedQueue.size());
+      LOGGER.debug("QueueSize now: " + usedQueue.size());
     } else {
       usedQueue = createNewQueue(nodeId, domainMonitorModel);
-      LOGGER.debug("QueueMapEntries: " + queueMap.size() + " - running newConsumer");
+      LOGGER.debug("created new Queue with size: " + queueMap.size() + " - starting new QueueConsumer");
       queueExecutor.submit(new MonitorQueueConsumer(nodeId, usedQueue, this, monitorHandler));
     }
 

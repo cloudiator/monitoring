@@ -43,7 +43,7 @@ public class NodeEventListener implements Runnable {
             try {
               TargetState targetState;
               LOGGER.debug(
-                  "Got NodeEvent: " + nodeEvent.getNode().getId() + ": " + nodeEvent.getFrom()
+                  "Got NodeEvent: " + nodeEvent.getFrom()
                       + " to " + nodeEvent.getTo());
               switch (nodeEvent.getTo()) {
                 case NODE_STATE_PENDING:
@@ -63,7 +63,6 @@ public class NodeEventListener implements Runnable {
               }
               monitorManagementService
                   .handleEvent(TypeEnum.NODE, nodeEvent.getNode().getId(), targetState);
-
             } catch (Exception e) {
               LOGGER.error("Error while receiving NodeEvent. ", e);
 

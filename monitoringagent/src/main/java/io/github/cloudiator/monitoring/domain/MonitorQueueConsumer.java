@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 
 public class MonitorQueueConsumer extends Thread  /*implements Runnable*/ {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(MonitorQueueConsumer.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(MonitorQueueController.class);
   private final MonitorQueueController monitorQueueController;
   private final String nodeId;
   private final MonitorHandler monitorHandler;
