@@ -2,12 +2,12 @@ package io.github.cloudiator.monitoring.converter;
 
 
 import de.uniulm.omi.cloudiator.util.TwoWayConverter;
+import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.rest.model.DataSink;
 import io.github.cloudiator.rest.model.Interval;
-import io.github.cloudiator.rest.model.Interval.UnitEnum;
-import io.github.cloudiator.monitoring.models.DomainMonitorModel;
 import io.github.cloudiator.rest.model.PullSensor;
 import io.github.cloudiator.rest.model.PushSensor;
+import io.github.cloudiator.rest.model.TimeUnit;
 import io.github.cloudiator.visor.rest.model.DataSink.TypeEnum;
 import io.github.cloudiator.visor.rest.model.DataSinkConfiguration;
 import io.github.cloudiator.visor.rest.model.Interval.TimeUnitEnum;
@@ -15,9 +15,7 @@ import io.github.cloudiator.visor.rest.model.PushMonitor;
 import io.github.cloudiator.visor.rest.model.SensorMonitor;
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class MonitorToVisorMonitorConverter implements
     TwoWayConverter<DomainMonitorModel, io.github.cloudiator.visor.rest.model.Monitor> {
@@ -129,7 +127,7 @@ public class MonitorToVisorMonitorConverter implements
     public Interval applyBack(io.github.cloudiator.visor.rest.model.Interval VisorInterval) {
       Interval result = new Interval()
           .period(VisorInterval.getPeriod().longValue())
-          .unit(UnitEnum.valueOf(VisorInterval.getTimeUnit().getValue()));
+          .unit(TimeUnit.valueOf(VisorInterval.getTimeUnit().getValue()));
       return result;
     }
   }
